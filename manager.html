@@ -177,6 +177,7 @@ async function uploadFile() {
             .insert({
                 file_name: file.name,         // Real file name
                 download_url: urlData.publicUrl // Your specific column (with the typo)
+                folder_name: folderInput.value || "General" // <---
             });
 
         if (dbError) {
