@@ -76,7 +76,7 @@
     // If no session exists, it means they aren't the manager
     if (!session) {
         alert("Access Denied. Returning to User Page.");
-        window.location.href = "user_index.html"; // Change to your user page filename
+        window.location.href = "index.html"; // Change to your user page filename
     }
 }
 
@@ -177,7 +177,56 @@ checkAccess();
     if (name.endsWith('.zip') || name.endsWith('.rar')) return 'folder_zip';
     return 'draft'; // Default icon for other types
 }
+async function loadManagerFiles() {
+    // Note: Ensure your Supabase client is initialized as _supabase
+    const { data, error } = await _supabase
+        .storage
+        .from('vault_files') // Using your bucket name here
+        .list('', {
+            limit: 100,
+            sortBy: { column: 'created_at', order: 'desc' }
+        });
 
+    if (error) {
+        console.error('Error fetching files:', error.message);
+        document.getElementById('file-list').innerHTML = '<p class="text-red-500">Error loading files.</p>';
+        return;
+    }
+
+    const fileContainer = document.getElementById('file-list');
+    fileContainer.innerHTML = ''; 
+
+    if (data.length === 0) {
+        fileContainer.innerHTML = '<p class="text-gray-500 text-center">No files found in the vault.</p>';
+        return;
+    }
+
+    data.forEach(file => {
+        // Get the link so the manager can view the file
+        const { data: urlData } = _supabase.storage
+            .from('vault_files')
+            .getPublicUrl(file.name);
+
+        fileContainer.innerHTML += `
+            <div class="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl shadow-sm mb-3">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-blue-100 p-2 rounded-lg text-blue-600">
+                        📄
+                    </div>
+                    <span class="font-semibold text-slate-700">${file.name}</span>
+                </div>
+                <a href="${urlData.publicUrl}" target="_blank" 
+                   class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-all">
+                    View
+                </a>
+            </div>
+        `;
+    });
+}
+
+// Call the function
+loadManagerFiles();
+        
     </script>
 </body>
 </html>
