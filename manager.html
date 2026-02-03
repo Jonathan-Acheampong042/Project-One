@@ -1,17 +1,15 @@
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html lang="en">
 <head>
     <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>FileVault | Manager Portal</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
 </head>
 <body class="bg-slate-50 min-h-screen font-sans">
-<button onclick="window.location.href='index.html'" style="padding: 10px; background: #333; color: blue;">
-  Return to Dashboard
-</button>
+    
     <header class="bg-white border-b border-gray-200 p-4 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
@@ -30,7 +28,7 @@
             
             <input type="file" id="fileInput" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-6"/>
             
-            <button onclick="uploadToSupabase()" id="uploadBtn" class="bg-blue-600 text-white px-10 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
+            <button onclick="uploadFile()" id="uploadBtn" class="bg-blue-600 text-white px-10 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
                 Upload & Share
             </button>
             <div id="status" class="mt-4 text-sm font-medium text-blue-600"></div>
@@ -45,140 +43,96 @@
                 <p class="text-gray-400 italic">Checking the vault...</p>
             </div>
         </section>
-        <section class="mt-20 pt-10 border-t border-gray-200">
-    <div class="bg-blue-50 dark:bg-blue-900/10 rounded-2xl p-8">
-        <h4 class="text-blue-600 font-bold mb-4 flex items-center gap-2">
-            <span class="material-symbols-outlined">info</span>
-            Technical Architecture
-        </h4>
-          
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-gray-600 dark:text-gray-400">
-            <div>
-                <p class="font-bold text-gray-800 dark:text-white mb-1">Frontend</p>
-                <p>HTML5, Tailwind CSS, and Vanilla JavaScript for a responsive, fast UI.</p>
-            </div>
-            <div>
-                <p class="font-bold text-gray-800 dark:text-white mb-1">Backend-as-a-Service</p>
-                <p>Powered by Supabase for Database, Storage, and Authentication.</p>
-            </div>
-            <div>
-                <p class="font-bold text-gray-800 dark:text-white mb-1">Security</p>
-                <p>Protected by Row Level Security (RLS) policies and Email-based Auth.</p>
-            </div>
-        </div>
-    </div>
-</section>
     </main>
 
     <script>
-        // 1. Initialize Supabase
-const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
+        // Initialize Supabase
+        const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
 
-// 2. Icon Logic (Restored)
-function getFileIcon(fileName) {
-    const name = fileName.toLowerCase();
-    if (name.endsWith('.pdf')) return 'picture_as_pdf';
-    if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'slideshow';
-    if (name.endsWith('.docx') || name.endsWith('.doc')) return 'description';
-    if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'table_chart';
-    if (name.endsWith('.zip') || name.endsWith('.rar')) return 'folder_zip';
-    return 'draft'; 
-}
-
-// 3. Security Check
-async function checkAccess() {
-    const { data: { session } } = await _supabase.auth.getSession();
-    if (!session) {
-        window.location.href = "login.html"; 
-    } else {
-        loadManagerFiles(); 
-    }
-}
-
-// 4. Load & Display Logic (Fixed & Restored)
-async function loadManagerFiles() {
-    const container = document.getElementById('managerFileGrid');
-    
-    try {
-        const { data: files, error } = await _supabase.storage.from('vault_files').list();
-
-        if (error) throw error;
-
-        if (!files || files.length === 0) {
-            container.innerHTML = "<div class='bg-gray-100 p-6 rounded-xl text-center text-gray-400'>No files uploaded yet.</div>";
-            return;
+        // Check Access on load
+        async function checkAccess() {
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (!session) {
+                window.location.href = "login.html"; 
+            } else {
+                loadManagerFiles(); 
+            }
         }
 
-        container.innerHTML = files.map(file => {
-            const icon = getFileIcon(file.name);
-            const { data: urlData } = _supabase.storage.from('vault_files').getPublicUrl(file.name);
-            
-            return `
-                <div class="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm">
-                    <div class="flex items-center gap-3">
-                        <span class="material-symbols-outlined text-blue-400">${icon}</span>
-                        <p class="font-semibold text-gray-800 text-sm truncate max-w-[200px]">${file.name}</p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <a href="${urlData.publicUrl}" target="_blank" class="text-blue-500 hover:bg-blue-50 p-2 rounded-full">
-                            <span class="material-symbols-outlined">visibility</span>
-                        </a>
-                        <button onclick="deleteFile('${file.name}')" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-full">
-                            <span class="material-symbols-outlined">delete</span>
-                        </button>
-                    </div>
-                </div>`;
-        }).join('');
-    } catch (err) {
-        container.innerHTML = `<p class="text-red-500">Error: ${err.message}</p>`;
-    }
-}
+        // Upload Function
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const status = document.getElementById('status');
+            const file = fileInput.files[0];
 
-// 5. Upload Logic (Restored)
-async function uploadToSupabase() {
-    const fileInput = document.getElementById('fileInput');
-    const status = document.getElementById('status');
-    const file = fileInput.files[0];
+            if (!file) {
+                alert("Please select a file.");
+                return;
+            }
 
-    if (!file) {
-        alert("Please select a file.");
-        return;
-    }
+            status.innerText = "Uploading...";
+            const { data, error } = await _supabase.storage.from('vault_files').upload(file.name, file, { upsert: true });
 
-    status.innerText = "Uploading...";
-    const { data, error } = await _supabase.storage.from('vault_files').upload(file.name, file, { upsert: true });
+            if (error) {
+                status.innerText = "Upload failed: " + error.message;
+            } else {
+                status.innerText = "Upload successful!";
+                fileInput.value = '';
+                loadManagerFiles(); 
+            }
+        }
 
-    if (error) {
-        status.innerText = "Upload failed: " + error.message;
-    } else {
-        status.innerText = "Upload successful!";
-        fileInput.value = '';
-        loadManagerFiles(); 
-    }
-}
+        // List Files Function
+        async function loadManagerFiles() {
+            const container = document.getElementById('managerFileGrid');
+            try {
+                const { data: files, error } = await _supabase.storage.from('vault_files').list();
+                if (error) throw error;
 
-// 6. Delete Logic (Fixed for Storage)
-async function deleteFile(fileName) {
-    if (!confirm(`Delete ${fileName} permanently?`)) return;
-    
-    const { error } = await _supabase.storage.from('vault_files').remove([fileName]);
-    
-    if (error) {
-        alert("Error deleting file: " + error.message);
-    } else {
-        loadManagerFiles(); 
-    }
-}
+                if (!files || files.length === 0) {
+                    container.innerHTML = "<div class='bg-gray-100 p-6 rounded-xl text-center text-gray-400'>No files found.</div>";
+                    return;
+                }
 
-// 7. Logout (Restored)
-async function signOut() {
-    await _supabase.auth.signOut();
-    window.location.href = "login.html";
-}
+                container.innerHTML = files.map(file => {
+                    const { data: urlData } = _supabase.storage.from('vault_files').getPublicUrl(file.name);
+                    return `
+                        <div class="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm">
+                            <div class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-blue-400">description</span>
+                                <p class="font-semibold text-gray-800 text-sm truncate max-w-[200px]">${file.name}</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <a href="${urlData.publicUrl}" target="_blank" class="text-blue-500 p-2">
+                                    <span class="material-symbols-outlined">visibility</span>
+                                </a>
+                                <button onclick="deleteFile('${file.name}')" class="text-red-400 p-2">
+                                    <span class="material-symbols-outlined">delete</span>
+                                </button>
+                            </div>
+                        </div>`;
+                }).join('');
+            } catch (err) {
+                container.innerHTML = `<p class="text-red-500 text-xs">Error: ${err.message}</p>`;
+            }
+        }
 
-// Run check on startup
-checkAccess();
+        // Delete Function
+        async function deleteFile(fileName) {
+            if (!confirm(`Delete ${fileName}?`)) return;
+            const { error } = await _supabase.storage.from('vault_files').remove([fileName]);
+            if (error) alert(error.message);
+            else loadManagerFiles();
+        }
 
+        // Logout Function
+        async function signOut() {
+            await _supabase.auth.signOut();
+            window.location.href = "login.html";
+        }
+
+        // Start
+        checkAccess();
     </script>
 </body>
 </html>
