@@ -92,38 +92,60 @@ async function checkAccess() {
 
 async function loadManagerFiles() {
     const container = document.getElementById('managerFileGrid');
-    
-    // 1. Fetch EVERYTHING (Recursive)
-    const { data, error } = await _supabase.storage
-        .from('vault-files')
-        .list('', { limit: 100, offset: 0, sortBy: { column: 'name', order: 'asc' }, recursive: true });
+    try {
+        // 1. Get recursive list
+        const { data, error } = await _supabase.storage
+            .from('vault-files')
+            .list('', { limit: 100, sortBy: { column: 'name', order: 'asc' }, recursive: true });
 
-    if (error) {
-        container.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
-        return;
+        if (error) throw error;
+
+        // 2. Filter: Only show REAL files (items with an ID)
+        // This hides the empty "MATH" and "uploads" folders automatically
+        const realFiles = data.filter(f => f.id !== null);
+
+        if (!realFiles || realFiles.length === 0) {
+            container.innerHTML = "<p class='text-gray-400 text-center py-10'>Vault is empty.</p>";
+            return;
+        }
+
+        container.innerHTML = realFiles.map(file => {
+            const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
+            
+            // Format the name: "MATH/notes.pdf" -> "notes.pdf"
+            const displayName = file.name.split('/').pop(); 
+            const folderName = file.name.includes('/') ? file.name.split('/')[0] : 'Main Library';
+
+            const icon = getFileIcon(displayName);
+            const colorClasses = getFileColor(displayName);
+            const [textColor, bgColor] = colorClasses.split(' ');
+
+            return `
+                <div class="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm mb-2">
+                    <div class="flex items-center gap-3">
+                        <div class="${bgColor} p-2 rounded-lg">
+                            <span class="material-symbols-outlined ${textColor}">${icon}</span>
+                        </div>
+                        <div class="overflow-hidden">
+                            <p class="font-semibold text-gray-800 text-sm truncate max-w-[150px]">${displayName}</p>
+                            <p class="text-[10px] text-gray-400 uppercase tracking-wide">
+                                <span class="material-symbols-outlined text-[10px] align-middle">folder</span> ${folderName}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <a href="${urlData.publicUrl}" target="_blank" class="text-blue-500 p-2 hover:bg-blue-50 rounded-full">
+                            <span class="material-symbols-outlined">visibility</span>
+                        </a>
+                        <button onclick="deleteFile('${file.name}')" class="text-red-400 p-2 hover:bg-red-50 rounded-full">
+                            <span class="material-symbols-outlined">delete</span>
+                        </button>
+                    </div>
+                </div>`;
+        }).join('');
+    } catch (err) {
+        container.innerHTML = `<p class="text-red-500 text-center">Error: ${err.message}</p>`;
     }
-
-    if (!data || data.length === 0) {
-        container.innerHTML = "<p class='text-gray-500 text-center'>Vault is completely empty.</p>";
-        return;
-    }
-
-    // 2. Render EVERYTHING (No 'filter' command here)
-    container.innerHTML = `<p class="text-xs text-gray-400 mb-2">Raw Items Found: ${data.length}</p>`;
-    
-    container.innerHTML += data.map(item => {
-        // We will show ALL technical details to debug
-        const isFolder = !item.metadata; // If no metadata, it's a folder
-        
-        return `
-            <div class="bg-white p-3 border-b border-gray-200 text-sm font-mono">
-                <p class="font-bold text-blue-600">Name: ${item.name}</p>
-                <p class="text-gray-500">Type: ${isFolder ? "📂 FOLDER" : "📄 FILE"}</p>
-                <p class="text-xs text-gray-400">ID: ${item.id}</p>
-                <p class="text-xs text-gray-400">Size: ${item.metadata ? item.metadata.size : "N/A"}</p>
-            </div>
-        `;
-    }).join('');
 }
              
 async function uploadFile() {
