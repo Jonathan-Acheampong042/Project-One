@@ -93,27 +93,36 @@ async function checkAccess() {
 async function loadManagerFiles() {
     const container = document.getElementById('managerFileGrid');
     try {
+        // 1. Get ALL items recursively
         const { data, error } = await _supabase.storage
             .from('vault-files')
-            .list('', { recursive: true });
+            .list('', { limit: 100, recursive: true });
 
         if (error) throw error;
 
-        // Filter: Keep only items with an ID (Real files)
-        const cleanFiles = data.filter(f => f.id !== null && f.name !== 'uploads');
+        // 2. THE FIX: Filter by ID, not by name.
+        // If it has an ID, it's a real file. If ID is null, it's a folder.
+        const realFiles = data.filter(f => f.id !== null);
 
-        if (!cleanFiles || cleanFiles.length === 0) {
-            container.innerHTML = "<p class='text-gray-400 text-center py-10'>Vault is empty.</p>";
+        if (!realFiles || realFiles.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8 text-gray-500">
+                    <p>No files found.</p>
+                    <p class="text-xs text-red-400 mt-2">(Debug: Found ${data.length} raw items, but 0 real files)</p>
+                </div>`;
             return;
         }
 
-        container.innerHTML = cleanFiles.map(file => {
+        container.innerHTML = realFiles.map(file => {
             const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
             
-            // Get just the filename (remove folder path for the icon check)
-            const justName = file.name.split('/').pop(); 
-            const icon = getFileIcon(justName);
-            const colorClasses = getFileColor(justName);
+            // Extract folder and file name for display
+            const pathParts = file.name.split('/');
+            const fileName = pathParts.pop(); // The last part is the name
+            const folderName = pathParts.length > 0 ? pathParts.join('/') : 'Main Library';
+
+            const icon = getFileIcon(fileName);
+            const colorClasses = getFileColor(fileName);
             const [textColor, bgColor] = colorClasses.split(' ');
 
             return `
@@ -123,26 +132,28 @@ async function loadManagerFiles() {
                             <span class="material-symbols-outlined ${textColor}">${icon}</span>
                         </div>
                         <div class="overflow-hidden">
-                            <p class="font-semibold text-gray-800 text-sm truncate max-w-[150px]">${justName}</p>
-                            <p class="text-[10px] text-gray-400 truncate">
-                                ${file.name.includes('/') ? file.name.split('/')[0] : 'Root'}
+                            <p class="font-semibold text-gray-800 text-sm truncate max-w-[150px]">${fileName}</p>
+                            <p class="text-[10px] text-gray-400 uppercase tracking-wide">
+                                <span class="material-symbols-outlined text-[10px] align-middle">folder</span> ${folderName}
                             </p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <a href="${urlData.publicUrl}" target="_blank" class="text-blue-500 p-2">
+                        <a href="${urlData.publicUrl}" target="_blank" class="text-blue-500 p-2 hover:bg-blue-50 rounded-full">
                             <span class="material-symbols-outlined">visibility</span>
                         </a>
-                        <button onclick="deleteFile('${file.name}')" class="text-red-400 p-2">
+                        <button onclick="deleteFile('${file.name}')" class="text-red-400 p-2 hover:bg-red-50 rounded-full">
                             <span class="material-symbols-outlined">delete</span>
                         </button>
                     </div>
                 </div>`;
         }).join('');
     } catch (err) {
-        container.innerHTML = `<p class="text-red-500 text-center">Error: ${err.message}</p>`;
+        container.innerHTML = `<p class="text-red-500 text-center font-bold">Error: ${err.message}</p>`;
     }
 }
+        
+
         
 async function uploadFile() {
     const fileInput = document.getElementById('fileInput');
