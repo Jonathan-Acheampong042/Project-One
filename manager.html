@@ -92,60 +92,57 @@ async function checkAccess() {
 
 async function loadManagerFiles() {
     const container = document.getElementById('managerFileGrid');
-    try {
-        // 1. Get recursive list
-        const { data, error } = await _supabase.storage
-            .from('vault-files')
-            .list('', { limit: 100, sortBy: { column: 'name', order: 'asc' }, recursive: true });
+    
+    // 1. SELECT from the Database Table instead of Storage
+    // Make sure to use '_supabase' like in your other functions
+    const { data: dbFiles, error } = await _supabase
+        .from('files_list')
+        .select('*')
+        .order('file_name', { ascending: true }); // Sorts by name
 
-        if (error) throw error;
-
-        // 2. Filter: Only show REAL files (items with an ID)
-        // This hides the empty "MATH" and "uploads" folders automatically
-        const realFiles = data.filter(f => f.id !== null);
-
-        if (!realFiles || realFiles.length === 0) {
-            container.innerHTML = "<p class='text-gray-400 text-center py-10'>Vault is empty.</p>";
-            return;
-        }
-
-        container.innerHTML = realFiles.map(file => {
-            const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
-            
-            // Format the name: "MATH/notes.pdf" -> "notes.pdf"
-            const displayName = file.name.split('/').pop(); 
-            const folderName = file.name.includes('/') ? file.name.split('/')[0] : 'Main Library';
-
-            const icon = getFileIcon(displayName);
-            const colorClasses = getFileColor(displayName);
-            const [textColor, bgColor] = colorClasses.split(' ');
-
-            return `
-                <div class="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm mb-2">
-                    <div class="flex items-center gap-3">
-                        <div class="${bgColor} p-2 rounded-lg">
-                            <span class="material-symbols-outlined ${textColor}">${icon}</span>
-                        </div>
-                        <div class="overflow-hidden">
-                            <p class="font-semibold text-gray-800 text-sm truncate max-w-[150px]">${displayName}</p>
-                            <p class="text-[10px] text-gray-400 uppercase tracking-wide">
-                                <span class="material-symbols-outlined text-[10px] align-middle">folder</span> ${folderName}
-                            </p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <a href="${urlData.publicUrl}" target="_blank" class="text-blue-500 p-2 hover:bg-blue-50 rounded-full">
-                            <span class="material-symbols-outlined">visibility</span>
-                        </a>
-                        <button onclick="deleteFile('${file.name}')" class="text-red-400 p-2 hover:bg-red-50 rounded-full">
-                            <span class="material-symbols-outlined">delete</span>
-                        </button>
-                    </div>
-                </div>`;
-        }).join('');
-    } catch (err) {
-        container.innerHTML = `<p class="text-red-500 text-center">Error: ${err.message}</p>`;
+    if (error) {
+        console.error("Error loading files:", error);
+        container.innerHTML = `<p class="text-red-500 text-center">Error loading list.</p>`;
+        return;
     }
+
+    // 2. Check if list is empty
+    if (!dbFiles || dbFiles.length === 0) {
+        container.innerHTML = "<p class='text-gray-400 text-center py-10'>Vault is empty.</p>";
+        return;
+    }
+
+    // 3. Generate the HTML for the list
+    container.innerHTML = dbFiles.map(row => {
+        // We use the columns from your table: 'file_name' and 'dowload_url'
+        const displayName = row.file_name;
+        
+        // Setup icons/colors (using your helper functions)
+        const icon = getFileIcon(displayName);
+        const colorClasses = getFileColor(displayName);
+        const [textColor, bgColor] = colorClasses.split(' ');
+
+        return `
+            <div class="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm mb-2">
+                <div class="flex items-center gap-3">
+                    <div class="${bgColor} p-2 rounded-lg">
+                        <span class="material-symbols-outlined ${textColor}">${icon}</span>
+                    </div>
+                    <div class="overflow-hidden">
+                        <p class="font-semibold text-gray-800 text-sm truncate max-w-[150px]">${displayName}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="${row.dowload_url}" target="_blank" class="text-blue-500 p-2 hover:bg-blue-50 rounded-full">
+                        <span class="material-symbols-outlined">visibility</span>
+                    </a>
+                    
+                    <button class="text-red-400 p-2 hover:bg-red-50 rounded-full">
+                        <span class="material-symbols-outlined">delete</span>
+                    </button>
+                </div>
+            </div>`;
+    }).join('');
 }
              
 async function uploadFile() {
