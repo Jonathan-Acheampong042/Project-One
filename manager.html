@@ -76,7 +76,7 @@
 
     // If no session exists, it means they aren't the manager
     if (!session) {
-        alert("Access Denied. Returning to User Page.");
+        alert("Access Denied. Returning to Login Page.");
         window.location.href = "index.html"; // Change to your user page filename
     }
 }
@@ -156,9 +156,16 @@ checkAccess();
         }
 
         // 6. LOGOUT
-        async function signOut() {
-            await _supabase.auth.signOut();
-            window.location.href = "login.html";
+        async function logout() {
+    const { error } = await _supabase.auth.signOut();
+    if (error) {
+        alert("Error logging out: " + error.message);
+    } else {
+        // After logout, send them back to the main vault page
+        window.location.href = "login.html"; 
+    }
+}
+
         }
 
         checkAccess(); // Start the app
@@ -195,9 +202,8 @@ const { data, error } = await _supabase.storage.from('vault_files').list();
                 </div>
             `;
         });
-    }
 }
-
+}
         
     </script>
 </body>
