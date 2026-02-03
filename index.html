@@ -84,14 +84,17 @@ async function fetchFiles() {
 
         if (error) throw error;
 
-        // Only show items that have an ID (Real Files)
+        // Filter: Real files only (Must have an ID)
         const realFiles = data.filter(f => f.id !== null);
 
         allFiles = realFiles.map(file => {
             const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
+            const displayName = file.name.split('/').pop();
+            const folderName = file.name.includes('/') ? file.name.split('/')[0] : 'Main Library';
             
             return {
-                file_name: file.name.split('/').pop(), // Just the name
+                file_name: displayName,
+                folder: folderName, // Saved so we can search by folder later if we want
                 full_path: file.name,
                 download_url: urlData.publicUrl
             };
