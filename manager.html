@@ -25,6 +25,14 @@
             <span class="material-symbols-outlined text-6xl text-blue-500 mb-4">cloud_upload</span>
             <h2 class="text-xl font-bold mb-2">Publish New File</h2>
             <p class="text-gray-500 mb-6 text-sm">Upload PDF, PPTX, or DOCX for your users.</p>
+            <div class="space-y-4 mb-6 text-left">
+    <div>
+        <label class="text-xs font-bold text-gray-400 uppercase">Folder Name (Optional)</label>
+        <input type="text" id="folderName" placeholder="e.g. Documents/Math" 
+               class="w-full p-3 bg-slate-100 border-none rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm"/>
+    </div>
+    <input type="file" id="fileInput" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+            </div>
             
             <input type="file" id="fileInput" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-6"/>
             
@@ -85,7 +93,11 @@ async function checkAccess() {
 async function loadManagerFiles() {
     const container = document.getElementById('managerFileGrid');
     try {
-        const { data, error } = await _supabase.storage.from('vault-files').list();
+// To this (Recursive shows files inside all folders):
+        const { data, error } = await _supabase.storage.from('vault-files').list('', {
+    recursive: true
+});
+
         if (error) throw error;
 
         // Filter out system folders
@@ -124,22 +136,31 @@ async function loadManagerFiles() {
 
 async function uploadFile() {
     const fileInput = document.getElementById('fileInput');
+    const folderInput = document.getElementById('folderName');
     const status = document.getElementById('status');
     const file = fileInput.files[0];
-    if (!file) return alert("Select a file");
 
-    status.innerText = "Uploading...";
-    const { error } = await _supabase.storage.from('vault-files').upload(file.name, file, { upsert: true });
+    if (!file) return alert("Please select a file.");
+
+    // Create the path: "folder/subfolder/filename.ext"
+    let folderPath = folderInput.value.trim();
+    let finalPath = folderPath ? `${folderPath}/${file.name}` : file.name;
+
+    status.innerText = "Uploading to " + (folderPath || "Root") + "...";
     
+    const { error } = await _supabase.storage
+        .from('vault-files')
+        .upload(finalPath, file, { upsert: true });
+
     if (error) {
         status.innerText = "Error: " + error.message;
     } else {
         status.innerText = "Success!";
         fileInput.value = '';
+        folderInput.value = ''; // Clear folder name after upload
         loadManagerFiles();
     }
 }
-
 async function deleteFile(fileName) {
     if (!confirm("Delete " + fileName + "?")) return;
     const { error } = await _supabase.storage.from('vault-files').remove([fileName]);
