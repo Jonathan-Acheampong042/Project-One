@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>FileVault | User Library</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+</head>
+<body class="bg-[#f6f6f8] min-h-screen">
+
+    <header class="bg-white border-b border-gray-200 p-4 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex items-center gap-3">
+            <span class="material-symbols-outlined text-blue-600">folder_shared</span>
+            <h1 class="font-bold text-xl">FileVault Library</h1>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-12">
+        <div class="mb-10 text-center">
+            <h2 class="text-3xl font-black mb-2">Available Resources</h2>
+            <p class="text-gray-500">Download the files shared by your manager.</p>
+        </div>
+<div class="max-w-xl mx-auto mb-10 relative group">
+    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+        <span class="material-symbols-outlined text-gray-400">search</span>
+    </div>
+    <input 
+        oninput="filterFiles(this.value)" 
+        class="block w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 shadow-sm transition-all" 
+        placeholder="Search for documents..." 
+        type="text"
+    />
+</div>
+
+        <div id="fileGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <p class="text-center col-span-full py-20 text-gray-400">Searching for files...</p>
+        </div>
+        <section class="mt-20 pt-10 border-t border-gray-200">
+    <div class="bg-blue-50 dark:bg-blue-900/10 rounded-2xl p-8">
+        <h4 class="text-blue-600 font-bold mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined">info</span>
+            Technical Architecture
+        </h4>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-gray-600 dark:text-gray-400">
+            <div>
+                <p class="font-bold text-gray-800 dark:text-white mb-1">Frontend</p>
+                <p>HTML5, Tailwind CSS, and Vanilla JavaScript for a responsive, fast UI.</p>
+            </div>
+            <div>
+                <p class="font-bold text-gray-800 dark:text-white mb-1">Backend-as-a-Service</p>
+                <p>Powered by Supabase for Database, Storage, and Authentication.</p>
+            </div>
+            <div>
+                <p class="font-bold text-gray-800 dark:text-white mb-1">Security</p>
+                <p>Protected by Row Level Security (RLS) policies and Email-based Auth.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+    </main>
+<script>
+    const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
+
+let allFiles = []; // Master list to hold our data
+
+async function fetchFiles() {
+    const { data, error } = await _supabase.from('files_list').select('*');
+    if (!error && data) {
+        allFiles = data; // Save the data for filtering later
+        renderFiles(allFiles); // Draw them on screen
+    }
+}
+
+// This function draws the cards
+function renderFiles(filesToDisplay) {
+    const grid = document.getElementById('fileGrid');
+    if (filesToDisplay.length === 0) {
+        grid.innerHTML = `<p class="text-gray-400 col-span-full text-center py-10">No matching files found.</p>`;
+        return;
+    }
+
+    grid.innerHTML = filesToDisplay.map(file => {
+    // Get the right icon based on the file name
+    const icon = getFileIcon(file.file_name);
+    
+    return `
+        <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all">
+            <div class="aspect-square bg-blue-50 flex items-center justify-center rounded-lg mb-4">
+                <span class="material-symbols-outlined text-5xl text-blue-600">${icon}</span>
+            </div>
+            <h3 class="font-bold text-gray-900 truncate mb-4">${file.file_name}</h3>
+            <a href="${file.download_url}" target="_blank" class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium transition-colors">
+                <span class="material-symbols-outlined text-[20px]">download</span>
+                Download
+            </a>
+        </div>
+    `;
+}).join('');
+
+}
+
+// This function filters the list as you type
+function filterFiles(searchTerm) {
+    const filtered = allFiles.filter(file => 
+        file.file_name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    renderFiles(filtered);
+}
+
+fetchFiles();
+function getFileIcon(fileName) {
+    const name = fileName.toLowerCase();
+    if (name.endsWith('.pdf')) return 'picture_as_pdf';
+    if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'slideshow';
+    if (name.endsWith('.docx') || name.endsWith('.doc')) return 'description';
+    if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'table_chart';
+    if (name.endsWith('.zip') || name.endsWith('.rar')) return 'folder_zip';
+    return 'draft'; // Default icon for other types
+}
+
+</script>
+</body>
+</html>
