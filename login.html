@@ -19,7 +19,7 @@
     </div>
 
     <script>
-                async function checkAccess() {
+     async function checkAccess() {
     const { data: { session } } = await supabase.auth.getSession();
 
     // If no session exists, it means they aren't the manager
