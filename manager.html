@@ -91,57 +91,35 @@ async function checkAccess() {
 async function loadManagerFiles() {
     const container = document.getElementById('managerFileGrid');
     
-    // 1. SELECT from the Database Table instead of Storage
-    // Make sure to use '_supabase' like in your other functions
+    // Select all columns including your new 'folder_name'
     const { data: dbFiles, error } = await _supabase
         .from('files_list')
         .select('*')
-        .order('file_name', { ascending: true }); // Sorts by name
+        .order('file_name', { ascending: true });
 
-    if (error) {
-        console.error("Error loading files:", error);
-        container.innerHTML = `<p class="text-red-500 text-center">Error loading list.</p>`;
-        return;
-    }
-
-    // 2. Check if list is empty
     if (!dbFiles || dbFiles.length === 0) {
-        container.innerHTML = "<p class='text-gray-400 text-center py-10'>Vault is empty.</p>";
+        container.innerHTML = "<p class='text-center text-gray-400'>Vault is empty.</p>";
         return;
     }
 
-    // 3. Generate the HTML for the list
-    container.innerHTML = dbFiles.map(row => {
-        // We use the columns from your table: 'file_name' and 'download_url'
-        const displayName = row.file_name;
-        
-        // Setup icons/colors (using your helper functions)
-        const icon = getFileIcon(displayName);
-        const colorClasses = getFileColor(displayName);
-        const [textColor, bgColor] = colorClasses.split(' ');
+    container.innerHTML = dbFiles.map(file => {
+        // READ THE FOLDER FROM THE DATABASE
+        // If the column is empty, show "Main Library"
+        const folderLabel = file.folder_name || "Main Library"; 
 
         return `
             <div class="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm mb-2">
-                <div class="flex items-center gap-3">
-                    <div class="${bgColor} p-2 rounded-lg">
-                        <span class="material-symbols-outlined ${textColor}">${icon}</span>
-                    </div>
-                    <div class="overflow-hidden">
-                        <p class="font-semibold text-gray-800 text-sm truncate max-w-[150px]">${displayName}</p>
-                    </div>
+                <div>
+                    <p class="font-bold text-gray-700">${file.file_name}</p>
+                    <p class="text-xs text-gray-400 uppercase tracking-wider">
+                        📂 ${folderLabel}
+                    </p>
                 </div>
-                <div class="flex items-center gap-2">
-                    <a href="${row.download_url}" target="_blank" class="text-blue-500 p-2 hover:bg-blue-50 rounded-full">
-                        <span class="material-symbols-outlined">visibility</span>
-                    </a>
-                    
-                    <button class="text-red-400 p-2 hover:bg-red-50 rounded-full">
-                        <span class="material-symbols-outlined">delete</span>
-                    </button>
-                </div>
+                <a href="${file.download_url}" target="_blank" class="text-blue-500 hover:underline">Download</a>
             </div>`;
     }).join('');
 }
+
              
 async function uploadFile() {
     const fileInput = document.getElementById('fileInput');
