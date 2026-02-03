@@ -93,29 +93,27 @@ async function checkAccess() {
 async function loadManagerFiles() {
     const container = document.getElementById('managerFileGrid');
     try {
-        // Change: Added recursive: true
         const { data, error } = await _supabase.storage
             .from('vault-files')
             .list('', { recursive: true });
 
         if (error) throw error;
 
-        // Filter: Keep only files (items with metadata) and ignore placeholders
-        const cleanFiles = data.filter(f => 
-            f.name !== 'uploads' && 
-            f.name !== '.emptyFolderPlaceholder' &&
-            f.metadata 
-        );
+        // Filter: Keep only items with an ID (Real files)
+        const cleanFiles = data.filter(f => f.id !== null && f.name !== 'uploads');
 
         if (!cleanFiles || cleanFiles.length === 0) {
-            container.innerHTML = "<p class='text-gray-400 text-center'>No files found in any folder.</p>";
+            container.innerHTML = "<p class='text-gray-400 text-center py-10'>Vault is empty.</p>";
             return;
         }
 
         container.innerHTML = cleanFiles.map(file => {
             const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
-            const icon = getFileIcon(file.name);
-            const colorClasses = getFileColor(file.name);
+            
+            // Get just the filename (remove folder path for the icon check)
+            const justName = file.name.split('/').pop(); 
+            const icon = getFileIcon(justName);
+            const colorClasses = getFileColor(justName);
             const [textColor, bgColor] = colorClasses.split(' ');
 
             return `
@@ -124,19 +122,28 @@ async function loadManagerFiles() {
                         <div class="${bgColor} p-2 rounded-lg">
                             <span class="material-symbols-outlined ${textColor}">${icon}</span>
                         </div>
-                        <p class="font-semibold text-gray-800 text-sm truncate max-w-[180px]">${file.name}</p>
+                        <div class="overflow-hidden">
+                            <p class="font-semibold text-gray-800 text-sm truncate max-w-[150px]">${justName}</p>
+                            <p class="text-[10px] text-gray-400 truncate">
+                                ${file.name.includes('/') ? file.name.split('/')[0] : 'Root'}
+                            </p>
+                        </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <a href="${urlData.publicUrl}" target="_blank" class="text-blue-500 p-2"><span class="material-symbols-outlined">visibility</span></a>
-                        <button onclick="deleteFile('${file.name}')" class="text-red-400 p-2"><span class="material-symbols-outlined">delete</span></button>
+                        <a href="${urlData.publicUrl}" target="_blank" class="text-blue-500 p-2">
+                            <span class="material-symbols-outlined">visibility</span>
+                        </a>
+                        <button onclick="deleteFile('${file.name}')" class="text-red-400 p-2">
+                            <span class="material-symbols-outlined">delete</span>
+                        </button>
                     </div>
                 </div>`;
         }).join('');
     } catch (err) {
-        container.innerHTML = `<p class="text-red-500">Error: ${err.message}</p>`;
+        container.innerHTML = `<p class="text-red-500 text-center">Error: ${err.message}</p>`;
     }
 }
-
+        
 async function uploadFile() {
     const fileInput = document.getElementById('fileInput');
     const folderInput = document.getElementById('folderName');
