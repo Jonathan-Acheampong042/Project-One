@@ -133,6 +133,24 @@
 
         // Start
         checkAccess();
+        // This line ignores both the 'uploads' placeholder and any empty files
+const filteredFiles = storageFiles.filter(file => 
+    file.name !== 'uploads' && 
+    file.name !== '.emptyFolderPlaceholder'
+);
+
+// Now map the remaining REAL files
+allFiles = filteredFiles.map(file => {
+    const { data: urlData } = _supabase.storage
+        .from('vault-files')
+        .getPublicUrl(file.name);
+    
+    return {
+        file_name: file.name,
+        download_url: urlData.publicUrl
+    };
+});
+        
     </script>
 </body>
 </html>
