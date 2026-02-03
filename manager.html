@@ -93,57 +93,46 @@ async function checkAccess() {
 async function loadManagerFiles() {
     const container = document.getElementById('managerFileGrid');
     try {
-// To this (Recursive shows files inside all folders):
-        const { data, error } = await _supabase.storage.from('vault-files').list('', {
-    recursive: true
-});
+        // Change: Added recursive: true
+        const { data, error } = await _supabase.storage
+            .from('vault-files')
+            .list('', { recursive: true });
 
         if (error) throw error;
 
-        // Filter out system folders
-        const cleanFiles = data.filter(f => f.name !== 'uploads' && f.name !== '.emptyFolderPlaceholder');
+        // Filter: Keep only files (items with metadata) and ignore placeholders
+        const cleanFiles = data.filter(f => 
+            f.name !== 'uploads' && 
+            f.name !== '.emptyFolderPlaceholder' &&
+            f.metadata 
+        );
 
         if (!cleanFiles || cleanFiles.length === 0) {
-            container.innerHTML = "<p class='text-gray-400 italic text-center'>Vault is empty.</p>";
+            container.innerHTML = "<p class='text-gray-400 text-center'>No files found in any folder.</p>";
             return;
         }
 
         container.innerHTML = cleanFiles.map(file => {
-    // metadata is null for folders in Supabase
-    const isFolder = !file.metadata; 
-    const icon = isFolder ? 'folder' : getFileIcon(file.name);
-    const colorClasses = getFileColor(file.name);
-    const [textColor, bgColor] = colorClasses.split(' ');
+            const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
+            const icon = getFileIcon(file.name);
+            const colorClasses = getFileColor(file.name);
+            const [textColor, bgColor] = colorClasses.split(' ');
 
-    // Only generate a URL if it's a real file
-    let viewButton = '';
-    if (!isFolder) {
-        const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
-        viewButton = `
-            <a href="${urlData.publicUrl}" target="_blank" class="text-blue-500 p-2">
-                <span class="material-symbols-outlined">visibility</span>
-            </a>`;
-    }
-
-    return `
-        <div class="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm mb-2">
-            <div class="flex items-center gap-3">
-                <div class="${bgColor} p-2 rounded-lg">
-                    <span class="material-symbols-outlined ${textColor}">${icon}</span>
-                </div>
-                <p class="font-semibold text-gray-800 text-sm truncate max-w-[150px]">${file.name}</p>
-            </div>
-            <div class="flex items-center gap-2">
-                ${viewButton}
-                <button onclick="deleteFile('${file.name}', ${isFolder})" class="text-red-400 p-2">
-                    <span class="material-symbols-outlined">delete</span>
-                </button>
-            </div>
-        </div>`;
-}).join('');
-
+            return `
+                <div class="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm mb-2">
+                    <div class="flex items-center gap-3">
+                        <div class="${bgColor} p-2 rounded-lg">
+                            <span class="material-symbols-outlined ${textColor}">${icon}</span>
+                        </div>
+                        <p class="font-semibold text-gray-800 text-sm truncate max-w-[180px]">${file.name}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <a href="${urlData.publicUrl}" target="_blank" class="text-blue-500 p-2"><span class="material-symbols-outlined">visibility</span></a>
+                        <button onclick="deleteFile('${file.name}')" class="text-red-400 p-2"><span class="material-symbols-outlined">delete</span></button>
+                    </div>
+                </div>`;
+        }).join('');
     } catch (err) {
-        console.error(err);
         container.innerHTML = `<p class="text-red-500">Error: ${err.message}</p>`;
     }
 }
