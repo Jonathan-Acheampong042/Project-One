@@ -105,20 +105,22 @@ function renderFiles(filesToDisplay) {
     }
 
     grid.innerHTML = filesToDisplay.map(file => {
-        const icon = getFileIcon(file.file_name);
-        return `
-            <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all">
-                <div class="aspect-square bg-blue-50 flex items-center justify-center rounded-lg mb-4">
-                    <span class="material-symbols-outlined text-5xl text-blue-600">${icon}</span>
-                </div>
-                <h3 class="font-bold text-gray-900 truncate mb-4">${file.file_name}</h3>
-                <a href="${file.download_url}" target="_blank" class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium transition-colors">
-                    <span class="material-symbols-outlined text-[20px]">visibility</span>
-                    View File
-                </a>
+    const icon = getFileIcon(file.file_name);
+    const colorClasses = getFileColor(file.file_name); // Get the dynamic color
+    
+    return `
+        <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all">
+            <div class="aspect-square ${colorClasses} flex items-center justify-center rounded-lg mb-4">
+                <span class="material-symbols-outlined text-5xl">${icon}</span>
             </div>
-        `;
-    }).join('');
+            <h3 class="font-bold text-gray-900 truncate mb-4">${file.file_name}</h3>
+            <a href="${file.download_url}" target="_blank" class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium transition-colors">
+                <span class="material-symbols-outlined text-[20px]">visibility</span>
+                View File
+            </a>
+        </div>
+    `;
+}).join('');
 }
 
 function filterFiles(searchTerm) {
