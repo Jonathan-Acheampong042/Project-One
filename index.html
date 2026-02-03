@@ -78,41 +78,28 @@ let allFiles = [];
 
 async function fetchFiles() {
     try {
-        // recursive: true lets us see inside folders
-        const { data: storageFiles, error } = await _supabase.storage
+        const { data, error } = await _supabase.storage
             .from('vault-files')
-            .list('', { recursive: true });
+            .list('', { limit: 100, recursive: true });
 
         if (error) throw error;
 
-        if (storageFiles) {
-            // FILTERING LOGIC:
-            // 1. Must have an 'id' (Folders usually have null ID)
-            // 2. Name must not be just 'uploads' (The folder itself)
-            // 3. Name must not be the placeholder
-            const realFilesOnly = storageFiles.filter(file => 
-                file.id !== null && 
-                file.name !== 'uploads' && 
-                !file.name.endsWith('.emptyFolderPlaceholder')
-            );
+        // Only show items that have an ID (Real Files)
+        const realFiles = data.filter(f => f.id !== null);
 
-            allFiles = realFilesOnly.map(file => {
-                const { data: urlData } = _supabase.storage
-                    .from('vault-files')
-                    .getPublicUrl(file.name);
-                
-                // .split('/').pop() ensures we show "math.pdf" instead of "uploads/math.pdf"
-                return {
-                    file_name: file.name.split('/').pop(), 
-                    full_path: file.name,
-                    download_url: urlData.publicUrl
-                };
-            });
+        allFiles = realFiles.map(file => {
+            const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
+            
+            return {
+                file_name: file.name.split('/').pop(), // Just the name
+                full_path: file.name,
+                download_url: urlData.publicUrl
+            };
+        });
 
-            renderFiles(allFiles); 
-        }
+        renderFiles(allFiles); 
     } catch (err) {
-        console.error("Error loading files:", err.message);
+        console.error("Fetch Error:", err);
     }
 }
     
