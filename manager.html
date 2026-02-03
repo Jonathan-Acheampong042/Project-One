@@ -74,57 +74,67 @@
         // 1. Initialize Supabase
 const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
 
-// 2. Fix: Corrected Logout Function
-async function signOut() {
-    const { error } = await _supabase.auth.signOut();
-    if (error) {
-        alert("Error logging out: " + error.message);
-    } else {
-        window.location.href = "login.html"; 
-    }
+// 2. Icon Logic (Restored)
+function getFileIcon(fileName) {
+    const name = fileName.toLowerCase();
+    if (name.endsWith('.pdf')) return 'picture_as_pdf';
+    if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'slideshow';
+    if (name.endsWith('.docx') || name.endsWith('.doc')) return 'description';
+    if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'table_chart';
+    if (name.endsWith('.zip') || name.endsWith('.rar')) return 'folder_zip';
+    return 'draft'; 
 }
 
-// 3. Fix: Corrected Access Check
+// 3. Security Check
 async function checkAccess() {
     const { data: { session } } = await _supabase.auth.getSession();
     if (!session) {
-        window.location.href = "login.html";
+        window.location.href = "login.html"; 
     } else {
-        loadManagerFiles(); // Load storage files
+        loadManagerFiles(); 
     }
 }
 
-// 4. Fix: Load Storage Files (Using your bucket name 'vault_files')
+// 4. Load & Display Logic (Fixed & Restored)
 async function loadManagerFiles() {
-    const displayArea = document.getElementById('managerFileGrid');
+    const container = document.getElementById('managerFileGrid');
     
     try {
-        const { data, error } = await _supabase.storage.from('vault_files').list();
+        const { data: files, error } = await _supabase.storage.from('vault_files').list();
 
         if (error) throw error;
 
-        if (data && data.length > 0) {
-            displayArea.innerHTML = ''; 
-            data.forEach(file => {
-                const { data: urlData } = _supabase.storage.from('vault_files').getPublicUrl(file.name);
-                displayArea.innerHTML += `
-                    <div class="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm mb-2">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-blue-400">description</span>
-                            <p class="font-semibold text-gray-800 text-sm">${file.name}</p>
-                        </div>
-                        <a href="${urlData.publicUrl}" target="_blank" class="text-blue-600 font-bold text-sm">View</a>
-                    </div>`;
-            });
-        } else {
-            displayArea.innerHTML = "<p class='text-gray-400 italic'>The vault is empty.</p>";
+        if (!files || files.length === 0) {
+            container.innerHTML = "<div class='bg-gray-100 p-6 rounded-xl text-center text-gray-400'>No files uploaded yet.</div>";
+            return;
         }
+
+        container.innerHTML = files.map(file => {
+            const icon = getFileIcon(file.name);
+            const { data: urlData } = _supabase.storage.from('vault_files').getPublicUrl(file.name);
+            
+            return `
+                <div class="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-blue-400">${icon}</span>
+                        <p class="font-semibold text-gray-800 text-sm truncate max-w-[200px]">${file.name}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <a href="${urlData.publicUrl}" target="_blank" class="text-blue-500 hover:bg-blue-50 p-2 rounded-full">
+                            <span class="material-symbols-outlined">visibility</span>
+                        </a>
+                        <button onclick="deleteFile('${file.name}')" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-full">
+                            <span class="material-symbols-outlined">delete</span>
+                        </button>
+                    </div>
+                </div>`;
+        }).join('');
     } catch (err) {
-        displayArea.innerHTML = `<p class="text-red-500">Error: ${err.message}</p>`;
+        container.innerHTML = `<p class="text-red-500">Error: ${err.message}</p>`;
     }
 }
 
-// 5. Fix: Upload to Supabase
+// 5. Upload Logic (Restored)
 async function uploadToSupabase() {
     const fileInput = document.getElementById('fileInput');
     const status = document.getElementById('status');
@@ -136,23 +146,39 @@ async function uploadToSupabase() {
     }
 
     status.innerText = "Uploading...";
-    
-    const { data, error } = await _supabase.storage
-        .from('vault_files')
-        .upload(file.name, file, { upsert: true });
+    const { data, error } = await _supabase.storage.from('vault_files').upload(file.name, file, { upsert: true });
 
     if (error) {
         status.innerText = "Upload failed: " + error.message;
     } else {
         status.innerText = "Upload successful!";
         fileInput.value = '';
-        loadManagerFiles(); // Refresh list automatically
+        loadManagerFiles(); 
     }
+}
+
+// 6. Delete Logic (Fixed for Storage)
+async function deleteFile(fileName) {
+    if (!confirm(`Delete ${fileName} permanently?`)) return;
+    
+    const { error } = await _supabase.storage.from('vault_files').remove([fileName]);
+    
+    if (error) {
+        alert("Error deleting file: " + error.message);
+    } else {
+        loadManagerFiles(); 
+    }
+}
+
+// 7. Logout (Restored)
+async function signOut() {
+    await _supabase.auth.signOut();
+    window.location.href = "login.html";
 }
 
 // Run check on startup
 checkAccess();
-        
+
     </script>
 </body>
 </html>
