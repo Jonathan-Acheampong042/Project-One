@@ -71,139 +71,87 @@
     </main>
 
     <script>
-        async function checkAccess() {
-    const { data: { session } } = await supabase.auth.getSession();
+        // 1. Initialize Supabase
+const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
 
-    // If no session exists, it means they aren't the manager
-    if (!session) {
-        alert("Access Denied. Returning to Login Page.");
-        window.location.href = "index.html"; // Change to your user page filename
-    }
-}
-
-checkAccess();
-        
-        // 1. YOUR CONNECTION (Fill these in!)
-        const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
-
-        // 2. GATEKEEPER: Check if logged in
-        async function checkAccess() {
-            const { data: { user } } = await _supabase.auth.getUser();
-            if (!user) {
-                window.location.href = "login.html"; // Redirect if not logged in
-            } else {
-                fetchAndDisplayFiles(); // Load files if logged in
-            }
-        }
-
-        // 3. UPLOAD LOGIC
-        async function uploadFile() {
-    const fileInput = document.getElementById('file-input'); // Make sure this ID matches your input
-    const file = fileInput.files[0];
-
-    if (!file) {
-        alert("Please choose a file first!");
-        return;
-    }
-
-    // 1. Upload to Supabase
-    const { data, error } = await _supabase.storage
-        .from('vault_files')
-        .upload(file.name, file);
-
-    if (error) {
-        alert("Upload failed: " + error.message);
-    } else {
-        alert("File uploaded successfully!");
-        
-        // --- THE CRITICAL FIX ---
-        // After success, call the function that draws the file list!
-        loadManagerFiles(); 
-        
-        // Clear the input so it's ready for the next file
-        fileInput.value = ''; 
-    }
-}
-
-        // 4. DISPLAY LOGIC (The List)
-        async function fetchAndDisplayFiles() {
-            const container = document.getElementById('managerFileGrid');
-            const { data: files, error } = await _supabase.from('files_list').select('*').order('created_at', { ascending: false });
-
-            if (!files || files.length === 0) {
-                container.innerHTML = "<div class='bg-gray-100 p-6 rounded-xl text-center text-gray-400'>No files uploaded yet.</div>";
-                return;
-            }
-
-            container.innerHTML = files.map(file => `
-                <div class="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm">
-                    <div class="flex items-center gap-3">
-                        <span class="material-symbols-outlined text-blue-400">description</span>
-                        <p class="font-semibold text-gray-800 text-sm truncate max-w-[200px]">${file.file_name}</p>
-                    </div>
-                    <button onclick="deleteFile(${file.id})" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-full transition-all">
-                        <span class="material-symbols-outlined">delete</span>
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        // 5. DELETE LOGIC
-        async function deleteFile(id) {
-            if (!confirm("Delete this file permanently?")) return;
-            await _supabase.from('files_list').delete().eq('id', id);
-            fetchAndDisplayFiles();
-        }
-
-        // 6. LOGOUT
-        async function logout() {
+// 2. Fix: Corrected Logout Function
+async function signOut() {
     const { error } = await _supabase.auth.signOut();
     if (error) {
         alert("Error logging out: " + error.message);
     } else {
-        // After logout, send them back to the main vault page
         window.location.href = "login.html"; 
     }
 }
 
-        }
-
-        checkAccess(); // Start the app
-        function getFileIcon(fileName) {
-    const name = fileName.toLowerCase();
-    if (name.endsWith('.pdf')) return 'picture_as_pdf';
-    if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'slideshow';
-    if (name.endsWith('.docx') || name.endsWith('.doc')) return 'description';
-    if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'table_chart';
-    if (name.endsWith('.zip') || name.endsWith('.rar')) return 'folder_zip';
-    return 'draft'; // Default icon for other types
+// 3. Fix: Corrected Access Check
+async function checkAccess() {
+    const { data: { session } } = await _supabase.auth.getSession();
+    if (!session) {
+        window.location.href = "login.html";
+    } else {
+        loadManagerFiles(); // Load storage files
+    }
 }
+
+// 4. Fix: Load Storage Files (Using your bucket name 'vault_files')
 async function loadManagerFiles() {
-    // WRONG (if variable is _supabase)
-const { data, error } = await supabase.storage... 
+    const displayArea = document.getElementById('managerFileGrid');
+    
+    try {
+        const { data, error } = await _supabase.storage.from('vault_files').list();
 
-// RIGHT
-const { data, error } = await _supabase.storage.from('vault_files').list();
+        if (error) throw error;
 
-
-    // Find the div that currently says "No files uploaded yet"
-    const displayArea = document.getElementById('file-list-container'); 
-
-    if (data && data.length > 0) {
-        displayArea.innerHTML = ''; // Remove the "No files" message
-        
-        data.forEach(file => {
-            const { data: urlData } = _supabase.storage.from('vault_files').getPublicUrl(file.name);
-            
-            displayArea.innerHTML += `
-                <div class="flex items-center justify-between p-3 bg-white border rounded-lg mb-2 shadow-sm">
-                    <span class="text-sm font-medium text-gray-700">${file.name}</span>
-                    <a href="${urlData.publicUrl}" target="_blank" class="text-blue-600 text-sm font-bold">View</a>
-                </div>
-            `;
-        });
+        if (data && data.length > 0) {
+            displayArea.innerHTML = ''; 
+            data.forEach(file => {
+                const { data: urlData } = _supabase.storage.from('vault_files').getPublicUrl(file.name);
+                displayArea.innerHTML += `
+                    <div class="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm mb-2">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-blue-400">description</span>
+                            <p class="font-semibold text-gray-800 text-sm">${file.name}</p>
+                        </div>
+                        <a href="${urlData.publicUrl}" target="_blank" class="text-blue-600 font-bold text-sm">View</a>
+                    </div>`;
+            });
+        } else {
+            displayArea.innerHTML = "<p class='text-gray-400 italic'>The vault is empty.</p>";
+        }
+    } catch (err) {
+        displayArea.innerHTML = `<p class="text-red-500">Error: ${err.message}</p>`;
+    }
 }
+
+// 5. Fix: Upload to Supabase
+async function uploadToSupabase() {
+    const fileInput = document.getElementById('fileInput');
+    const status = document.getElementById('status');
+    const file = fileInput.files[0];
+
+    if (!file) {
+        alert("Please select a file.");
+        return;
+    }
+
+    status.innerText = "Uploading...";
+    
+    const { data, error } = await _supabase.storage
+        .from('vault_files')
+        .upload(file.name, file, { upsert: true });
+
+    if (error) {
+        status.innerText = "Upload failed: " + error.message;
+    } else {
+        status.innerText = "Upload successful!";
+        fileInput.value = '';
+        loadManagerFiles(); // Refresh list automatically
+    }
 }
+
+// Run check on startup
+checkAccess();
         
     </script>
 </body>
