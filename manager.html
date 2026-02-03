@@ -145,52 +145,45 @@ async function loadManagerFiles() {
              
 async function uploadFile() {
     const fileInput = document.getElementById('fileInput');
-    const folderInput = document.getElementById('folderName');
+    const folderInput = document.getElementById('folderName'); // This gets the text you typed
     const status = document.getElementById('status');
     const file = fileInput.files[0];
 
     if (!file) return alert("Please select a file.");
 
-    // 1. Prepare the path
-    let folderPath = folderInput.value.trim();
-    let finalPath = folderPath ? `${folderPath}/${file.name}` : file.name;
-
-    status.innerText = "Uploading to " + (folderPath || "Root") + "...";
+    // 1. Upload to Storage
+    let path = folderInput.value.trim() ? `${folderInput.value.trim()}/${file.name}` : file.name;
+    status.innerText = "Uploading...";
     
-    // 2. Upload to Storage Bucket
     const { error: uploadError } = await _supabase.storage
         .from('vault-files')
-        .upload(finalPath, file, { upsert: true });
+        .upload(path, file, { upsert: true });
 
     if (uploadError) {
-        status.innerText = "Upload Error: " + uploadError.message;
-        console.error(uploadError);
+        status.innerText = "Error: " + uploadError.message;
     } else {
-        // 3. GET Public URL
+        // 2. Get Public URL
         const { data: urlData } = _supabase.storage
             .from('vault-files')
-            .getPublicUrl(finalPath);
+            .getPublicUrl(path);
 
-        // 4. INSERT into Database Table ('files_list')
+        // 3. SAVE TO DATABASE (The Critical Step)
         const { error: dbError } = await _supabase
-            .from('files_list')   // Your specific table name
+            .from('files_list')
             .insert({
-                file_name: file.name,         // Real file name
-                download_url: urlData.publicUrl // Your specific column (with the typo)
-                folder_name: folderInput.value || "General" // <---
+                file_name: file.name,
+                download_url: urlData.publicUrl,
+                folder_name: folderInput.value.trim() || "Main Library" // <--- SAVES TO YOUR NEW COLUMN
             });
 
         if (dbError) {
-            status.innerText = "Database Error: " + dbError.message;
             console.error(dbError);
+            status.innerText = "Database Error!";
         } else {
-            status.innerText = "Success! Saved to list.";
+            status.innerText = "Success!";
             fileInput.value = '';
-            folderInput.value = ''; 
-            
-            // Reload the list to show the new file immediately
-            // (You can use window.location.reload() if you prefer a full refresh)
-            loadManagerFiles(); 
+            folderInput.value = '';
+            loadManagerFiles(); // Refresh the list
         }
     }
 }
