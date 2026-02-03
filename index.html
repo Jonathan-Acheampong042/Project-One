@@ -84,13 +84,16 @@
 </section>
 
     </main>
-<script>
+    <script>
+    // 1. Initialize Supabase
     const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
 
     let allFiles = []; 
 
-    // Helper: Colors for file types
+    // --- HELPER FUNCTIONS ---
+
     function getFileColor(fileName) {
+        if (!fileName) return 'text-slate-500 bg-slate-50';
         const name = fileName.toLowerCase();
         if (name.endsWith('.pdf')) return 'text-red-500 bg-red-50';
         if (name.endsWith('.docx') || name.endsWith('.doc')) return 'text-blue-500 bg-blue-50';
@@ -100,52 +103,44 @@
         return 'text-slate-500 bg-slate-50';
     }
 
-    // Helper: Icons
     function getFileIcon(fileName) {
+        if (!fileName) return 'draft';
         const name = fileName.toLowerCase();
         if (name.endsWith('.pdf')) return 'picture_as_pdf';
         if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'slideshow';
         if (name.endsWith('.docx') || name.endsWith('.doc')) return 'description';
         if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'table_chart';
-        if (name.endsWith('.zip')) return 'folder_zip';
+        if (name.endsWith('.zip') || name.endsWith('.rar')) return 'folder_zip';
         return 'draft'; 
     }
 
+    // --- CORE FUNCTIONS ---
+
     async function fetchFiles() {
         try {
-            const { data, error } = await _supabase.storage
-                .from('vault-files')
-                .list('', { limit: 100, recursive: true });
+            // UPDATED: Now we select from the 'files_list' TABLE instead of Storage
+            const { data, error } = await _supabase
+                .from('files_list')
+                .select('*')
+                .order('file_name', { ascending: true });
 
             if (error) throw error;
 
-            // 1. Get Real Files Only (Must have ID)
-            const realFiles = data.filter(f => f.id !== null);
-
-            // 2. Process Files & Extract Folder Names
-            const foldersSet = new Set(); // Using a Set automatically removes duplicates
-
-            allFiles = realFiles.map(file => {
-                const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
-                const displayName = file.name.split('/').pop();
-                
-                // If path has '/', grab the first part. Otherwise call it 'General'
-                const folderName = file.name.includes('/') ? file.name.split('/')[0] : 'General';
-                
-                foldersSet.add(folderName); // Save this folder name
-
+            // Process the database rows into our app's format
+            allFiles = data.map(row => {
                 return {
-                    file_name: displayName,
-                    folder: folderName, 
-                    full_path: file.name,
-                    download_url: urlData.publicUrl
+                    file_name: row.file_name,
+                    // Use the database column 'folder_name'. Default to 'Main Library' if empty.
+                    folder: row.folder_name || 'Main Library', 
+                    download_url: row.download_url
                 };
             });
 
-            // 3. Update the Dropdown Menu
+            // Extract unique folders for the dropdown
+            const foldersSet = new Set(allFiles.map(f => f.folder));
             populateFolderDropdown(Array.from(foldersSet));
 
-            // 4. Show all files initially
+            // Show all files initially
             renderFiles(allFiles); 
 
         } catch (err) {
@@ -154,10 +149,11 @@
         }
     }
 
-    // New Function: Fills the dropdown with the folder names we found
     function populateFolderDropdown(folders) {
         const select = document.getElementById('folderSelect');
-        // Sort folders alphabetically
+        // Clear existing options except "All Folders"
+        select.innerHTML = '<option value="ALL">All Folders</option>';
+        
         folders.sort().forEach(folder => {
             const option = document.createElement('option');
             option.value = folder;
@@ -166,18 +162,13 @@
         });
     }
 
-    // Combined Filter Function (Handles both Search AND Dropdown)
     function applyFilters() {
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
         const selectedFolder = document.getElementById('folderSelect').value;
 
         const filtered = allFiles.filter(file => {
-            // Check 1: Does name match search?
             const matchesSearch = file.file_name.toLowerCase().includes(searchTerm);
-            
-            // Check 2: Does folder match dropdown? (Or is "ALL" selected?)
             const matchesFolder = selectedFolder === 'ALL' || file.folder === selectedFolder;
-
             return matchesSearch && matchesFolder;
         });
 
@@ -221,7 +212,8 @@
 
     // Start App
     fetchFiles();
-</script>
+    </script>
+    
     <div class="text-center mt-10 mb-20">
     <a href="login.html" class="text-sm font-bold text-gray-400 hover:text-blue-600 transition-all underline">
         Manager Portal Access
