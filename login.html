@@ -19,6 +19,17 @@
     </div>
 
     <script>
+                async function checkAccess() {
+    const { data: { session } } = await supabase.auth.getSession();
+
+    // If no session exists, it means they aren't the manager
+    if (!session) {
+        alert("Access Denied. Returning to User Page.");
+        window.location.href = "user_index.html"; // Change to your user page filename
+    }
+}
+
+checkAccess();
         const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
 
         async function signIn() {
