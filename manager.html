@@ -92,52 +92,40 @@ async function checkAccess() {
 
 async function loadManagerFiles() {
     const container = document.getElementById('managerFileGrid');
-    container.innerHTML = "<p class='text-blue-500'>Scanning vault...</p>";
+    
+    // 1. Fetch EVERYTHING (Recursive)
+    const { data, error } = await _supabase.storage
+        .from('vault-files')
+        .list('', { limit: 100, offset: 0, sortBy: { column: 'name', order: 'asc' }, recursive: true });
 
-    try {
-        // 1. Ask Supabase for EVERYTHING (Recursive)
-        const { data, error } = await _supabase.storage
-            .from('vault-files')
-            .list('', { limit: 100, offset: 0, sortBy: { column: 'name', order: 'asc' }, recursive: true });
-
-        // 2. Alert if there is a connection error
-        if (error) {
-            alert("Supabase Error: " + error.message);
-            container.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
-            return;
-        }
-
-        // 3. Alert exactly how many items were found
-        alert(`Found ${data.length} items in the vault.`);
-        console.log("Raw Data:", data); // If you can check console
-
-        // 4. Show RAW list on screen (No filters, just names)
-        if (!data || data.length === 0) {
-            container.innerHTML = "<p class='text-red-500 font-bold'>The list returned from Supabase is EMPTY.</p>";
-            return;
-        }
-
-        container.innerHTML = data.map(item => {
-            // Check if it's a folder or file
-            const isFolder = !item.metadata; // Folders usually have no metadata
-            const typeLabel = isFolder ? "FOLDER" : "FILE";
-            
-            return `
-                <div class="p-2 border-b border-gray-200 text-xs font-mono">
-                    <span class="font-bold ${isFolder ? 'text-orange-500' : 'text-blue-600'}">[${typeLabel}]</span> 
-                    ${item.name} 
-                    <span class="text-gray-400">(ID: ${item.id})</span>
-                </div>`;
-        }).join('');
-
-    } catch (err) {
-        alert("System Crash: " + err.message);
+    if (error) {
+        container.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
+        return;
     }
+
+    if (!data || data.length === 0) {
+        container.innerHTML = "<p class='text-gray-500 text-center'>Vault is completely empty.</p>";
+        return;
+    }
+
+    // 2. Render EVERYTHING (No 'filter' command here)
+    container.innerHTML = `<p class="text-xs text-gray-400 mb-2">Raw Items Found: ${data.length}</p>`;
+    
+    container.innerHTML += data.map(item => {
+        // We will show ALL technical details to debug
+        const isFolder = !item.metadata; // If no metadata, it's a folder
+        
+        return `
+            <div class="bg-white p-3 border-b border-gray-200 text-sm font-mono">
+                <p class="font-bold text-blue-600">Name: ${item.name}</p>
+                <p class="text-gray-500">Type: ${isFolder ? "📂 FOLDER" : "📄 FILE"}</p>
+                <p class="text-xs text-gray-400">ID: ${item.id}</p>
+                <p class="text-xs text-gray-400">Size: ${item.metadata ? item.metadata.size : "N/A"}</p>
+            </div>
+        `;
+    }).join('');
 }
-
-        
-
-        
+             
 async function uploadFile() {
     const fileInput = document.getElementById('fileInput');
     const folderInput = document.getElementById('folderName');
