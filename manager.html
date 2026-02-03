@@ -133,7 +133,7 @@ async function loadManagerFiles() {
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <a href="${row.dowload_url}" target="_blank" class="text-blue-500 p-2 hover:bg-blue-50 rounded-full">
+                    <a href="${row.download_url}" target="_blank" class="text-blue-500 p-2 hover:bg-blue-50 rounded-full">
                         <span class="material-symbols-outlined">visibility</span>
                     </a>
                     
@@ -178,7 +178,7 @@ async function uploadFile() {
             .from('files_list')   // Your specific table name
             .insert({
                 file_name: file.name,         // Real file name
-                dowload_url: urlData.publicUrl // Your specific column (with the typo)
+                download_url: urlData.publicUrl // Your specific column (with the typo)
             });
 
         if (dbError) {
