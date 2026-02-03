@@ -71,7 +71,7 @@
             }
 
             status.innerText = "Uploading...";
-            const { data, error } = await _supabase.storage.from('vault_files').upload(file.name, file, { upsert: true });
+            const { data, error } = await _supabase.storage.from('vault-files ').upload(file.name, file, { upsert: true });
 
             if (error) {
                 status.innerText = "Upload failed: " + error.message;
@@ -86,11 +86,56 @@
         async function loadManagerFiles() {
             const container = document.getElementById('managerFileGrid');
             try {
-                const { data: files, error } = await _supabase.storage.from('vault_files').list();
+                const { data: files, error } = await _supabase.storage.from('vault-files ').list();
                 if (error) throw error;
 
                 if (!files || files.length === 0) {
                     container.innerHTML = "<div class='bg-gray-100 p-6 rounded-xl text-center text-gray-400'>No files found.</div>";
+                    return;
+                }
+
+                container.innerHTML = files.map(file => {
+                    const { data: urlData } = _supabase.storage.from('vault-files ').getPublicUrl(file.name);
+                    return `
+                        <div class="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm">
+                            <div class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-blue-400">description</span>
+                                <p class="font-semibold text-gray-800 text-sm truncate max-w-[200px]">${file.name}</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <a href="${urlData.publicUrl}" target="_blank" class="text-blue-500 p-2">
+                                    <span class="material-symbols-outlined">visibility</span>
+                                </a>
+                                <button onclick="deleteFile('${file.name}')" class="text-red-400 p-2">
+                                    <span class="material-symbols-outlined">delete</span>
+                                </button>
+                            </div>
+                        </div>`;
+                }).join('');
+            } catch (err) {
+                container.innerHTML = `<p class="text-red-500 text-xs">Error: ${err.message}</p>`;
+            }
+        }
+
+        // Delete Function
+        async function deleteFile(fileName) {
+            if (!confirm(`Delete ${fileName}?`)) return;
+            const { error } = await _supabase.storage.from('vault-files ').remove([fileName]);
+            if (error) alert(error.message);
+            else loadManagerFiles();
+        }
+
+        // Logout Function
+        async function signOut() {
+            await _supabase.auth.signOut();
+            window.location.href = "login.html";
+        }
+
+        // Start
+        checkAccess();
+    </script>
+</body>
+</html>
                     return;
                 }
 
