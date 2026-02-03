@@ -46,15 +46,28 @@
     </main>
 
     <script>
-        function getFileColor(fileName) {
+        // Helper function to pick the right icon
+function getFileIcon(fileName) {
+    const name = fileName.toLowerCase();
+    if (name.endsWith('.pdf')) return 'picture_as_pdf';
+    if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'slideshow';
+    if (name.endsWith('.docx') || name.endsWith('.doc')) return 'description';
+    if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'table_chart';
+    if (name.endsWith('.zip') || name.endsWith('.rar')) return 'folder_zip';
+    return 'draft'; 
+}
+
+// Helper function to pick the right colors (Fixes your color issue too!)
+function getFileColor(fileName) {
     const name = fileName.toLowerCase();
     if (name.endsWith('.pdf')) return 'text-red-500 bg-red-50';
     if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'text-orange-500 bg-orange-50';
     if (name.endsWith('.docx') || name.endsWith('.doc')) return 'text-blue-500 bg-blue-50';
     if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'text-green-500 bg-green-50';
     if (name.endsWith('.zip') || name.endsWith('.rar')) return 'text-purple-500 bg-purple-50';
-    return 'text-slate-500 bg-slate-50'; // Default gray for others
-        }
+    return 'text-slate-500 bg-slate-50';
+}
+
         
         // Initialize Supabase
         const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
@@ -112,26 +125,31 @@
 
         container.innerHTML = cleanFiles.map(file => {
     const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
+    
+    // Use the functions we just added
     const icon = getFileIcon(file.name);
-    const colorClasses = getFileColor(file.name); // Get colors
-
-    // We split colorClasses to use the text color on the icon and background on the box
+    const colorClasses = getFileColor(file.name);
     const [textColor, bgColor] = colorClasses.split(' ');
 
     return `
         <div class="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm mb-2">
             <div class="flex items-center gap-3">
-                <div class="${bgColor} p-2 rounded-lg">
+                <div class="${bgColor} p-2 rounded-lg flex items-center justify-center">
                     <span class="material-symbols-outlined ${textColor}">${icon}</span>
                 </div>
-                <p class="font-semibold text-gray-800 text-sm">${file.name}</p>
+                <p class="font-semibold text-gray-800 text-sm truncate max-w-[150px]">${file.name}</p>
             </div>
             <div class="flex items-center gap-2">
-                <a href="${urlData.publicUrl}" target="_blank" class="text-blue-500 p-2"><span class="material-symbols-outlined">visibility</span></a>
-                <button onclick="deleteFile('${file.name}')" class="text-red-400 p-2"><span class="material-symbols-outlined">delete</span></button>
+                <a href="${urlData.publicUrl}" target="_blank" class="text-blue-500 p-2">
+                    <span class="material-symbols-outlined">visibility</span>
+                </a>
+                <button onclick="deleteFile('${file.name}')" class="text-red-400 p-2">
+                    <span class="material-symbols-outlined">delete</span>
+                </button>
             </div>
         </div>`;
 }).join('');
+        
     } catch (err) {
         container.innerHTML = `<p class="text-red-500">Error: ${err.message}</p>`;
     }
