@@ -103,40 +103,33 @@ checkAccess();
         }
 
         // 3. UPLOAD LOGIC
-        async function uploadToSupabase() {
-            // Inside uploadToSupabase() in manager.html
-            const { data: { session } } = await _supabase.auth.getSession();
-            if (!session) return status.innerText = "Error: You must be logged in to upload.";
-            
-            const fileInput = document.getElementById('fileInput');
-            const status = document.getElementById('status');
-            const file = fileInput.files[0];
+        async function uploadFile() {
+    const fileInput = document.getElementById('file-input'); // Make sure this ID matches your input
+    const file = fileInput.files[0];
 
-            if (!file) return alert("Select a file first!");
-            status.innerText = "Processing upload...";
+    if (!file) {
+        alert("Please choose a file first!");
+        return;
+    }
 
-            const filePath = `uploads/${Date.now()}_${file.name}`;
-            
-            // Upload to Storage
-            const { data: sData, error: sErr } = await _supabase.storage.from('vault-files').upload(filePath, file);
-            if (sErr) return status.innerText = "Storage Error: " + sErr.message;
+    // 1. Upload to Supabase
+    const { data, error } = await _supabase.storage
+        .from('vault_files')
+        .upload(file.name, file);
 
-            // Get URL
-            const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(filePath);
-
-            // Save to Table
-            const { error: dbErr } = await _supabase.from('files_list').insert([
-                { file_name: file.name, download_url: urlData.publicUrl }
-            ]);
-
-            if (dbErr) {
-                status.innerText = "Database Error: " + dbErr.message;
-            } else {
-                status.innerText = "✅ Successfully published!";
-                fileInput.value = "";
-                fetchAndDisplayFiles(); // Refresh the list below
-            }
-        }
+    if (error) {
+        alert("Upload failed: " + error.message);
+    } else {
+        alert("File uploaded successfully!");
+        
+        // --- THE CRITICAL FIX ---
+        // After success, call the function that draws the file list!
+        loadManagerFiles(); 
+        
+        // Clear the input so it's ready for the next file
+        fileInput.value = ''; 
+    }
+}
 
         // 4. DISPLAY LOGIC (The List)
         async function fetchAndDisplayFiles() {
@@ -185,54 +178,27 @@ checkAccess();
     return 'draft'; // Default icon for other types
 }
 async function loadManagerFiles() {
-    // Note: Ensure your Supabase client is initialized as _supabase
-    const { data, error } = await _supabase
-        .storage
-        .from('vault_files') // Using your bucket name here
-        .list('', {
-            limit: 100,
-            sortBy: { column: 'created_at', order: 'desc' }
-        });
+    const { data, error } = await _supabase.storage.from('vault_files').list();
 
-    if (error) {
-        console.error('Error fetching files:', error.message);
-        document.getElementById('file-list').innerHTML = '<p class="text-red-500">Error loading files.</p>';
-        return;
-    }
+    // Find the div that currently says "No files uploaded yet"
+    const displayArea = document.getElementById('file-list-container'); 
 
-    const fileContainer = document.getElementById('file-list');
-    fileContainer.innerHTML = ''; 
-
-    if (data.length === 0) {
-        fileContainer.innerHTML = '<p class="text-gray-500 text-center">No files found in the vault.</p>';
-        return;
-    }
-
-    data.forEach(file => {
-        // Get the link so the manager can view the file
-        const { data: urlData } = _supabase.storage
-            .from('vault_files')
-            .getPublicUrl(file.name);
-
-        fileContainer.innerHTML += `
-            <div class="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl shadow-sm mb-3">
-                <div class="flex items-center space-x-3">
-                    <div class="bg-blue-100 p-2 rounded-lg text-blue-600">
-                        📄
-                    </div>
-                    <span class="font-semibold text-slate-700">${file.name}</span>
+    if (data && data.length > 0) {
+        displayArea.innerHTML = ''; // Remove the "No files" message
+        
+        data.forEach(file => {
+            const { data: urlData } = _supabase.storage.from('vault_files').getPublicUrl(file.name);
+            
+            displayArea.innerHTML += `
+                <div class="flex items-center justify-between p-3 bg-white border rounded-lg mb-2 shadow-sm">
+                    <span class="text-sm font-medium text-gray-700">${file.name}</span>
+                    <a href="${urlData.publicUrl}" target="_blank" class="text-blue-600 text-sm font-bold">View</a>
                 </div>
-                <a href="${urlData.publicUrl}" target="_blank" 
-                   class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-all">
-                    View
-                </a>
-            </div>
-        `;
-    });
+            `;
+        });
+    }
 }
 
-// Call the function
-loadManagerFiles();
         
     </script>
 </body>
