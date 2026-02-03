@@ -62,6 +62,16 @@
 
     </main>
 <script>
+    function getFileColor(fileName) {
+    const name = fileName.toLowerCase();
+    if (name.endsWith('.pdf')) return 'text-red-500 bg-red-50';
+    if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'text-orange-500 bg-orange-50';
+    if (name.endsWith('.docx') || name.endsWith('.doc')) return 'text-blue-500 bg-blue-50';
+    if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'text-green-500 bg-green-50';
+    if (name.endsWith('.zip') || name.endsWith('.rar')) return 'text-purple-500 bg-purple-50';
+    return 'text-slate-500 bg-slate-50'; // Default gray for others
+    }
+    
     const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
 
 let allFiles = []; 
