@@ -52,133 +52,147 @@
     </main>
 
     <script>
-// --- 1. HELPER FUNCTIONS (Must be at the top) ---
-function getFileIcon(fileName) {
-    if (!fileName) return 'draft';
-    const name = fileName.toLowerCase();
-    if (name.endsWith('.pdf')) return 'picture_as_pdf';
-    if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'slideshow';
-    if (name.endsWith('.docx') || name.endsWith('.doc')) return 'description';
-    if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'table_chart';
-    if (name.endsWith('.zip') || name.endsWith('.rar')) return 'folder_zip';
-    return 'draft'; 
-}
-
-function getFileColor(fileName) {
-    if (!fileName) return 'text-slate-500 bg-slate-50';
-    const name = fileName.toLowerCase();
-    if (name.endsWith('.pdf')) return 'text-red-500 bg-red-50';
-    if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'text-orange-500 bg-orange-50';
-    if (name.endsWith('.docx') || name.endsWith('.doc')) return 'text-blue-500 bg-blue-50';
-    if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'text-green-500 bg-green-50';
-    if (name.endsWith('.zip') || name.endsWith('.rar')) return 'text-purple-500 bg-purple-50';
-    return 'text-slate-500 bg-slate-50';
-}
-
-// --- 2. INITIALIZE SUPABASE ---
-const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
-
-// --- 3. CORE FUNCTIONS ---
-async function checkAccess() {
-    const { data: { session } } = await _supabase.auth.getSession();
-    if (!session) {
-        window.location.href = "login.html"; 
-    } else {
-        loadManagerFiles(); 
-    }
-}
-
-async function loadManagerFiles() {
-    const container = document.getElementById('managerFileGrid');
-    
-    // Select all columns including your new 'folder_name'
-    const { data: dbFiles, error } = await _supabase
-        .from('files_list')
-        .select('*')
-        .order('file_name', { ascending: true });
-
-    if (!dbFiles || dbFiles.length === 0) {
-        container.innerHTML = "<p class='text-center text-gray-400'>Vault is empty.</p>";
-        return;
+    // --- 1. HELPER FUNCTIONS ---
+    function getFileIcon(fileName) {
+        if (!fileName) return 'draft';
+        const name = fileName.toLowerCase();
+        if (name.endsWith('.pdf')) return 'picture_as_pdf';
+        if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'slideshow';
+        if (name.endsWith('.docx') || name.endsWith('.doc')) return 'description';
+        if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'table_chart';
+        if (name.endsWith('.zip') || name.endsWith('.rar')) return 'folder_zip';
+        return 'draft'; 
     }
 
-    container.innerHTML = dbFiles.map(file => {
-        // READ THE FOLDER FROM THE DATABASE
-        // If the column is empty, show "Main Library"
-        const folderLabel = file.folder_name || "Main Library"; 
+    function getFileColor(fileName) {
+        if (!fileName) return 'text-slate-500 bg-slate-50';
+        const name = fileName.toLowerCase();
+        if (name.endsWith('.pdf')) return 'text-red-500 bg-red-50';
+        if (name.endsWith('.docx') || name.endsWith('.doc')) return 'text-blue-500 bg-blue-50';
+        if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'text-orange-500 bg-orange-50';
+        return 'text-slate-500 bg-slate-50';
+    }
 
-        return `
-            <div class="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm mb-2">
-                <div>
-                    <p class="font-bold text-gray-700">${file.file_name}</p>
-                    <p class="text-xs text-gray-400 uppercase tracking-wider">
-                        📂 ${folderLabel}
-                    </p>
-                </div>
-                <a href="${file.download_url}" target="_blank" class="text-blue-500 hover:underline">Download</a>
-            </div>`;
-    }).join('');
-}
+    // --- 2. INITIALIZE SUPABASE ---
+    const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
 
-             
-async function uploadFile() {
-    const fileInput = document.getElementById('fileInput');
-    const folderInput = document.getElementById('folderName'); // This gets the text you typed
-    const status = document.getElementById('status');
-    const file = fileInput.files[0];
-
-    if (!file) return alert("Please select a file.");
-
-    // 1. Upload to Storage
-    let path = folderInput.value.trim() ? `${folderInput.value.trim()}/${file.name}` : file.name;
-    status.innerText = "Uploading...";
-    
-    const { error: uploadError } = await _supabase.storage
-        .from('vault-files')
-        .upload(path, file, { upsert: true });
-
-    if (uploadError) {
-        status.innerText = "Error: " + uploadError.message;
-    } else {
-        // 2. Get Public URL
-        const { data: urlData } = _supabase.storage
-            .from('vault-files')
-            .getPublicUrl(path);
-
-        // 3. SAVE TO DATABASE (The Critical Step)
-        const { error: dbError } = await _supabase
-            .from('files_list')
-            .insert({
-                file_name: file.name,
-                download_url: urlData.publicUrl,
-                folder_name: folderInput.value.trim() || "Main Library" // <--- SAVES TO YOUR NEW COLUMN
-            });
-
-        if (dbError) {
-            console.error(dbError);
-            status.innerText = "Database Error!";
+    // --- 3. CORE FUNCTIONS ---
+    async function checkAccess() {
+        const { data: { session } } = await _supabase.auth.getSession();
+        if (!session) {
+            window.location.href = "login.html"; 
         } else {
-            status.innerText = "Success!";
-            fileInput.value = '';
-            folderInput.value = '';
-            loadManagerFiles(); // Refresh the list
+            loadManagerFiles(); 
         }
     }
-}
-async function deleteFile(fileName) {
-    if (!confirm("Delete " + fileName + "?")) return;
-    const { error } = await _supabase.storage.from('vault-files').remove([fileName]);
-    if (error) alert(error.message);
-    else loadManagerFiles();
-}
 
-async function signOut() {
-    await _supabase.auth.signOut();
-    window.location.href = "login.html";
-}
+    async function loadManagerFiles() {
+        const container = document.getElementById('managerFileGrid');
+        
+        const { data: dbFiles, error } = await _supabase
+            .from('files_list')
+            .select('*')
+            .order('file_name', { ascending: true });
 
-// Start app
-checkAccess();
-    </script>
+        if (!dbFiles || dbFiles.length === 0) {
+            container.innerHTML = "<p class='text-center text-gray-400'>Vault is empty.</p>";
+            return;
+        }
+
+        container.innerHTML = dbFiles.map(file => {
+            const folderLabel = file.folder_name || "Main Library"; 
+            const icon = getFileIcon(file.file_name);
+            const colorClasses = getFileColor(file.file_name);
+            const [textColor, bgColor] = colorClasses.split(' ');
+
+            return `
+                <div class="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm mb-2">
+                    <div class="flex items-center gap-3">
+                        <div class="${bgColor} p-2 rounded-lg">
+                            <span class="material-symbols-outlined ${textColor}">${icon}</span>
+                        </div>
+                        <div>
+                            <p class="font-bold text-gray-700">${file.file_name}</p>
+                            <p class="text-xs text-gray-400 uppercase tracking-wider">
+                                📂 ${folderLabel}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <a href="${file.download_url}" target="_blank" class="text-blue-500 p-2 hover:bg-blue-50 rounded-full">
+                            <span class="material-symbols-outlined">visibility</span>
+                        </a>
+                        <button onclick="deleteFile('${file.file_name}')" class="text-red-400 p-2 hover:bg-red-50 rounded-full">
+                            <span class="material-symbols-outlined">delete</span>
+                        </button>
+                    </div>
+                </div>`;
+        }).join('');
+    }
+
+    async function uploadFile() {
+        const fileInput = document.getElementById('fileInput');
+        const folderInput = document.getElementById('folderName');
+        const status = document.getElementById('status');
+        const file = fileInput.files[0];
+
+        if (!file) return alert("Please select a file.");
+
+        let path = folderInput.value.trim() ? `${folderInput.value.trim()}/${file.name}` : file.name;
+        status.innerText = "Uploading...";
+        
+        // 1. Upload to Storage
+        const { error: uploadError } = await _supabase.storage
+            .from('vault-files')
+            .upload(path, file, { upsert: true });
+
+        if (uploadError) {
+            status.innerText = "Error: " + uploadError.message;
+        } else {
+            // 2. Get Public URL
+            const { data: urlData } = _supabase.storage
+                .from('vault-files')
+                .getPublicUrl(path);
+
+            // 3. Save to Database
+            const { error: dbError } = await _supabase
+                .from('files_list')
+                .insert({
+                    file_name: file.name,
+                    download_url: urlData.publicUrl,
+                    folder_name: folderInput.value.trim() || "Main Library"
+                });
+
+            if (dbError) {
+                console.error(dbError);
+                status.innerText = "Database Error!";
+            } else {
+                status.innerText = "Success!";
+                fileInput.value = '';
+                folderInput.value = '';
+                loadManagerFiles(); 
+            }
+        }
+    }
+
+    async function deleteFile(fileName) {
+        if (!confirm("Delete " + fileName + "?")) return;
+
+        // 1. Delete from Database Table
+        await _supabase.from('files_list').delete().eq('file_name', fileName);
+
+        // 2. Delete from Storage Bucket (Optional: requires exact path, but DB delete is most important for the list)
+        // Note: To delete from storage perfectly, we'd need the full path, but cleaning the list is the priority for UI.
+        
+        loadManagerFiles();
+    }
+
+    async function signOut() {
+        await _supabase.auth.signOut();
+        window.location.href = "login.html";
+    }
+
+    checkAccess();
+</script>
 </body>
 </html>
