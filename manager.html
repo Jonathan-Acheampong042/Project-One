@@ -92,66 +92,49 @@ async function checkAccess() {
 
 async function loadManagerFiles() {
     const container = document.getElementById('managerFileGrid');
+    container.innerHTML = "<p class='text-blue-500'>Scanning vault...</p>";
+
     try {
-        // 1. Get ALL items recursively
+        // 1. Ask Supabase for EVERYTHING (Recursive)
         const { data, error } = await _supabase.storage
             .from('vault-files')
-            .list('', { limit: 100, recursive: true });
+            .list('', { limit: 100, offset: 0, sortBy: { column: 'name', order: 'asc' }, recursive: true });
 
-        if (error) throw error;
-
-        // 2. THE FIX: Filter by ID, not by name.
-        // If it has an ID, it's a real file. If ID is null, it's a folder.
-        const realFiles = data.filter(f => f.id !== null);
-
-        if (!realFiles || realFiles.length === 0) {
-            container.innerHTML = `
-                <div class="text-center py-8 text-gray-500">
-                    <p>No files found.</p>
-                    <p class="text-xs text-red-400 mt-2">(Debug: Found ${data.length} raw items, but 0 real files)</p>
-                </div>`;
+        // 2. Alert if there is a connection error
+        if (error) {
+            alert("Supabase Error: " + error.message);
+            container.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
             return;
         }
 
-        container.innerHTML = realFiles.map(file => {
-            const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
+        // 3. Alert exactly how many items were found
+        alert(`Found ${data.length} items in the vault.`);
+        console.log("Raw Data:", data); // If you can check console
+
+        // 4. Show RAW list on screen (No filters, just names)
+        if (!data || data.length === 0) {
+            container.innerHTML = "<p class='text-red-500 font-bold'>The list returned from Supabase is EMPTY.</p>";
+            return;
+        }
+
+        container.innerHTML = data.map(item => {
+            // Check if it's a folder or file
+            const isFolder = !item.metadata; // Folders usually have no metadata
+            const typeLabel = isFolder ? "FOLDER" : "FILE";
             
-            // Extract folder and file name for display
-            const pathParts = file.name.split('/');
-            const fileName = pathParts.pop(); // The last part is the name
-            const folderName = pathParts.length > 0 ? pathParts.join('/') : 'Main Library';
-
-            const icon = getFileIcon(fileName);
-            const colorClasses = getFileColor(fileName);
-            const [textColor, bgColor] = colorClasses.split(' ');
-
             return `
-                <div class="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm mb-2">
-                    <div class="flex items-center gap-3">
-                        <div class="${bgColor} p-2 rounded-lg">
-                            <span class="material-symbols-outlined ${textColor}">${icon}</span>
-                        </div>
-                        <div class="overflow-hidden">
-                            <p class="font-semibold text-gray-800 text-sm truncate max-w-[150px]">${fileName}</p>
-                            <p class="text-[10px] text-gray-400 uppercase tracking-wide">
-                                <span class="material-symbols-outlined text-[10px] align-middle">folder</span> ${folderName}
-                            </p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <a href="${urlData.publicUrl}" target="_blank" class="text-blue-500 p-2 hover:bg-blue-50 rounded-full">
-                            <span class="material-symbols-outlined">visibility</span>
-                        </a>
-                        <button onclick="deleteFile('${file.name}')" class="text-red-400 p-2 hover:bg-red-50 rounded-full">
-                            <span class="material-symbols-outlined">delete</span>
-                        </button>
-                    </div>
+                <div class="p-2 border-b border-gray-200 text-xs font-mono">
+                    <span class="font-bold ${isFolder ? 'text-orange-500' : 'text-blue-600'}">[${typeLabel}]</span> 
+                    ${item.name} 
+                    <span class="text-gray-400">(ID: ${item.id})</span>
                 </div>`;
         }).join('');
+
     } catch (err) {
-        container.innerHTML = `<p class="text-red-500 text-center font-bold">Error: ${err.message}</p>`;
+        alert("System Crash: " + err.message);
     }
 }
+
         
 
         
