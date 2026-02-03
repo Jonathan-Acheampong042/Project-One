@@ -178,7 +178,12 @@ checkAccess();
     return 'draft'; // Default icon for other types
 }
 async function loadManagerFiles() {
-    const { data, error } = await _supabase.storage.from('vault_files').list();
+    // WRONG (if variable is _supabase)
+const { data, error } = await supabase.storage... 
+
+// RIGHT
+const { data, error } = await _supabase.storage.from('vault_files').list();
+
 
     // Find the div that currently says "No files uploaded yet"
     const displayArea = document.getElementById('file-list-container'); 
