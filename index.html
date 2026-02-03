@@ -85,15 +85,11 @@
 
     </main>
     <script>
-    // 1. Initialize Supabase
     const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
 
     let allFiles = []; 
 
-    // --- HELPER FUNCTIONS ---
-
     function getFileColor(fileName) {
-        if (!fileName) return 'text-slate-500 bg-slate-50';
         const name = fileName.toLowerCase();
         if (name.endsWith('.pdf')) return 'text-red-500 bg-red-50';
         if (name.endsWith('.docx') || name.endsWith('.doc')) return 'text-blue-500 bg-blue-50';
@@ -104,21 +100,18 @@
     }
 
     function getFileIcon(fileName) {
-        if (!fileName) return 'draft';
         const name = fileName.toLowerCase();
         if (name.endsWith('.pdf')) return 'picture_as_pdf';
         if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'slideshow';
         if (name.endsWith('.docx') || name.endsWith('.doc')) return 'description';
         if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'table_chart';
-        if (name.endsWith('.zip') || name.endsWith('.rar')) return 'folder_zip';
+        if (name.endsWith('.zip')) return 'folder_zip';
         return 'draft'; 
     }
 
-    // --- CORE FUNCTIONS ---
-
     async function fetchFiles() {
         try {
-            // UPDATED: Now we select from the 'files_list' TABLE instead of Storage
+            // UPDATED: Now looks at the DATABASE TABLE, not Storage
             const { data, error } = await _supabase
                 .from('files_list')
                 .select('*')
@@ -126,21 +119,19 @@
 
             if (error) throw error;
 
-            // Process the database rows into our app's format
             allFiles = data.map(row => {
                 return {
                     file_name: row.file_name,
-                    // Use the database column 'folder_name'. Default to 'Main Library' if empty.
-                    folder: row.folder_name || 'Main Library', 
+                    folder: row.folder_name || 'Main Library', // Uses the column we made
                     download_url: row.download_url
                 };
             });
 
-            // Extract unique folders for the dropdown
+            // Setup Dropdown
             const foldersSet = new Set(allFiles.map(f => f.folder));
             populateFolderDropdown(Array.from(foldersSet));
 
-            // Show all files initially
+            // Show Files
             renderFiles(allFiles); 
 
         } catch (err) {
@@ -151,7 +142,6 @@
 
     function populateFolderDropdown(folders) {
         const select = document.getElementById('folderSelect');
-        // Clear existing options except "All Folders"
         select.innerHTML = '<option value="ALL">All Folders</option>';
         
         folders.sort().forEach(folder => {
@@ -210,9 +200,9 @@
         }).join('');
     }
 
-    // Start App
     fetchFiles();
     </script>
+    
     
     <div class="text-center mt-10 mb-20">
     <a href="login.html" class="text-sm font-bold text-gray-400 hover:text-blue-600 transition-all underline">
