@@ -84,6 +84,10 @@
 
         // 3. UPLOAD LOGIC
         async function uploadToSupabase() {
+            // Inside uploadToSupabase() in manager.html
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (!session) return status.innerText = "Error: You must be logged in to upload.";
+            
             const fileInput = document.getElementById('fileInput');
             const status = document.getElementById('status');
             const file = fileInput.files[0];
