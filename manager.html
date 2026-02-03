@@ -114,7 +114,7 @@ async function loadManagerFiles() {
 
     // 3. Generate the HTML for the list
     container.innerHTML = dbFiles.map(row => {
-        // We use the columns from your table: 'file_name' and 'dowload_url'
+        // We use the columns from your table: 'file_name' and 'download_url'
         const displayName = row.file_name;
         
         // Setup icons/colors (using your helper functions)
