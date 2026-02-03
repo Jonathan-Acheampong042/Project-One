@@ -22,16 +22,36 @@
             <h2 class="text-3xl font-black mb-2">Available Resources</h2>
             <p class="text-gray-500">Download the files shared by your manager.</p>
         </div>
-<div class="max-w-xl mx-auto mb-10 relative group">
-    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-        <span class="material-symbols-outlined text-gray-400">search</span>
+<div class="max-w-2xl mx-auto mb-10 flex flex-col sm:flex-row gap-4">
+    
+    <div class="relative flex-grow group">
+        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <span class="material-symbols-outlined text-gray-400">search</span>
+        </div>
+        <input 
+            id="searchInput"
+            oninput="applyFilters()" 
+            class="block w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 shadow-sm transition-all" 
+            placeholder="Search documents..." 
+            type="text"
+        />
     </div>
-    <input 
-        oninput="filterFiles(this.value)" 
-        class="block w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 shadow-sm transition-all" 
-        placeholder="Search for documents..." 
-        type="text"
-    />
+
+    <div class="relative min-w-[150px]">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span class="material-symbols-outlined text-gray-500">folder</span>
+        </div>
+        <select 
+            id="folderSelect" 
+            onchange="applyFilters()"
+            class="block w-full pl-10 pr-8 py-3 bg-white border border-gray-200 rounded-xl text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/50 shadow-sm appearance-none cursor-pointer hover:bg-gray-50 transition-all">
+            <option value="ALL">All Folders</option>
+            </select>
+        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <span class="material-symbols-outlined text-gray-400 text-sm">expand_more</span>
+        </div>
+    </div>
+
 </div>
 
         <div id="fileGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -62,97 +82,142 @@
 
     </main>
 <script>
-    function getFileColor(fileName) {
-    const name = fileName.toLowerCase();
-    if (name.endsWith('.pdf')) return 'text-red-500 bg-red-50';
-    if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'text-orange-500 bg-orange-50';
-    if (name.endsWith('.docx') || name.endsWith('.doc')) return 'text-blue-500 bg-blue-50';
-    if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'text-green-500 bg-green-50';
-    if (name.endsWith('.zip') || name.endsWith('.rar')) return 'text-purple-500 bg-purple-50';
-    return 'text-slate-500 bg-slate-50'; // Default gray for others
-    }
-    
     const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
 
-let allFiles = []; 
+    let allFiles = []; 
 
-async function fetchFiles() {
-    try {
-        const { data, error } = await _supabase.storage
-            .from('vault-files')
-            .list('', { limit: 100, recursive: true });
+    // Helper: Colors for file types
+    function getFileColor(fileName) {
+        const name = fileName.toLowerCase();
+        if (name.endsWith('.pdf')) return 'text-red-500 bg-red-50';
+        if (name.endsWith('.docx') || name.endsWith('.doc')) return 'text-blue-500 bg-blue-50';
+        if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'text-orange-500 bg-orange-50';
+        if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'text-green-500 bg-green-50';
+        if (name.endsWith('.zip') || name.endsWith('.rar')) return 'text-purple-500 bg-purple-50';
+        return 'text-slate-500 bg-slate-50';
+    }
 
-        if (error) throw error;
+    // Helper: Icons
+    function getFileIcon(fileName) {
+        const name = fileName.toLowerCase();
+        if (name.endsWith('.pdf')) return 'picture_as_pdf';
+        if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'slideshow';
+        if (name.endsWith('.docx') || name.endsWith('.doc')) return 'description';
+        if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'table_chart';
+        if (name.endsWith('.zip')) return 'folder_zip';
+        return 'draft'; 
+    }
 
-        // Filter: Real files only (Must have an ID)
-        const realFiles = data.filter(f => f.id !== null);
+    async function fetchFiles() {
+        try {
+            const { data, error } = await _supabase.storage
+                .from('vault-files')
+                .list('', { limit: 100, recursive: true });
 
-        allFiles = realFiles.map(file => {
-            const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
-            const displayName = file.name.split('/').pop();
-            const folderName = file.name.includes('/') ? file.name.split('/')[0] : 'Main Library';
+            if (error) throw error;
+
+            // 1. Get Real Files Only (Must have ID)
+            const realFiles = data.filter(f => f.id !== null);
+
+            // 2. Process Files & Extract Folder Names
+            const foldersSet = new Set(); // Using a Set automatically removes duplicates
+
+            allFiles = realFiles.map(file => {
+                const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
+                const displayName = file.name.split('/').pop();
+                
+                // If path has '/', grab the first part. Otherwise call it 'General'
+                const folderName = file.name.includes('/') ? file.name.split('/')[0] : 'General';
+                
+                foldersSet.add(folderName); // Save this folder name
+
+                return {
+                    file_name: displayName,
+                    folder: folderName, 
+                    full_path: file.name,
+                    download_url: urlData.publicUrl
+                };
+            });
+
+            // 3. Update the Dropdown Menu
+            populateFolderDropdown(Array.from(foldersSet));
+
+            // 4. Show all files initially
+            renderFiles(allFiles); 
+
+        } catch (err) {
+            console.error("Fetch Error:", err);
+            document.getElementById('fileGrid').innerHTML = "<p class='col-span-full text-center text-red-400'>Unable to load library.</p>";
+        }
+    }
+
+    // New Function: Fills the dropdown with the folder names we found
+    function populateFolderDropdown(folders) {
+        const select = document.getElementById('folderSelect');
+        // Sort folders alphabetically
+        folders.sort().forEach(folder => {
+            const option = document.createElement('option');
+            option.value = folder;
+            option.textContent = folder;
+            select.appendChild(option);
+        });
+    }
+
+    // Combined Filter Function (Handles both Search AND Dropdown)
+    function applyFilters() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const selectedFolder = document.getElementById('folderSelect').value;
+
+        const filtered = allFiles.filter(file => {
+            // Check 1: Does name match search?
+            const matchesSearch = file.file_name.toLowerCase().includes(searchTerm);
             
-            return {
-                file_name: displayName,
-                folder: folderName, // Saved so we can search by folder later if we want
-                full_path: file.name,
-                download_url: urlData.publicUrl
-            };
+            // Check 2: Does folder match dropdown? (Or is "ALL" selected?)
+            const matchesFolder = selectedFolder === 'ALL' || file.folder === selectedFolder;
+
+            return matchesSearch && matchesFolder;
         });
 
-        renderFiles(allFiles); 
-    } catch (err) {
-        console.error("Fetch Error:", err);
-    }
-}
-    
-
-function renderFiles(filesToDisplay) {
-    const grid = document.getElementById('fileGrid');
-    if (filesToDisplay.length === 0) {
-        grid.innerHTML = `<p class="text-gray-400 col-span-full text-center py-10">No files shared yet.</p>`;
-        return;
+        renderFiles(filtered);
     }
 
-    grid.innerHTML = filesToDisplay.map(file => {
-    const icon = getFileIcon(file.file_name);
-    const colorClasses = getFileColor(file.file_name); // Get the dynamic color
-    
-    return `
-        <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all">
-            <div class="aspect-square ${colorClasses} flex items-center justify-center rounded-lg mb-4">
-                <span class="material-symbols-outlined text-5xl">${icon}</span>
-            </div>
-            <h3 class="font-bold text-gray-900 truncate mb-4">${file.file_name}</h3>
-            <a href="${file.download_url}" target="_blank" class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium transition-colors">
-                <span class="material-symbols-outlined text-[20px]">visibility</span>
-                View File
-            </a>
-        </div>
-    `;
-}).join('');
-}
+    function renderFiles(filesToDisplay) {
+        const grid = document.getElementById('fileGrid');
+        
+        if (filesToDisplay.length === 0) {
+            grid.innerHTML = `<p class="text-gray-400 col-span-full text-center py-10">No matching files found.</p>`;
+            return;
+        }
 
-function filterFiles(searchTerm) {
-    const filtered = allFiles.filter(file => 
-        file.file_name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    renderFiles(filtered);
-}
+        grid.innerHTML = filesToDisplay.map(file => {
+            const icon = getFileIcon(file.file_name);
+            const colorClasses = getFileColor(file.file_name);
+            const [textColor, bgColor] = colorClasses.split(' ');
 
-function getFileIcon(fileName) {
-    const name = fileName.toLowerCase();
-    if (name.endsWith('.pdf')) return 'picture_as_pdf';
-    if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'slideshow';
-    if (name.endsWith('.docx') || name.endsWith('.doc')) return 'description';
-    if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'table_chart';
-    if (name.endsWith('.zip') || name.endsWith('.rar')) return 'folder_zip';
-    return 'draft';
-}
+            return `
+                <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all group">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="aspect-square w-14 ${bgColor} flex items-center justify-center rounded-lg">
+                            <span class="material-symbols-outlined text-3xl ${textColor}">${icon}</span>
+                        </div>
+                        <span class="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded uppercase tracking-wider">
+                            ${file.folder}
+                        </span>
+                    </div>
+                    
+                    <h3 class="font-bold text-gray-900 truncate mb-2" title="${file.file_name}">${file.file_name}</h3>
+                    
+                    <a href="${file.download_url}" target="_blank" class="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-blue-600 text-white py-2.5 rounded-lg font-medium transition-colors text-sm">
+                        <span class="material-symbols-outlined text-[18px]">download</span>
+                        Download
+                    </a>
+                </div>
+            `;
+        }).join('');
+    }
 
-// Start the process
-fetchFiles();
-    
+    // Start App
+    fetchFiles();
 </script>
     <div class="text-center mt-10 mb-20">
     <a href="login.html" class="text-sm font-bold text-gray-400 hover:text-blue-600 transition-all underline">
