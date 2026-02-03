@@ -156,54 +156,47 @@ async function uploadFile() {
 
     if (!file) return alert("Please select a file.");
 
-    // Create the path: "folder/subfolder/filename.ext"
+    // 1. Prepare the path
     let folderPath = folderInput.value.trim();
     let finalPath = folderPath ? `${folderPath}/${file.name}` : file.name;
 
     status.innerText = "Uploading to " + (folderPath || "Root") + "...";
     
-    const { error } = await _supabase.storage
+    // 2. Upload to Storage Bucket
+    const { error: uploadError } = await _supabase.storage
         .from('vault-files')
         .upload(finalPath, file, { upsert: true });
 
-    if (error) {
-        status.innerText = "Error: " + error.message;
+    if (uploadError) {
+        status.innerText = "Upload Error: " + uploadError.message;
+        console.error(uploadError);
     } else {
-        status.innerText = "Success!";
-        fileInput.value = '';
-        folderInput.value = ''; // Clear folder name after upload
-        loadManagerFiles();
+        // 3. GET Public URL
+        const { data: urlData } = _supabase.storage
+            .from('vault-files')
+            .getPublicUrl(finalPath);
+
+        // 4. INSERT into Database Table ('files_list')
+        const { error: dbError } = await _supabase
+            .from('files_list')   // Your specific table name
+            .insert({
+                file_name: file.name,         // Real file name
+                dowload_url: urlData.publicUrl // Your specific column (with the typo)
+            });
+
+        if (dbError) {
+            status.innerText = "Database Error: " + dbError.message;
+            console.error(dbError);
+        } else {
+            status.innerText = "Success! Saved to list.";
+            fileInput.value = '';
+            folderInput.value = ''; 
+            
+            // Reload the list to show the new file immediately
+            // (You can use window.location.reload() if you prefer a full refresh)
+            loadManagerFiles(); 
+        }
     }
-    // 1. Upload the file to Storage
-const { data: fileData, error: uploadError } = await supabase
-  .storage
-  .from('vault-files')
-  .upload('folder/filename.pdf', file);
-
-if (uploadError) {
-  console.log('Upload failed:', uploadError);
-  return; 
-}
-
-// --- THIS IS THE MISSING PART ---
-
-// 2. Get the Public URL (so users can download it)
-const { data: { publicUrl } } = supabase
-  .storage
-  .from('vault-files')
-  .getPublicUrl('folder/filename.pdf');
-
-// 3. Save the details to your Database Table
-const { error: dbError } = await supabase
-  .from('library_files') // Your table name
-  .insert({
-    file_name: 'Math Notes',
-    folder_name: 'Documents/Math',
-    file_url: publicUrl // Save the link so you can show it later
-  });
-
-if (dbError) console.log('Database save failed:', dbError);
-    
 }
 async function deleteFile(fileName) {
     if (!confirm("Delete " + fileName + "?")) return;
