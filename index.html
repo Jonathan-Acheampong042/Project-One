@@ -77,38 +77,45 @@
 let allFiles = []; 
 
 async function fetchFiles() {
-    // We add { recursive: true } to look inside all folders
-    const { data: storageFiles, error } = await _supabase.storage
-        .from('vault-files')
-        .list('', { recursive: true });
+    try {
+        // recursive: true lets us see inside folders
+        const { data: storageFiles, error } = await _supabase.storage
+            .from('vault-files')
+            .list('', { recursive: true });
 
-    if (error) {
-        console.error("Error:", error.message);
-        return;
-    }
+        if (error) throw error;
 
-    if (storageFiles) {
-        // Filter out the 'uploads' placeholder and actual folder objects
-        // Folders have no 'metadata' or 'id' in the storage list
-        const filtered = storageFiles.filter(file => 
-            file.name !== 'uploads' && 
-            file.name !== '.emptyFolderPlaceholder' &&
-            file.metadata // This ensures we only show actual files, not folders
-        );
+        if (storageFiles) {
+            // FILTERING LOGIC:
+            // 1. Must have an 'id' (Folders usually have null ID)
+            // 2. Name must not be just 'uploads' (The folder itself)
+            // 3. Name must not be the placeholder
+            const realFilesOnly = storageFiles.filter(file => 
+                file.id !== null && 
+                file.name !== 'uploads' && 
+                !file.name.endsWith('.emptyFolderPlaceholder')
+            );
 
-        allFiles = filtered.map(file => {
-            const { data: urlData } = _supabase.storage
-                .from('vault-files')
-                .getPublicUrl(file.name);
-            return {
-                file_name: file.name,
-                download_url: urlData.publicUrl
-            };
-        });
+            allFiles = realFilesOnly.map(file => {
+                const { data: urlData } = _supabase.storage
+                    .from('vault-files')
+                    .getPublicUrl(file.name);
+                
+                // .split('/').pop() ensures we show "math.pdf" instead of "uploads/math.pdf"
+                return {
+                    file_name: file.name.split('/').pop(), 
+                    full_path: file.name,
+                    download_url: urlData.publicUrl
+                };
+            });
 
-        renderFiles(allFiles); 
+            renderFiles(allFiles); 
+        }
+    } catch (err) {
+        console.error("Error loading files:", err.message);
     }
 }
+    
 
 function renderFiles(filesToDisplay) {
     const grid = document.getElementById('fileGrid');
