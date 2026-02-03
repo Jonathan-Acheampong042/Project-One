@@ -109,25 +109,39 @@ async function loadManagerFiles() {
         }
 
         container.innerHTML = cleanFiles.map(file => {
-            const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
-            const icon = getFileIcon(file.name);
-            const colorClasses = getFileColor(file.name);
-            const [textColor, bgColor] = colorClasses.split(' ');
+    // metadata is null for folders in Supabase
+    const isFolder = !file.metadata; 
+    const icon = isFolder ? 'folder' : getFileIcon(file.name);
+    const colorClasses = getFileColor(file.name);
+    const [textColor, bgColor] = colorClasses.split(' ');
 
-            return `
-                <div class="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm mb-2">
-                    <div class="flex items-center gap-3">
-                        <div class="${bgColor} p-2 rounded-lg">
-                            <span class="material-symbols-outlined ${textColor}">${icon}</span>
-                        </div>
-                        <p class="font-semibold text-gray-800 text-sm truncate max-w-[150px]">${file.name}</p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <a href="${urlData.publicUrl}" target="_blank" class="text-blue-500 p-2"><span class="material-symbols-outlined">visibility</span></a>
-                        <button onclick="deleteFile('${file.name}')" class="text-red-400 p-2"><span class="material-symbols-outlined">delete</span></button>
-                    </div>
-                </div>`;
-        }).join('');
+    // Only generate a URL if it's a real file
+    let viewButton = '';
+    if (!isFolder) {
+        const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
+        viewButton = `
+            <a href="${urlData.publicUrl}" target="_blank" class="text-blue-500 p-2">
+                <span class="material-symbols-outlined">visibility</span>
+            </a>`;
+    }
+
+    return `
+        <div class="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm mb-2">
+            <div class="flex items-center gap-3">
+                <div class="${bgColor} p-2 rounded-lg">
+                    <span class="material-symbols-outlined ${textColor}">${icon}</span>
+                </div>
+                <p class="font-semibold text-gray-800 text-sm truncate max-w-[150px]">${file.name}</p>
+            </div>
+            <div class="flex items-center gap-2">
+                ${viewButton}
+                <button onclick="deleteFile('${file.name}', ${isFolder})" class="text-red-400 p-2">
+                    <span class="material-symbols-outlined">delete</span>
+                </button>
+            </div>
+        </div>`;
+}).join('');
+
     } catch (err) {
         console.error(err);
         container.innerHTML = `<p class="text-red-500">Error: ${err.message}</p>`;
