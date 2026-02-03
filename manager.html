@@ -92,6 +92,23 @@
                 if (!files || files.length === 0) {
                     container.innerHTML = "<div class='bg-gray-100 p-6 rounded-xl text-center text-gray-400'>No files found.</div>";
                     return;
+                            // This line ignores both the 'uploads' placeholder and any empty files
+             const filteredFiles = storageFiles.filter(file => 
+                file.name !== 'uploads' && 
+                file.name !== '.emptyFolderPlaceholder'
+);
+
+// Now map the remaining REAL files
+               allFiles = filteredFiles.map(file => {
+             const { data: urlData } = _supabase.storage
+             .from('vault-files')
+             .getPublicUrl(file.name);
+    
+              return {
+              file_name: file.name,
+              download_url: urlData.publicUrl
+    };
+});
                 }
 
                 container.innerHTML = files.map(file => {
@@ -133,23 +150,6 @@
 
         // Start
         checkAccess();
-        // This line ignores both the 'uploads' placeholder and any empty files
-const filteredFiles = storageFiles.filter(file => 
-    file.name !== 'uploads' && 
-    file.name !== '.emptyFolderPlaceholder'
-);
-
-// Now map the remaining REAL files
-allFiles = filteredFiles.map(file => {
-    const { data: urlData } = _supabase.storage
-        .from('vault-files')
-        .getPublicUrl(file.name);
-    
-    return {
-        file_name: file.name,
-        download_url: urlData.publicUrl
-    };
-});
         
     </script>
 </body>
