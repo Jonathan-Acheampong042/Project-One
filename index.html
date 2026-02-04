@@ -149,55 +149,56 @@
 
     // --- RENDER FUNCTION (Draws the whole UI) ---
     function renderAll(files) {
-        // 1. SUGGESTED (Top 2 Newest)
-        const suggested = files.slice(0, 2); 
-        const suggestedGrid = document.getElementById('suggestedGrid');
-        
-        if (suggested.length > 0) {
-            document.getElementById('suggestedSection').classList.remove('hidden');
-            suggestedGrid.innerHTML = suggested.map(file => {
-                const icon = getFileIcon(file.name);
-                const colorClasses = getFileColor(file.name);
-                const [textColor, bgColor] = colorClasses.split(' ');
-                
-                return `
-                    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between h-32 relative overflow-hidden">
-                        <div class="${bgColor} w-10 h-10 rounded-lg flex items-center justify-center mb-2">
-                            <span class="material-symbols-outlined ${textColor}">${icon}</span>
-                        </div>
-                        <div class="z-10">
-                            <p class="font-bold text-gray-800 text-sm truncate mb-1">${file.name}</p>
-                            <a href="${file.url}" target="_blank" class="text-[10px] font-bold text-blue-600 uppercase hover:underline">Open File</a>
-                        </div>
+    // 1. SUGGESTED SECTION (Top 2 Newest)
+    const suggested = files.slice(0, 2); 
+    const suggestedGrid = document.getElementById('suggestedGrid');
+    
+    if (suggested.length > 0) {
+        document.getElementById('suggestedSection').classList.remove('hidden');
+        suggestedGrid.innerHTML = suggested.map(file => {
+            const icon = getFileIcon(file.name);
+            const colorClasses = getFileColor(file.name);
+            const [textColor, bgColor] = colorClasses.split(' ');
+            
+            return `
+                <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between h-32 relative overflow-hidden group">
+                    <div class="${bgColor} w-10 h-10 rounded-lg flex items-center justify-center mb-2">
+                        <span class="material-symbols-outlined ${textColor}">${icon}</span>
                     </div>
-                `;
-            }).join('');
-        }
-
-        // 2. FOLDERS (Unique List)
-        const folders = [...new Set(files.map(f => f.folder))].sort();
-        const folderGrid = document.getElementById('folderGrid');
-        
-        // Always add "Unsorted" or "All" option logic
-        let folderHtml = `
-            <div onclick="filterByFolder('ALL')" class="bg-blue-50 p-4 rounded-2xl border border-blue-100 shadow-sm flex items-center gap-3 cursor-pointer active:scale-95 transition-transform">
-                <span class="material-symbols-outlined text-blue-600">grid_view</span>
-                <span class="font-bold text-blue-700 text-sm">All Files</span>
-            </div>
-        `;
-
-        folderHtml += folders.map(folder => `
-            <div onclick="filterByFolder('${folder}')" class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-gray-50 active:scale-95 transition-transform">
-                <span class="material-symbols-outlined text-gray-500">folder</span>
-                <span class="font-semibold text-gray-700 text-sm truncate">${folder}</span>
-            </div>
-        `).join('');
-        
-        folderGrid.innerHTML = folderHtml;
-
-        // 3. FILES LIST
-        renderFileList(files);
+                    <div class="z-10">
+                        <p class="font-bold text-gray-800 text-sm truncate mb-1" title="${file.name}">${file.name}</p>
+                        <a href="${file.url}" target="_blank" class="text-[10px] font-bold text-blue-600 uppercase hover:underline">Open File</a>
+                    </div>
+                </div>
+            `;
+        }).join('');
     }
+
+    // 2. FOLDERS SECTION (Clicking these filters the list below)
+    const folders = [...new Set(files.map(f => f.folder))].sort();
+    const folderGrid = document.getElementById('folderGrid');
+    
+    // "All Files" Button
+    let folderHtml = `
+        <div onclick="filterByFolder('ALL')" class="bg-blue-50 p-4 rounded-2xl border border-blue-100 shadow-sm flex items-center gap-3 cursor-pointer active:scale-95 transition-transform select-none">
+            <span class="material-symbols-outlined text-blue-600">grid_view</span>
+            <span class="font-bold text-blue-700 text-sm">All Files</span>
+        </div>
+    `;
+
+    // Dynamic Folders
+    folderHtml += folders.map(folder => `
+        <div onclick="filterByFolder('${folder}')" class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-gray-50 active:scale-95 transition-transform select-none">
+            <span class="material-symbols-outlined text-gray-500">folder</span>
+            <span class="font-semibold text-gray-700 text-sm truncate">${folder}</span>
+        </div>
+    `).join('');
+    
+    folderGrid.innerHTML = folderHtml;
+
+    // 3. RENDER THE FILE LIST INITIALLY
+    renderFileList(files);
+}
 
     // --- RENDER JUST THE FILE LIST (Used by filters) ---
     function renderFileList(filesToRender) {
