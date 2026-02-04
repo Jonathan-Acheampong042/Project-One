@@ -103,54 +103,49 @@
 
     // --- MAIN FETCH FUNCTION ---
     async function fetchFiles() {
-        const fileGrid = document.getElementById('fileGrid');
-        
-        try {
-            // Get everything recursively
-            const { data, error } = await _supabase.storage
-                .from('vault-files')
-                .list('', { limit: 100, sortBy: { column: 'created_at', order: 'desc' }, recursive: true });
+    const fileGrid = document.getElementById('fileGrid');
+    
+    try {
+        // 1. Get List (Recursive)
+        const { data, error } = await _supabase.storage
+            .from('vault-files')
+            .list('', { limit: 100, sortBy: { column: 'created_at', order: 'desc' }, recursive: true });
 
-            if (error) throw error;
+        if (error) throw error;
 
-            // FILTER: 
-            // 1. Must have an ID (Removes folder placeholders)
-            // 2. Name cannot be 'uploads'
-            // 3. Name cannot contain system placeholder text
-            const realFiles = data.filter(f => 
-                f.id !== null && 
-                f.name !== 'uploads' && 
-                !f.name.endsWith('.emptyFolderPlaceholder')
-            );
+        // 2. SIMPLIFIED FILTER: Just hide the system placeholders
+        // We removed the "id !== null" check because it might be hiding real files on your version
+        const realFiles = data.filter(f => 
+            f.name !== 'uploads' && 
+            !f.name.endsWith('.emptyFolderPlaceholder')
+        );
 
-            // PROCESS DATA
-            allFiles = realFiles.map(file => {
-                const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
-                const displayName = file.name.split('/').pop();
-                const folderName = file.name.includes('/') ? file.name.split('/')[0] : 'Unsorted';
-                
-                return {
-                    name: displayName,
-                    folder: folderName,
-                    fullPath: file.name,
-                    url: urlData.publicUrl,
-                    date: new Date(file.created_at) // Capture date for "Suggested"
-                };
-            });
+        allFiles = realFiles.map(file => {
+            const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
+            const displayName = file.name.split('/').pop();
+            const folderName = file.name.includes('/') ? file.name.split('/')[0] : 'Unsorted';
+            
+            return {
+                name: displayName,
+                folder: folderName,
+                fullPath: file.name,
+                url: urlData.publicUrl,
+                date: new Date(file.created_at)
+            };
+        });
 
-            if (allFiles.length === 0) {
-                fileGrid.innerHTML = `<div class="text-center py-10 text-gray-400">No files shared yet.</div>`;
-                document.getElementById('folderGrid').innerHTML = "";
-                return;
-            }
-
-            renderAll(allFiles);
-
-        } catch (err) {
-            console.error(err);
-            fileGrid.innerHTML = `<div class="text-center py-10 text-red-400">Error loading library.</div>`;
+        if (allFiles.length === 0) {
+            fileGrid.innerHTML = `<div class="text-center py-10 text-gray-400">No files found.</div>`;
+            return;
         }
+
+        renderAll(allFiles);
+
+    } catch (err) {
+        console.error(err);
+        fileGrid.innerHTML = `<div class="text-center py-10 text-red-400">Error loading library.</div>`;
     }
+}
 
     // --- RENDER FUNCTION (Draws the whole UI) ---
     function renderAll(files) {
