@@ -109,50 +109,64 @@
     }
 
     async function loadManagerFiles() {
-        const container = document.getElementById('managerFileGrid');
-        
-        const { data: dbFiles, error } = await _supabase
-            .from('files_list')
-            .select('*')
-            .order('file_name', { ascending: true });
+    const container = document.getElementById('managerFileGrid');
+    container.innerHTML = `<div class="text-center py-4 text-gray-400">Loading files...</div>`;
 
-        if (!dbFiles || dbFiles.length === 0) {
-            container.innerHTML = "<p class='text-center text-gray-400'>Vault is empty.</p>";
+    try {
+        // 1. Get recursive list of EVERYTHING
+        const { data, error } = await _supabase.storage
+            .from('vault-files')
+            .list('', { limit: 100, sortBy: { column: 'created_at', order: 'desc' }, recursive: true });
+
+        if (error) throw error;
+
+        // 2. FILTER: Keep ONLY real files (Must have an ID)
+        // This automatically hides "uploads", "Unsorted", and any other folder placeholders
+        const realFiles = data.filter(f => f.id !== null && !f.name.endsWith('.emptyFolderPlaceholder'));
+
+        if (!realFiles || realFiles.length === 0) {
+            container.innerHTML = "<p class='text-gray-400 text-center py-10'>Vault is empty.</p>";
             return;
         }
 
-        container.innerHTML = dbFiles.map(file => {
-            const folderLabel = file.folder_name || "Main Library"; 
-            const icon = getFileIcon(file.file_name);
-            const colorClasses = getFileColor(file.file_name);
+        container.innerHTML = realFiles.map(file => {
+            const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
+            
+            // Extract display names
+            const displayName = file.name.split('/').pop(); 
+            const folderName = file.name.includes('/') ? file.name.split('/')[0] : 'Unsorted';
+
+            const icon = getFileIcon(displayName);
+            const colorClasses = getFileColor(displayName);
             const [textColor, bgColor] = colorClasses.split(' ');
 
             return `
                 <div class="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm mb-2">
-                    <div class="flex items-center gap-3">
-                        <div class="${bgColor} p-2 rounded-lg">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <div class="${bgColor} p-2 rounded-lg shrink-0">
                             <span class="material-symbols-outlined ${textColor}">${icon}</span>
                         </div>
-                        <div>
-                            <p class="font-bold text-gray-700">${file.file_name}</p>
-                            <p class="text-xs text-gray-400 uppercase tracking-wider">
-                                📂 ${folderLabel}
+                        <div class="min-w-0">
+                            <p class="font-semibold text-gray-800 text-sm truncate">${displayName}</p>
+                            <p class="text-[10px] text-gray-400 uppercase tracking-wide flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[10px]">folder</span> ${folderName}
                             </p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <a href="${file.download_url}" target="_blank" class="text-blue-500 p-2 hover:bg-blue-50 rounded-full">
+                    <div class="flex items-center gap-1 shrink-0">
+                        <a href="${urlData.publicUrl}" target="_blank" class="text-blue-500 p-2 hover:bg-blue-50 rounded-full">
                             <span class="material-symbols-outlined">visibility</span>
                         </a>
-                        // ... inside your .map loop ...
-                       <button onclick="deleteFile('${file.name}')" class="text-red-400 p-2 hover:bg-red-50 rounded-full">
-                     <span class="material-symbols-outlined">delete</span>
-                     </button>
-
+                        <button onclick="deleteFile('${file.name}')" class="text-red-400 p-2 hover:bg-red-50 rounded-full">
+                            <span class="material-symbols-outlined">delete</span>
+                        </button>
                     </div>
                 </div>`;
         }).join('');
+    } catch (err) {
+        container.innerHTML = `<p class="text-red-500 text-center">Error: ${err.message}</p>`;
     }
+}
 
     async function uploadFile() {
         const fileInput = document.getElementById('fileInput');
