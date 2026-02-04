@@ -1,211 +1,269 @@
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html lang="en">
 <head>
     <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>FileVault | User Library</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Drive Clone | Library</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <style>
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+    </style>
 </head>
-<body class="bg-[#f6f6f8] min-h-screen">
+<body class="bg-gray-50 flex h-screen overflow-hidden text-gray-700">
 
-    <header class="bg-white border-b border-gray-200 p-4 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto flex items-center gap-3">
-            <span class="material-symbols-outlined text-blue-600">folder_shared</span>
-            <h1 class="font-bold text-xl">FileVault Library</h1>
+    <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 hidden md:flex flex-col">
+        <div class="p-5 flex items-center gap-2 text-blue-600">
+            <span class="material-symbols-outlined text-3xl">cloud_circle</span>
+            <h1 class="font-bold text-xl tracking-tight">CloudDrive</h1>
         </div>
-    </header>
 
-    <main class="max-w-7xl mx-auto px-6 py-12">
-        <div class="mb-10 text-center">
-            <h2 class="text-3xl font-black mb-2">Available Resources</h2>
-            <p class="text-gray-500">Download the files shared by your manager.</p>
-        </div>
-<div class="max-w-2xl mx-auto mb-10 flex flex-col sm:flex-row gap-4">
-    
-    <div class="relative flex-grow group">
-        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <span class="material-symbols-outlined text-gray-400">search</span>
-        </div>
-        <input 
-            id="searchInput"
-            oninput="applyFilters()" 
-            class="block w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 shadow-sm transition-all" 
-            placeholder="Search documents..." 
-            type="text"
-        />
-    </div>
+        <nav class="flex-1 px-3 space-y-1 mt-4">
+            <button onclick="renderView('ALL')" class="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium bg-blue-50 text-blue-700 rounded-r-full">
+                <span class="material-symbols-outlined">home</span>
+                My Drive
+            </button>
+            <button class="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-r-full transition-colors">
+                <span class="material-symbols-outlined">schedule</span>
+                Recent
+            </button>
+            <button class="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-r-full transition-colors">
+                <span class="material-symbols-outlined">star</span>
+                Starred
+            </button>
+        </nav>
 
-    <div class="relative min-w-[150px]">
-        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <span class="material-symbols-outlined text-gray-500">folder</span>
-        </div>
-        <select 
-            id="folderSelect" 
-            onchange="applyFilters()"
-            class="block w-full pl-10 pr-8 py-3 bg-white border border-gray-200 rounded-xl text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/50 shadow-sm appearance-none cursor-pointer hover:bg-gray-50 transition-all">
-            <option value="ALL">All Folders</option>
-            </select>
-        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-            <span class="material-symbols-outlined text-gray-400 text-sm">expand_more</span>
-        </div>
-    </div>
-    
-</div>
-
-        <div id="fileGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <p class="text-center col-span-full py-20 text-gray-400">Searching for files...</p>
-        </div>
-        <section class="mt-20 pt-10 border-t border-gray-200">
-    <div class="bg-blue-50 dark:bg-blue-900/10 rounded-2xl p-8">
-        <h4 class="text-blue-600 font-bold mb-4 flex items-center gap-2">
-            <span class="material-symbols-outlined">info</span>
-            Technical Architecture
-        </h4>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-gray-600 dark:text-gray-400">
-            <div>
-                <p class="font-bold text-gray-800 dark:text-white mb-1">Frontend</p>
-                <p>HTML5, Tailwind CSS, and Vanilla JavaScript for a responsive, fast UI.</p>
+        <div class="p-4 border-t border-gray-100">
+            <div class="bg-gray-100 rounded-lg p-3">
+                <div class="h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
+                    <div class="h-full bg-blue-500 w-[45%]"></div>
+                </div>
+                <p class="text-xs text-gray-500">Storage: 45% used</p>
             </div>
-            <div>
-                <p class="font-bold text-gray-800 dark:text-white mb-1">Backend-as-a-Service</p>
-                <p>Powered by Supabase for Database, Storage, and Authentication.</p>
-            </div>
-            <div>
-                <p class="font-bold text-gray-800 dark:text-white mb-1">Security</p>
-                <p>Protected by Row Level Security (RLS) policies and Email-based Auth.</p>
-            </div>
+            <a href="login.html" class="mt-4 block text-center text-xs text-blue-500 hover:underline">Manager Login</a>
         </div>
-    </div>
-</section>
+    </aside>
 
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
+        
+        <header class="bg-white border-b border-gray-200 p-4 flex items-center justify-between gap-4">
+            <div class="md:hidden">
+                <span class="material-symbols-outlined text-gray-500">menu</span>
+            </div>
+            
+            <div class="flex-1 max-w-2xl relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+                <input type="text" id="searchInput" oninput="applySearch()" placeholder="Search in Drive" 
+                       class="w-full bg-gray-100 border-none rounded-lg py-2.5 pl-10 pr-4 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all outline-none text-sm">
+            </div>
+
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center font-bold text-sm">U</div>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-6 scroll-smooth">
+            
+            <div class="flex items-center gap-2 text-sm text-gray-500 mb-6" id="breadcrumbs">
+                <span class="hover:bg-gray-200 px-2 py-1 rounded cursor-pointer" onclick="renderView('ALL')">My Drive</span>
+            </div>
+
+            <div id="recentSection">
+                <h2 class="text-sm font-bold text-gray-500 mb-4 uppercase tracking-wider">Suggested</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8" id="recentGrid">
+                    </div>
+            </div>
+
+            <div id="folderSection">
+                <h2 class="text-sm font-bold text-gray-500 mb-4 uppercase tracking-wider">Folders</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8" id="folderGrid">
+                    </div>
+            </div>
+
+            <div>
+                <h2 class="text-sm font-bold text-gray-500 mb-4 uppercase tracking-wider">Files</h2>
+                
+                <div class="grid grid-cols-12 gap-4 border-b border-gray-200 pb-2 mb-2 text-xs font-medium text-gray-400 px-2">
+                    <div class="col-span-6 md:col-span-6">Name</div>
+                    <div class="col-span-4 md:col-span-4 hidden md:block">Owner</div>
+                    <div class="col-span-6 md:col-span-2 text-right">Action</div>
+                </div>
+
+                <div class="space-y-1" id="fileList">
+                    <p class="text-center py-10 text-gray-400">Loading files...</p>
+                </div>
+            </div>
+
+        </div>
     </main>
+
     <script>
-    const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
+        // --- CONFIG ---
+        const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
 
-    let allFiles = []; 
+        let allFiles = []; 
+        let currentFolder = 'ALL';
 
-    function getFileColor(fileName) {
-        const name = fileName.toLowerCase();
-        if (name.endsWith('.pdf')) return 'text-red-500 bg-red-50';
-        if (name.endsWith('.docx') || name.endsWith('.doc')) return 'text-blue-500 bg-blue-50';
-        if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'text-orange-500 bg-orange-50';
-        if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'text-green-500 bg-green-50';
-        if (name.endsWith('.zip') || name.endsWith('.rar')) return 'text-purple-500 bg-purple-50';
-        return 'text-slate-500 bg-slate-50';
-    }
+        // --- ICONS & COLORS ---
+        function getFileIcon(fileName) {
+            const name = fileName.toLowerCase();
+            if (name.endsWith('.pdf')) return 'picture_as_pdf';
+            if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'slideshow';
+            if (name.endsWith('.docx') || name.endsWith('.doc')) return 'description';
+            if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'table_chart';
+            if (name.endsWith('.zip')) return 'folder_zip';
+            if (name.endsWith('.jpg') || name.endsWith('.png')) return 'image';
+            return 'draft'; 
+        }
 
-    function getFileIcon(fileName) {
-        const name = fileName.toLowerCase();
-        if (name.endsWith('.pdf')) return 'picture_as_pdf';
-        if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'slideshow';
-        if (name.endsWith('.docx') || name.endsWith('.doc')) return 'description';
-        if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'table_chart';
-        if (name.endsWith('.zip')) return 'folder_zip';
-        return 'draft'; 
-    }
+        function getFileColor(fileName) {
+            const name = fileName.toLowerCase();
+            if (name.endsWith('.pdf')) return 'text-red-500';
+            if (name.endsWith('.docx') || name.endsWith('.doc')) return 'text-blue-500';
+            if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'text-orange-500';
+            if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'text-green-500';
+            return 'text-gray-500';
+        }
 
-    async function fetchFiles() {
-        try {
-            // UPDATED: Now looks at the DATABASE TABLE, not Storage
+        // --- FETCH DATA ---
+        async function fetchFiles() {
+            // Select all files, ordered by most recent (created_at) if you added the column
+            // If you haven't added 'created_at' yet, this will just use ID order
             const { data, error } = await _supabase
                 .from('files_list')
                 .select('*')
-                .order('file_name', { ascending: true });
+                .order('created_at', { ascending: false }); // Needs 'created_at' column to work best
 
-            if (error) throw error;
+            if (error) {
+                console.error(error);
+                return;
+            }
 
-            allFiles = data.map(row => {
-                return {
-                    file_name: row.file_name,
-                    folder: row.folder_name || 'Main Library', // Uses the column we made
-                    download_url: row.download_url
-                };
-            });
+            allFiles = data.map(row => ({
+                name: row.file_name,
+                folder: row.folder_name || 'Unsorted',
+                url: row.download_url,
+                // If created_at is null, use current date as fallback
+                date: row.created_at ? new Date(row.created_at).toLocaleDateString() : 'Unknown'
+            }));
 
-            // Setup Dropdown
-            const foldersSet = new Set(allFiles.map(f => f.folder));
-            populateFolderDropdown(Array.from(foldersSet));
-
-            // Show Files
-            renderFiles(allFiles); 
-
-        } catch (err) {
-            console.error("Fetch Error:", err);
-            document.getElementById('fileGrid').innerHTML = "<p class='col-span-full text-center text-red-400'>Unable to load library.</p>";
-        }
-    }
-
-    function populateFolderDropdown(folders) {
-        const select = document.getElementById('folderSelect');
-        select.innerHTML = '<option value="ALL">All Folders</option>';
-        
-        folders.sort().forEach(folder => {
-            const option = document.createElement('option');
-            option.value = folder;
-            option.textContent = folder;
-            select.appendChild(option);
-        });
-    }
-
-    function applyFilters() {
-        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-        const selectedFolder = document.getElementById('folderSelect').value;
-
-        const filtered = allFiles.filter(file => {
-            const matchesSearch = file.file_name.toLowerCase().includes(searchTerm);
-            const matchesFolder = selectedFolder === 'ALL' || file.folder === selectedFolder;
-            return matchesSearch && matchesFolder;
-        });
-
-        renderFiles(filtered);
-    }
-
-    function renderFiles(filesToDisplay) {
-        const grid = document.getElementById('fileGrid');
-        
-        if (filesToDisplay.length === 0) {
-            grid.innerHTML = `<p class="text-gray-400 col-span-full text-center py-10">No matching files found.</p>`;
-            return;
+            renderView('ALL');
         }
 
-        grid.innerHTML = filesToDisplay.map(file => {
-            const icon = getFileIcon(file.file_name);
-            const colorClasses = getFileColor(file.file_name);
-            const [textColor, bgColor] = colorClasses.split(' ');
+        // --- RENDER LOGIC ---
+        function renderView(viewMode) {
+            currentFolder = viewMode;
+            
+            const breadcrumbs = document.getElementById('breadcrumbs');
+            const recentSection = document.getElementById('recentSection');
+            const folderSection = document.getElementById('folderSection');
+            const fileList = document.getElementById('fileList');
 
-            return `
-                <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all group">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="aspect-square w-14 ${bgColor} flex items-center justify-center rounded-lg">
-                            <span class="material-symbols-outlined text-3xl ${textColor}">${icon}</span>
-                        </div>
-                        <span class="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded uppercase tracking-wider">
-                            ${file.folder}
-                        </span>
+            // 1. FILTER FILES
+            let filesToShow = allFiles;
+            if (viewMode !== 'ALL') {
+                filesToShow = allFiles.filter(f => f.folder === viewMode);
+                // Hide Recent & Folders when inside a specific folder
+                recentSection.style.display = 'none';
+                folderSection.style.display = 'none';
+                breadcrumbs.innerHTML = `<span class="hover:bg-gray-200 px-2 py-1 rounded cursor-pointer" onclick="renderView('ALL')">My Drive</span> <span class="text-gray-400">/</span> <span class="font-bold text-gray-800">${viewMode}</span>`;
+            } else {
+                // Show Everything on Home
+                recentSection.style.display = 'block';
+                folderSection.style.display = 'block';
+                breadcrumbs.innerHTML = `<span class="font-bold text-gray-800 px-2 py-1">My Drive</span>`;
+            }
+
+            // 2. RENDER FOLDERS (Only on Home)
+            if (viewMode === 'ALL') {
+                const uniqueFolders = [...new Set(allFiles.map(f => f.folder))].sort();
+                const folderGrid = document.getElementById('folderGrid');
+                
+                folderGrid.innerHTML = uniqueFolders.map(folder => `
+                    <div onclick="renderView('${folder}')" class="bg-gray-100 hover:bg-gray-200 p-3 rounded-xl cursor-pointer transition-colors flex items-center gap-3 border border-transparent hover:border-gray-300">
+                        <span class="material-symbols-outlined text-gray-500 text-2xl">folder</span>
+                        <span class="text-sm font-medium text-gray-700 truncate">${folder}</span>
                     </div>
-                    
-                    <h3 class="font-bold text-gray-900 truncate mb-2" title="${file.file_name}">${file.file_name}</h3>
-                    
-                    <a href="${file.download_url}" target="_blank" class="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-blue-600 text-white py-2.5 rounded-lg font-medium transition-colors text-sm">
-                        <span class="material-symbols-outlined text-[18px]">download</span>
-                        Download
-                    </a>
-                </div>
-            `;
-        }).join('');
-    }
+                `).join('');
+                
+                // RENDER RECENT (Top 4 files)
+                const recentGrid = document.getElementById('recentGrid');
+                const recentFiles = allFiles.slice(0, 4); // Take first 4
+                
+                recentGrid.innerHTML = recentFiles.map(file => `
+                    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="material-symbols-outlined ${getFileColor(file.name)}">${getFileIcon(file.name)}</span>
+                            <span class="text-xs text-gray-500 font-medium truncate">${file.name}</span>
+                        </div>
+                        <div class="h-20 bg-gray-50 rounded-lg flex items-center justify-center mb-2">
+                             <span class="material-symbols-outlined text-gray-300 text-4xl">description</span>
+                        </div>
+                         <a href="${file.url}" target="_blank" class="text-[10px] text-blue-600 hover:underline">Open File</a>
+                    </div>
+                `).join('');
+            }
 
-    fetchFiles();
+            // 3. RENDER FILE LIST
+            if (filesToShow.length === 0) {
+                fileList.innerHTML = `<div class="text-center py-10 text-gray-400 text-sm">Empty folder</div>`;
+            } else {
+                fileList.innerHTML = filesToShow.map(file => `
+                    <div class="group grid grid-cols-12 gap-4 items-center p-2 hover:bg-blue-50 rounded-lg border-b border-gray-50 transition-colors cursor-pointer">
+                        <div class="col-span-6 md:col-span-6 flex items-center gap-3 overflow-hidden">
+                            <span class="material-symbols-outlined ${getFileColor(file.name)}">${getFileIcon(file.name)}</span>
+                            <span class="text-sm text-gray-700 font-medium truncate group-hover:text-blue-700">${file.name}</span>
+                        </div>
+                        <div class="col-span-4 md:col-span-4 hidden md:block text-xs text-gray-400">
+                            Me
+                        </div>
+                        <div class="col-span-6 md:col-span-2 text-right">
+                             <a href="${file.url}" target="_blank" class="inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-200 text-gray-500">
+                                <span class="material-symbols-outlined text-lg">download</span>
+                            </a>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function applySearch() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            if (!term) {
+                renderView(currentFolder);
+                return;
+            }
+            
+            // Simple search filter
+            const filtered = allFiles.filter(f => f.name.toLowerCase().includes(term));
+            
+            // Hide folders/recent during search
+            document.getElementById('recentSection').style.display = 'none';
+            document.getElementById('folderSection').style.display = 'none';
+            
+            // Render list manually
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = filtered.map(file => `
+                <div class="group grid grid-cols-12 gap-4 items-center p-2 hover:bg-blue-50 rounded-lg border-b border-gray-50 transition-colors">
+                     <div class="col-span-10 flex items-center gap-3">
+                        <span class="material-symbols-outlined ${getFileColor(file.name)}">${getFileIcon(file.name)}</span>
+                        <span class="text-sm text-gray-700 font-medium truncate">${file.name}</span>
+                     </div>
+                     <div class="col-span-2 text-right">
+                         <a href="${file.url}" target="_blank" class="material-symbols-outlined text-gray-400 hover:text-blue-600">download</a>
+                     </div>
+                </div>
+            `).join('');
+        }
+
+        // Init
+        fetchFiles();
+
     </script>
-    
-    
-    <div class="text-center mt-10 mb-20">
-    <a href="login.html" class="text-sm font-bold text-gray-400 hover:text-blue-600 transition-all underline">
-        Manager Portal Access
-    </a>
-    </div>
-    
 </body>
 </html>
