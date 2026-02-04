@@ -144,9 +144,11 @@
                         <a href="${file.download_url}" target="_blank" class="text-blue-500 p-2 hover:bg-blue-50 rounded-full">
                             <span class="material-symbols-outlined">visibility</span>
                         </a>
-                        <button onclick="deleteFile('${file.file_name}')" class="text-red-400 p-2 hover:bg-red-50 rounded-full">
-                            <span class="material-symbols-outlined">delete</span>
-                        </button>
+                        // ... inside your .map loop ...
+                       <button onclick="deleteFile('${file.name}')" class="text-red-400 p-2 hover:bg-red-50 rounded-full">
+                     <span class="material-symbols-outlined">delete</span>
+                     </button>
+
                     </div>
                 </div>`;
         }).join('');
@@ -197,17 +199,22 @@
         }
     }
 
-    async function deleteFile(fileName) {
-        if (!confirm("Delete " + fileName + "?")) return;
+    async function deleteFile(fullPath) {
+    if (!confirm(`Are you sure you want to delete this file?\n\n${fullPath}`)) return;
 
-        // 1. Delete from Database Table
-        await _supabase.from('files_list').delete().eq('file_name', fileName);
+    // Use the full path (e.g. "Folder/file.pdf")
+    const { error } = await _supabase.storage
+        .from('vault-files')
+        .remove([fullPath]);
 
-        // 2. Delete from Storage Bucket (Optional: requires exact path, but DB delete is most important for the list)
-        // Note: To delete from storage perfectly, we'd need the full path, but cleaning the list is the priority for UI.
-        
+    if (error) {
+        alert("Delete Failed: " + error.message);
+    } else {
+        // Refresh the list immediately
         loadManagerFiles();
+        alert("File deleted successfully.");
     }
+}
 
     async function signOut() {
         await _supabase.auth.signOut();
