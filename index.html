@@ -1,269 +1,259 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="light" lang="en">
 <head>
     <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Drive Clone | Library</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>FileVault | User Library</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
-    <style>
-        /* Custom scrollbar for a cleaner look */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
-    </style>
 </head>
-<body class="bg-gray-50 flex h-screen overflow-hidden text-gray-700">
+<body class="bg-[#f6f6f8] min-h-screen font-sans text-slate-800">
 
-    <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 hidden md:flex flex-col">
-        <div class="p-5 flex items-center gap-2 text-blue-600">
-            <span class="material-symbols-outlined text-3xl">cloud_circle</span>
-            <h1 class="font-bold text-xl tracking-tight">CloudDrive</h1>
-        </div>
-
-        <nav class="flex-1 px-3 space-y-1 mt-4">
-            <button onclick="renderView('ALL')" class="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium bg-blue-50 text-blue-700 rounded-r-full">
-                <span class="material-symbols-outlined">home</span>
-                My Drive
-            </button>
-            <button class="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-r-full transition-colors">
-                <span class="material-symbols-outlined">schedule</span>
-                Recent
-            </button>
-            <button class="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-r-full transition-colors">
-                <span class="material-symbols-outlined">star</span>
-                Starred
-            </button>
-        </nav>
-
-        <div class="p-4 border-t border-gray-100">
-            <div class="bg-gray-100 rounded-lg p-3">
-                <div class="h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
-                    <div class="h-full bg-blue-500 w-[45%]"></div>
-                </div>
-                <p class="text-xs text-gray-500">Storage: 45% used</p>
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-blue-600 text-3xl">cloud_circle</span>
+                <h1 class="font-bold text-xl tracking-tight">FileVault</h1>
             </div>
-            <a href="login.html" class="mt-4 block text-center text-xs text-blue-500 hover:underline">Manager Login</a>
+            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-bold text-xs">
+                U
+            </div>
         </div>
-    </aside>
+    </header>
 
-    <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <div class="bg-white border-b border-gray-200 px-4 py-3 sticky top-[57px] z-40">
+        <div class="max-w-7xl mx-auto relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span class="material-symbols-outlined text-gray-400">search</span>
+            </div>
+            <input 
+                id="searchInput"
+                oninput="filterFiles(this.value)" 
+                class="block w-full pl-10 pr-4 py-3 bg-gray-100 border-none rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all" 
+                placeholder="Search in Drive" 
+                type="text"
+            />
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 pb-32">
         
-        <header class="bg-white border-b border-gray-200 p-4 flex items-center justify-between gap-4">
-            <div class="md:hidden">
-                <span class="material-symbols-outlined text-gray-500">menu</span>
-            </div>
-            
-            <div class="flex-1 max-w-2xl relative">
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
-                <input type="text" id="searchInput" oninput="applySearch()" placeholder="Search in Drive" 
-                       class="w-full bg-gray-100 border-none rounded-lg py-2.5 pl-10 pr-4 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all outline-none text-sm">
-            </div>
-
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center font-bold text-sm">U</div>
-            </div>
-        </header>
-
-        <div class="flex-1 overflow-y-auto p-6 scroll-smooth">
-            
-            <div class="flex items-center gap-2 text-sm text-gray-500 mb-6" id="breadcrumbs">
-                <span class="hover:bg-gray-200 px-2 py-1 rounded cursor-pointer" onclick="renderView('ALL')">My Drive</span>
-            </div>
-
-            <div id="recentSection">
-                <h2 class="text-sm font-bold text-gray-500 mb-4 uppercase tracking-wider">Suggested</h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8" id="recentGrid">
-                    </div>
-            </div>
-
-            <div id="folderSection">
-                <h2 class="text-sm font-bold text-gray-500 mb-4 uppercase tracking-wider">Folders</h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8" id="folderGrid">
-                    </div>
-            </div>
-
-            <div>
-                <h2 class="text-sm font-bold text-gray-500 mb-4 uppercase tracking-wider">Files</h2>
-                
-                <div class="grid grid-cols-12 gap-4 border-b border-gray-200 pb-2 mb-2 text-xs font-medium text-gray-400 px-2">
-                    <div class="col-span-6 md:col-span-6">Name</div>
-                    <div class="col-span-4 md:col-span-4 hidden md:block">Owner</div>
-                    <div class="col-span-6 md:col-span-2 text-right">Action</div>
+        <div id="suggestedSection" class="mb-8 hidden">
+            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Suggested</h3>
+            <div id="suggestedGrid" class="grid grid-cols-2 gap-3">
                 </div>
-
-                <div class="space-y-1" id="fileList">
-                    <p class="text-center py-10 text-gray-400">Loading files...</p>
-                </div>
-            </div>
-
         </div>
+
+        <div id="folderSection" class="mb-8">
+            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Folders</h3>
+            <div id="folderGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div class="col-span-full text-gray-400 text-sm italic">Loading folders...</div>
+            </div>
+        </div>
+
+        <div id="fileListSection">
+            <div class="flex justify-between items-end mb-3 border-b border-gray-200 pb-2">
+                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Files</h3>
+                <span id="fileCount" class="text-[10px] text-gray-400 font-bold"></span>
+            </div>
+            <div id="fileGrid" class="flex flex-col gap-2">
+                </div>
+        </div>
+
     </main>
 
-    <script>
-        // --- CONFIG ---
-        const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
+        <div class="max-w-7xl mx-auto text-center">
+            <a href="login.html" class="inline-flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-blue-600 transition-colors">
+                <span class="material-symbols-outlined text-sm">lock</span>
+                Manager Portal Access
+            </a>
+        </div>
+    </div>
 
-        let allFiles = []; 
-        let currentFolder = 'ALL';
+<script>
+    // 1. INITIALIZE SUPABASE
+    const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
 
-        // --- ICONS & COLORS ---
-        function getFileIcon(fileName) {
-            const name = fileName.toLowerCase();
-            if (name.endsWith('.pdf')) return 'picture_as_pdf';
-            if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'slideshow';
-            if (name.endsWith('.docx') || name.endsWith('.doc')) return 'description';
-            if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'table_chart';
-            if (name.endsWith('.zip')) return 'folder_zip';
-            if (name.endsWith('.jpg') || name.endsWith('.png')) return 'image';
-            return 'draft'; 
-        }
+    let allFiles = []; // Master list
 
-        function getFileColor(fileName) {
-            const name = fileName.toLowerCase();
-            if (name.endsWith('.pdf')) return 'text-red-500';
-            if (name.endsWith('.docx') || name.endsWith('.doc')) return 'text-blue-500';
-            if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'text-orange-500';
-            if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'text-green-500';
-            return 'text-gray-500';
-        }
+    // --- HELPER: ICONS ---
+    function getFileIcon(fileName) {
+        const name = fileName.toLowerCase();
+        if (name.endsWith('.pdf')) return 'picture_as_pdf';
+        if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'slideshow';
+        if (name.endsWith('.docx') || name.endsWith('.doc')) return 'description';
+        if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'table_chart';
+        if (name.endsWith('.zip') || name.endsWith('.rar')) return 'folder_zip';
+        if (name.endsWith('.jpg') || name.endsWith('.png') || name.endsWith('.jpeg')) return 'image';
+        return 'description'; 
+    }
 
-        // --- FETCH DATA ---
-        async function fetchFiles() {
-            // Select all files, ordered by most recent (created_at) if you added the column
-            // If you haven't added 'created_at' yet, this will just use ID order
-            const { data, error } = await _supabase
-                .from('files_list')
-                .select('*')
-                .order('created_at', { ascending: false }); // Needs 'created_at' column to work best
+    // --- HELPER: COLORS ---
+    function getFileColor(fileName) {
+        const name = fileName.toLowerCase();
+        if (name.endsWith('.pdf')) return 'text-red-500 bg-red-50';
+        if (name.endsWith('.docx') || name.endsWith('.doc')) return 'text-blue-600 bg-blue-50';
+        if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'text-orange-500 bg-orange-50';
+        if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'text-green-600 bg-green-50';
+        if (name.endsWith('.jpg') || name.endsWith('.png')) return 'text-purple-600 bg-purple-50';
+        return 'text-slate-500 bg-slate-100';
+    }
 
-            if (error) {
-                console.error(error);
+    // --- MAIN FETCH FUNCTION ---
+    async function fetchFiles() {
+        const fileGrid = document.getElementById('fileGrid');
+        
+        try {
+            // Get everything recursively
+            const { data, error } = await _supabase.storage
+                .from('vault-files')
+                .list('', { limit: 100, sortBy: { column: 'created_at', order: 'desc' }, recursive: true });
+
+            if (error) throw error;
+
+            // FILTER: 
+            // 1. Must have an ID (Removes folder placeholders)
+            // 2. Name cannot be 'uploads'
+            // 3. Name cannot contain system placeholder text
+            const realFiles = data.filter(f => 
+                f.id !== null && 
+                f.name !== 'uploads' && 
+                !f.name.endsWith('.emptyFolderPlaceholder')
+            );
+
+            // PROCESS DATA
+            allFiles = realFiles.map(file => {
+                const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
+                const displayName = file.name.split('/').pop();
+                const folderName = file.name.includes('/') ? file.name.split('/')[0] : 'Unsorted';
+                
+                return {
+                    name: displayName,
+                    folder: folderName,
+                    fullPath: file.name,
+                    url: urlData.publicUrl,
+                    date: new Date(file.created_at) // Capture date for "Suggested"
+                };
+            });
+
+            if (allFiles.length === 0) {
+                fileGrid.innerHTML = `<div class="text-center py-10 text-gray-400">No files shared yet.</div>`;
+                document.getElementById('folderGrid').innerHTML = "";
                 return;
             }
 
-            allFiles = data.map(row => ({
-                name: row.file_name,
-                folder: row.folder_name || 'Unsorted',
-                url: row.download_url,
-                // If created_at is null, use current date as fallback
-                date: row.created_at ? new Date(row.created_at).toLocaleDateString() : 'Unknown'
-            }));
+            renderAll(allFiles);
 
-            renderView('ALL');
+        } catch (err) {
+            console.error(err);
+            fileGrid.innerHTML = `<div class="text-center py-10 text-red-400">Error loading library.</div>`;
+        }
+    }
+
+    // --- RENDER FUNCTION (Draws the whole UI) ---
+    function renderAll(files) {
+        // 1. SUGGESTED (Top 2 Newest)
+        const suggested = files.slice(0, 2); 
+        const suggestedGrid = document.getElementById('suggestedGrid');
+        
+        if (suggested.length > 0) {
+            document.getElementById('suggestedSection').classList.remove('hidden');
+            suggestedGrid.innerHTML = suggested.map(file => {
+                const icon = getFileIcon(file.name);
+                const colorClasses = getFileColor(file.name);
+                const [textColor, bgColor] = colorClasses.split(' ');
+                
+                return `
+                    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between h-32 relative overflow-hidden">
+                        <div class="${bgColor} w-10 h-10 rounded-lg flex items-center justify-center mb-2">
+                            <span class="material-symbols-outlined ${textColor}">${icon}</span>
+                        </div>
+                        <div class="z-10">
+                            <p class="font-bold text-gray-800 text-sm truncate mb-1">${file.name}</p>
+                            <a href="${file.url}" target="_blank" class="text-[10px] font-bold text-blue-600 uppercase hover:underline">Open File</a>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
-        // --- RENDER LOGIC ---
-        function renderView(viewMode) {
-            currentFolder = viewMode;
-            
-            const breadcrumbs = document.getElementById('breadcrumbs');
-            const recentSection = document.getElementById('recentSection');
-            const folderSection = document.getElementById('folderSection');
-            const fileList = document.getElementById('fileList');
+        // 2. FOLDERS (Unique List)
+        const folders = [...new Set(files.map(f => f.folder))].sort();
+        const folderGrid = document.getElementById('folderGrid');
+        
+        // Always add "Unsorted" or "All" option logic
+        let folderHtml = `
+            <div onclick="filterByFolder('ALL')" class="bg-blue-50 p-4 rounded-2xl border border-blue-100 shadow-sm flex items-center gap-3 cursor-pointer active:scale-95 transition-transform">
+                <span class="material-symbols-outlined text-blue-600">grid_view</span>
+                <span class="font-bold text-blue-700 text-sm">All Files</span>
+            </div>
+        `;
 
-            // 1. FILTER FILES
-            let filesToShow = allFiles;
-            if (viewMode !== 'ALL') {
-                filesToShow = allFiles.filter(f => f.folder === viewMode);
-                // Hide Recent & Folders when inside a specific folder
-                recentSection.style.display = 'none';
-                folderSection.style.display = 'none';
-                breadcrumbs.innerHTML = `<span class="hover:bg-gray-200 px-2 py-1 rounded cursor-pointer" onclick="renderView('ALL')">My Drive</span> <span class="text-gray-400">/</span> <span class="font-bold text-gray-800">${viewMode}</span>`;
-            } else {
-                // Show Everything on Home
-                recentSection.style.display = 'block';
-                folderSection.style.display = 'block';
-                breadcrumbs.innerHTML = `<span class="font-bold text-gray-800 px-2 py-1">My Drive</span>`;
-            }
+        folderHtml += folders.map(folder => `
+            <div onclick="filterByFolder('${folder}')" class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-gray-50 active:scale-95 transition-transform">
+                <span class="material-symbols-outlined text-gray-500">folder</span>
+                <span class="font-semibold text-gray-700 text-sm truncate">${folder}</span>
+            </div>
+        `).join('');
+        
+        folderGrid.innerHTML = folderHtml;
 
-            // 2. RENDER FOLDERS (Only on Home)
-            if (viewMode === 'ALL') {
-                const uniqueFolders = [...new Set(allFiles.map(f => f.folder))].sort();
-                const folderGrid = document.getElementById('folderGrid');
-                
-                folderGrid.innerHTML = uniqueFolders.map(folder => `
-                    <div onclick="renderView('${folder}')" class="bg-gray-100 hover:bg-gray-200 p-3 rounded-xl cursor-pointer transition-colors flex items-center gap-3 border border-transparent hover:border-gray-300">
-                        <span class="material-symbols-outlined text-gray-500 text-2xl">folder</span>
-                        <span class="text-sm font-medium text-gray-700 truncate">${folder}</span>
-                    </div>
-                `).join('');
-                
-                // RENDER RECENT (Top 4 files)
-                const recentGrid = document.getElementById('recentGrid');
-                const recentFiles = allFiles.slice(0, 4); // Take first 4
-                
-                recentGrid.innerHTML = recentFiles.map(file => `
-                    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="material-symbols-outlined ${getFileColor(file.name)}">${getFileIcon(file.name)}</span>
-                            <span class="text-xs text-gray-500 font-medium truncate">${file.name}</span>
-                        </div>
-                        <div class="h-20 bg-gray-50 rounded-lg flex items-center justify-center mb-2">
-                             <span class="material-symbols-outlined text-gray-300 text-4xl">description</span>
-                        </div>
-                         <a href="${file.url}" target="_blank" class="text-[10px] text-blue-600 hover:underline">Open File</a>
-                    </div>
-                `).join('');
-            }
+        // 3. FILES LIST
+        renderFileList(files);
+    }
 
-            // 3. RENDER FILE LIST
-            if (filesToShow.length === 0) {
-                fileList.innerHTML = `<div class="text-center py-10 text-gray-400 text-sm">Empty folder</div>`;
-            } else {
-                fileList.innerHTML = filesToShow.map(file => `
-                    <div class="group grid grid-cols-12 gap-4 items-center p-2 hover:bg-blue-50 rounded-lg border-b border-gray-50 transition-colors cursor-pointer">
-                        <div class="col-span-6 md:col-span-6 flex items-center gap-3 overflow-hidden">
-                            <span class="material-symbols-outlined ${getFileColor(file.name)}">${getFileIcon(file.name)}</span>
-                            <span class="text-sm text-gray-700 font-medium truncate group-hover:text-blue-700">${file.name}</span>
-                        </div>
-                        <div class="col-span-4 md:col-span-4 hidden md:block text-xs text-gray-400">
-                            Me
-                        </div>
-                        <div class="col-span-6 md:col-span-2 text-right">
-                             <a href="${file.url}" target="_blank" class="inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-200 text-gray-500">
-                                <span class="material-symbols-outlined text-lg">download</span>
-                            </a>
-                        </div>
-                    </div>
-                `).join('');
-            }
+    // --- RENDER JUST THE FILE LIST (Used by filters) ---
+    function renderFileList(filesToRender) {
+        const fileGrid = document.getElementById('fileGrid');
+        document.getElementById('fileCount').innerText = `${filesToRender.length} items`;
+
+        if (filesToRender.length === 0) {
+            fileGrid.innerHTML = `<p class="text-center text-gray-400 py-8 text-sm">No files found.</p>`;
+            return;
         }
 
-        function applySearch() {
-            const term = document.getElementById('searchInput').value.toLowerCase();
-            if (!term) {
-                renderView(currentFolder);
-                return;
-            }
-            
-            // Simple search filter
-            const filtered = allFiles.filter(f => f.name.toLowerCase().includes(term));
-            
-            // Hide folders/recent during search
-            document.getElementById('recentSection').style.display = 'none';
-            document.getElementById('folderSection').style.display = 'none';
-            
-            // Render list manually
-            const fileList = document.getElementById('fileList');
-            fileList.innerHTML = filtered.map(file => `
-                <div class="group grid grid-cols-12 gap-4 items-center p-2 hover:bg-blue-50 rounded-lg border-b border-gray-50 transition-colors">
-                     <div class="col-span-10 flex items-center gap-3">
-                        <span class="material-symbols-outlined ${getFileColor(file.name)}">${getFileIcon(file.name)}</span>
-                        <span class="text-sm text-gray-700 font-medium truncate">${file.name}</span>
-                     </div>
-                     <div class="col-span-2 text-right">
-                         <a href="${file.url}" target="_blank" class="material-symbols-outlined text-gray-400 hover:text-blue-600">download</a>
-                     </div>
+        fileGrid.innerHTML = filesToRender.map(file => {
+            const icon = getFileIcon(file.name);
+            return `
+                <div class="bg-white p-3 rounded-xl border border-gray-100 flex items-center justify-between shadow-sm active:bg-gray-50 transition-colors">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <span class="material-symbols-outlined text-gray-400 text-2xl">${icon}</span>
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-gray-700 truncate">${file.name}</p>
+                            <p class="text-[10px] text-gray-400 flex items-center gap-1">
+                                ${file.folder}
+                            </p>
+                        </div>
+                    </div>
+                    <a href="${file.url}" target="_blank" class="text-gray-400 hover:text-blue-600 p-2">
+                        <span class="material-symbols-outlined">download</span>
+                    </a>
                 </div>
-            `).join('');
+            `;
+        }).join('');
+    }
+
+    // --- FILTERS ---
+    function filterByFolder(folderName) {
+        if (folderName === 'ALL') {
+            renderFileList(allFiles);
+        } else {
+            const filtered = allFiles.filter(f => f.folder === folderName);
+            renderFileList(filtered);
         }
+    }
 
-        // Init
-        fetchFiles();
+    function filterFiles(searchTerm) {
+        const term = searchTerm.toLowerCase();
+        const filtered = allFiles.filter(f => f.name.toLowerCase().includes(term));
+        renderFileList(filtered);
+    }
 
-    </script>
+    // Start App
+    fetchFiles();
+
+</script>
 </body>
 </html>
