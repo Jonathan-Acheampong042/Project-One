@@ -7,65 +7,206 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            min-height: 100vh;
+        }
+        
+        .floating-shapes {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.08;
+            animation: float 25s infinite ease-in-out;
+        }
+        
+        .shape-1 {
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            top: -150px;
+            left: -150px;
+            animation-delay: 0s;
+        }
+        
+        .shape-2 {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            bottom: -100px;
+            right: -100px;
+            animation-delay: -8s;
+        }
+        
+        .shape-3 {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            top: 40%;
+            right: 5%;
+            animation-delay: -15s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(30px, -30px) rotate(5deg); }
+            50% { transform: translate(0, -50px) rotate(0deg); }
+            75% { transform: translate(-30px, -30px) rotate(-5deg); }
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-slide-up {
+            animation: slideUp 0.7s ease-out forwards;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .file-item {
+            transition: all 0.3s ease;
+        }
+        
+        .file-item:hover {
+            transform: translateX(8px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .folder-item {
+            transition: all 0.3s ease;
+        }
+        
+        .folder-item:hover {
+            transform: scale(1.02);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .folder-item.active {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+        
+        .search-input {
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            transform: scale(1.02);
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
+        }
+        
+        .suggested-card {
+            transition: all 0.4s ease;
+        }
+        
+        .suggested-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .glow-border {
+            position: relative;
+        }
+        
+        .glow-border::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.5), rgba(139, 92, 246, 0.5), rgba(6, 182, 212, 0.5));
+            border-radius: inherit;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .glow-border:hover::before {
+            opacity: 1;
+        }
+    </style>
 </head>
-<body class="bg-[#f6f6f8] min-h-screen font-sans text-slate-800">
+<body class="min-h-screen font-sans text-white relative">
 
-    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <!-- Floating Background Shapes -->
+    <div class="floating-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <header class="glass-card border-b border-white/10 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-blue-600 text-3xl">cloud_circle</span>
-                <h1 class="font-bold text-xl tracking-tight">FileVault</h1>
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+                    <span class="material-symbols-outlined text-white text-xl">cloud_circle</span>
+                </div>
+                <h1 class="font-bold text-xl tracking-tight text-white">FileVault</h1>
             </div>
-            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-bold text-xs">
+            <div class="w-9 h-9 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
                 U
             </div>
         </div>
     </header>
 
-    <div class="bg-white border-b border-gray-200 px-4 py-3 sticky top-[57px] z-40">
+    <div class="glass-card border-b border-white/10 px-4 py-3 sticky top-[57px] z-40">
         <div class="max-w-7xl mx-auto relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span class="material-symbols-outlined text-gray-400">search</span>
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <span class="material-symbols-outlined text-white/40">search</span>
             </div>
             <input 
                 id="searchInput"
                 oninput="filterFiles(this.value)" 
-                class="block w-full pl-10 pr-4 py-3 bg-gray-100 border-none rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all" 
-                placeholder="Search in Drive" 
+                class="search-input block w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:border-blue-500/50 focus:bg-white/10 outline-none transition-all" 
+                placeholder="Search in FileVault..." 
                 type="text"
             />
         </div>
     </div>
 
-    <main class="max-w-7xl mx-auto px-4 py-6 pb-32">
+    <main class="max-w-7xl mx-auto px-4 py-6 pb-32 relative z-10">
         
         <div id="suggestedSection" class="mb-8 hidden">
-            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Suggested</h3>
-            <div id="suggestedGrid" class="grid grid-cols-2 gap-3">
+            <h3 class="text-xs font-bold text-white/50 uppercase tracking-wider mb-3">Suggested For You</h3>
+            <div id="suggestedGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 </div>
         </div>
 
         <div id="folderSection" class="mb-8">
-            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Folders</h3>
-            <div id="folderGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <div class="col-span-full text-gray-400 text-sm italic">Loading folders...</div>
+            <h3 class="text-xs font-bold text-white/50 uppercase tracking-wider mb-3">Folders</h3>
+            <div id="folderGrid" class="flex flex-wrap gap-2">
+                <div class="col-span-full text-white/40 text-sm italic">Loading folders...</div>
             </div>
         </div>
 
         <div id="fileListSection">
-            <div class="flex justify-between items-end mb-3 border-b border-gray-200 pb-2">
-                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Files</h3>
-                <span id="fileCount" class="text-[10px] text-gray-400 font-bold"></span>
+            <div class="flex justify-between items-end mb-3 border-b border-white/10 pb-2">
+                <h3 class="text-xs font-bold text-white/50 uppercase tracking-wider">All Files</h3>
+                <span id="fileCount" class="text-[10px] text-white/40 font-bold"></span>
             </div>
-            <div id="fileGrid" class="flex flex-col gap-2">
+            <div id="fileGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 </div>
         </div>
 
     </main>
 
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
+    <div class="fixed bottom-0 left-0 right-0 glass-card border-t border-white/10 p-4 z-50">
         <div class="max-w-7xl mx-auto text-center">
-            <a href="login.html" class="inline-flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-blue-600 transition-colors">
+            <a href="login.html" class="inline-flex items-center gap-2 text-xs font-bold text-white/40 hover:text-blue-400 transition-colors">
                 <span class="material-symbols-outlined text-sm">lock</span>
                 Manager Portal Access
             </a>
@@ -93,12 +234,12 @@
     // --- HELPER: COLORS ---
     function getFileColor(fileName) {
         const name = fileName.toLowerCase();
-        if (name.endsWith('.pdf')) return 'text-red-500 bg-red-50';
-        if (name.endsWith('.docx') || name.endsWith('.doc')) return 'text-blue-600 bg-blue-50';
-        if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'text-orange-500 bg-orange-50';
-        if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'text-green-600 bg-green-50';
-        if (name.endsWith('.jpg') || name.endsWith('.png')) return 'text-purple-600 bg-purple-50';
-        return 'text-slate-500 bg-slate-100';
+        if (name.endsWith('.pdf')) return 'text-red-400 bg-red-500/10';
+        if (name.endsWith('.docx') || name.endsWith('.doc')) return 'text-blue-400 bg-blue-500/10';
+        if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'text-orange-400 bg-orange-500/10';
+        if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'text-green-400 bg-green-500/10';
+        if (name.endsWith('.jpg') || name.endsWith('.png')) return 'text-purple-400 bg-purple-500/10';
+        return 'text-white/60 bg-white/5';
     }
 
     // --- MAIN FETCH FUNCTION ---
@@ -123,7 +264,7 @@
         allFiles = realFiles.map(file => {
             const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
             const displayName = file.name.split('/').pop();
-            const folderName = file.name.includes('/') ? file.name.split('/')[0] : 'Unsorted';
+            const folderName = file.name.includes('/') ? file.name.split('/')[0] : null;
             
             return {
                 name: displayName,
@@ -135,7 +276,7 @@
         });
 
         if (allFiles.length === 0) {
-            fileGrid.innerHTML = `<div class="text-center py-10 text-gray-400">No files found.</div>`;
+            fileGrid.innerHTML = `<div class="text-center py-10 text-white/40">No files found. Manager is yet to upload.</div>`;
             return;
         }
 
@@ -149,8 +290,8 @@
 
     // --- RENDER FUNCTION (Draws the whole UI) ---
     function renderAll(files) {
-    // 1. SUGGESTED SECTION (Top 2 Newest)
-    const suggested = files.slice(0, 2); 
+    // 1. SUGGESTED SECTION (Top 4 Newest)
+    const suggested = files.slice(0, 4); 
     const suggestedGrid = document.getElementById('suggestedGrid');
     
     if (suggested.length > 0) {
@@ -161,70 +302,81 @@
             const [textColor, bgColor] = colorClasses.split(' ');
             
             return `
-                <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between h-32 relative overflow-hidden group">
-                    <div class="${bgColor} w-10 h-10 rounded-lg flex items-center justify-center mb-2">
-                        <span class="material-symbols-outlined ${textColor}">${icon}</span>
+                <div class="suggested-card glass-card p-5 rounded-2xl flex flex-col justify-between h-40 relative overflow-hidden group">
+                    <div class="${bgColor} w-14 h-14 rounded-xl flex items-center justify-center mb-3">
+                        <span class="material-symbols-outlined ${textColor} text-3xl">${icon}</span>
                     </div>
                     <div class="z-10">
-                        <p class="font-bold text-gray-800 text-sm truncate mb-1" title="${file.name}">${file.name}</p>
-                        <a href="${file.url}" target="_blank" class="text-[10px] font-bold text-blue-600 uppercase hover:underline">Open File</a>
+                        <p class="font-bold text-white text-sm truncate mb-1" title="${file.name}">${file.name}</p>
+                        <p class="text-[10px] text-white/40 flex items-center gap-1 mb-2">
+                            <span class="material-symbols-outlined text-[10px]">folder</span> ${file.folder || 'Root'}
+                        </p>
+                        <a href="${file.url}" target="_blank" class="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors">
+                            <span class="material-symbols-outlined text-sm">download</span> Download
+                        </a>
                     </div>
                 </div>
             `;
         }).join('');
     }
 
-    // 2. FOLDERS SECTION (Clicking these filters the list below)
-    const folders = [...new Set(files.map(f => f.folder))].sort();
+    // 2. FOLDERS SECTION
+    const folders = [...new Set(files.map(f => f.folder).filter(f => f))].sort();
     const folderGrid = document.getElementById('folderGrid');
     
-    // "All Files" Button
-    let folderHtml = `
-        <div onclick="filterByFolder('ALL')" class="bg-blue-50 p-4 rounded-2xl border border-blue-100 shadow-sm flex items-center gap-3 cursor-pointer active:scale-95 transition-transform select-none">
-            <span class="material-symbols-outlined text-blue-600">grid_view</span>
-            <span class="font-bold text-blue-700 text-sm">All Files</span>
-        </div>
-    `;
+    if (folders.length > 0) {
+        let folderHtml = `
+            <div onclick="filterByFolder(null)" class="folder-item glass-card px-4 py-2 rounded-xl cursor-pointer border border-white/10 hover:border-white/20 transition-all text-sm text-white/70">
+                <span class="material-symbols-outlined text-sm mr-1">folder</span> All Files
+            </div>
+        `;
+        folders.forEach(folder => {
+            folderHtml += `
+                <div onclick="filterByFolder('${folder}')" class="folder-item glass-card px-4 py-2 rounded-xl cursor-pointer border border-white/10 hover:border-white/20 transition-all text-sm text-white/70">
+                    <span class="material-symbols-outlined text-sm mr-1">folder</span> ${folder}
+                </div>
+            `;
+        });
+        folderGrid.innerHTML = folderHtml;
+    } else {
+        folderGrid.innerHTML = '';
+    }
 
-    // Dynamic Folders
-    folderHtml += folders.map(folder => `
-        <div onclick="filterByFolder('${folder}')" class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-gray-50 active:scale-95 transition-transform select-none">
-            <span class="material-symbols-outlined text-gray-500">folder</span>
-            <span class="font-semibold text-gray-700 text-sm truncate">${folder}</span>
-        </div>
-    `).join('');
-    
-    folderGrid.innerHTML = folderHtml;
-
-    // 3. RENDER THE FILE LIST INITIALLY
+    // 3. RENDER THE FILE LIST
     renderFileList(files);
 }
 
     // --- RENDER JUST THE FILE LIST (Used by filters) ---
     function renderFileList(filesToRender) {
         const fileGrid = document.getElementById('fileGrid');
-        document.getElementById('fileCount').innerText = `${filesToRender.length} items`;
+        document.getElementById('fileCount').innerText = `${filesToRender.length} files`;
 
         if (filesToRender.length === 0) {
-            fileGrid.innerHTML = `<p class="text-center text-gray-400 py-8 text-sm">No files found.</p>`;
+            fileGrid.innerHTML = `<p class="text-center text-white/40 py-10 text-sm col-span-full">No files found.</p>`;
             return;
         }
 
         fileGrid.innerHTML = filesToRender.map(file => {
             const icon = getFileIcon(file.name);
+            const colorClasses = getFileColor(file.name);
+            const [textColor, bgColor] = colorClasses.split(' ');
+            
             return `
-                <div class="bg-white p-3 rounded-xl border border-gray-100 flex items-center justify-between shadow-sm active:bg-gray-50 transition-colors">
-                    <div class="flex items-center gap-3 overflow-hidden">
-                        <span class="material-symbols-outlined text-gray-400 text-2xl">${icon}</span>
-                        <div class="min-w-0">
-                            <p class="text-sm font-semibold text-gray-700 truncate">${file.name}</p>
-                            <p class="text-[10px] text-gray-400 flex items-center gap-1">
-                                ${file.folder}
+                <div class="file-item glass-card p-4 rounded-2xl border border-white/5 hover:border-white/20 transition-all group">
+                    <div class="flex items-start gap-3 mb-3">
+                        <div class="${bgColor} w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined ${textColor} text-2xl">${icon}</span>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="font-semibold text-white/80 text-sm truncate" title="${file.name}">${file.name}</p>
+                            <p class="text-[10px] text-white/40 mt-1 flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[10px]">folder</span> ${file.folder || 'Root'}
                             </p>
                         </div>
                     </div>
-                    <a href="${file.url}" target="_blank" class="text-gray-400 hover:text-blue-600 p-2">
-                        <span class="material-symbols-outlined">download</span>
+                    <a href="${file.url}" target="_blank" class="flex items-center justify-center gap-2 w-full py-2 rounded-lg bg-white/5 hover:bg-blue-500/20 text-white/60 hover:text-blue-400 text-sm transition-all">
+                        <span class="material-symbols-outlined text-lg">download</span>
+                        Download
                     </a>
                 </div>
             `;
@@ -232,18 +384,24 @@
     }
 
     // --- FILTERS ---
-    function filterByFolder(folderName) {
-        if (folderName === 'ALL') {
+    let currentFolder = null;
+    
+    function filterByFolder(folder) {
+        currentFolder = folder;
+        if (folder === null) {
             renderFileList(allFiles);
         } else {
-            const filtered = allFiles.filter(f => f.folder === folderName);
+            const filtered = allFiles.filter(f => f.folder === folder);
             renderFileList(filtered);
         }
     }
 
     function filterFiles(searchTerm) {
         const term = searchTerm.toLowerCase();
-        const filtered = allFiles.filter(f => f.name.toLowerCase().includes(term));
+        let filtered = allFiles.filter(f => f.name.toLowerCase().includes(term));
+        if (currentFolder) {
+            filtered = filtered.filter(f => f.folder === currentFolder);
+        }
         renderFileList(filtered);
     }
 
