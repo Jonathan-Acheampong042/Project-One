@@ -1,0 +1,8 @@
+# Secret environment variables
+.env
+
+# Dependencies (these are too large for GitHub)
+node_modules/
+
+# Logs
+npm-debug.log*
