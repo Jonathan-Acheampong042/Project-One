@@ -32,6 +32,8 @@
         .sync-err { background: #ef4444; box-shadow: 0 0 6px #ef444488; }
         .tab-btn { transition: all 0.2s; }
         .tab-btn.active { background: rgba(59,130,246,0.2); color: #60a5fa; border-color: rgba(59,130,246,0.4); }
+        #folderSidebar { transition: transform 0.3s ease; }
+        .upload-zone.dragover { border-color: #3b82f6 !important; background: rgba(59, 130, 246, 0.15) !important; transform: scale(1.02); }
     </style>
 </head>
 <body class="min-h-screen font-sans text-white relative">
@@ -44,9 +46,9 @@
     <header class="glass-card border-b border-white/10 p-4 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <button onclick="toggleFolderSidebar()" class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 hover:scale-105 transition-transform cursor-pointer" title="Toggle Folders">
                     <span class="material-symbols-outlined text-white text-xl">admin_panel_settings</span>
-                </div>
+                </button>
                 <div>
                     <h1 class="font-bold text-xl text-white leading-tight">Manager Dashboard</h1>
                     <div class="flex items-center gap-1.5 mt-0.5">
@@ -61,7 +63,22 @@
         </div>
     </header>
 
-    <main class="max-w-4xl mx-auto p-6 relative z-10 space-y-8">
+    <!-- Folder Sidebar -->
+    <div id="folderSidebar" class="fixed left-0 top-[73px] bottom-0 w-64 bg-slate-900/95 backdrop-blur-lg border-r border-white/10 z-40 overflow-y-auto transition-transform">
+        <div class="p-4">
+            <h4 class="text-xs font-bold text-white/40 uppercase tracking-wider mb-4 flex items-center justify-between">
+                <span>Folders</span>
+                <button onclick="createNewFolder()" class="text-blue-400 hover:text-blue-300" title="Create folder">
+                    <span class="material-symbols-outlined text-sm">create_new_folder</span>
+                </button>
+            </h4>
+            <div id="sidebarFolderList" class="space-y-1">
+                <p class="text-white/30 text-sm italic">Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-4xl mx-auto p-6 relative z-10 space-y-8 ml-64" id="mainContent">
 
         <!-- Upload Section -->
         <section class="glass-card p-8 rounded-2xl border border-white/10 animate-slide-up">
@@ -90,7 +107,8 @@
                     <div id="uploadZone" class="upload-zone glass-card p-6 rounded-xl border-2 border-dashed border-white/10 text-center cursor-pointer">
                         <span class="material-symbols-outlined text-4xl text-white/30 mb-2 block">upload_file</span>
                         <p class="text-white/50 text-sm mb-3">Click to select or drag & drop</p>
-                        <input type="file" id="fileInput" class="block w-full text-sm text-white/60 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-500/20 file:text-blue-400 hover:file:bg-blue-500/30 transition-all"/>
+                        <input type="file" id="fileInput" multiple class="block w-full text-sm text-white/60 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-500/20 file:text-blue-400 hover:file:bg-blue-500/30 transition-all"/>
+                        <p class="text-white/40 text-xs mt-2">Select multiple files using Ctrl/Cmd+Click</p>
                     </div>
                 </div>
             </div>
@@ -111,6 +129,12 @@
                     <span id="fileCountBadge" class="text-xs font-bold text-white/40 bg-white/5 px-2 py-0.5 rounded-full ml-1"></span>
                 </h3>
                 <div class="flex items-center gap-2">
+                    <select id="sortSelect" onchange="sortFiles(this.value)" class="text-xs text-white/70 bg-white/5 border border-white/10 rounded-lg px-3 py-2 outline-none cursor-pointer hover:bg-white/10 transition-all">
+                        <option value="newest" class="text-black">Newest First</option>
+                        <option value="oldest" class="text-black">Oldest First</option>
+                        <option value="name" class="text-black">Name A-Z</option>
+                        <option value="size" class="text-black">Size</option>
+                    </select>
                     <button onclick="runSyncRepair()" class="text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 px-3 py-2 rounded-lg transition-all flex items-center gap-1 border border-amber-500/20">
                         <span class="material-symbols-outlined text-sm">sync</span> Repair Sync
                     </button>
@@ -199,10 +223,79 @@
         return new Date(str).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
     }
 
+    function formatFileSize(bytes) {
+        if (!bytes) return '—';
+        const units = ['B', 'KB', 'MB', 'GB'];
+        let i = 0;
+        let size = bytes;
+        while (size >= 1024 && i < units.length - 1) { size /= 1024; i++; }
+        return `${size.toFixed(1)} ${units[i]}`;
+    }
+
     function setStatus(msg, type = 'blue') {
         const el = document.getElementById('status');
         el.innerText = msg;
         el.className = `mt-4 text-sm font-medium text-center min-h-[20px] text-${type}-400`;
+    }
+
+    // ─── TOGGLE FOLDER SIDEBAR ───────────────────────────────────
+    let folderSidebarVisible = true;
+    function toggleFolderSidebar() {
+        const sidebar = document.getElementById('folderSidebar');
+        const main = document.getElementById('mainContent');
+        folderSidebarVisible = !folderSidebarVisible;
+        if (folderSidebarVisible) {
+            sidebar.classList.remove('-translate-x-full');
+            main.classList.remove('ml-0');
+            main.classList.add('ml-64');
+        } else {
+            sidebar.classList.add('-translate-x-full');
+            main.classList.remove('ml-64');
+            main.classList.add('ml-0');
+        }
+    }
+
+    // Populate sidebar with folders
+    function renderSidebarFolders() {
+        const container = document.getElementById('sidebarFolderList');
+        if (availableFolders.length === 0) {
+            container.innerHTML = '<p class="text-white/30 text-sm italic">No folders yet</p>';
+            return;
+        }
+        let html = `
+            <div onclick="filterByFolder(null)" class="folder-item active glass-card px-3 py-2 rounded-lg cursor-pointer border border-white/10 hover:border-white/20 transition-all text-sm text-white/70 flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">folder</span> All Files
+            </div>`;
+        availableFolders.forEach(folder => {
+            html += `
+            <div onclick="filterByFolder('${folder}')" class="folder-item glass-card px-3 py-2 rounded-lg cursor-pointer border border-white/10 hover:border-white/20 transition-all text-sm text-white/70 flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">folder_open</span> ${folder}
+            </div>`;
+        });
+        container.innerHTML = html;
+    }
+
+    // Filter files by folder
+    let currentFolder = null;
+    function filterByFolder(folder) {
+        currentFolder = folder;
+        // Update active state in sidebar
+        document.querySelectorAll('#sidebarFolderList .folder-item').forEach(el => {
+            el.classList.remove('active');
+            if ((folder === null && el.textContent.includes('All Files')) || 
+                (folder && el.textContent.includes(folder))) {
+                el.classList.add('active');
+            }
+        });
+        // Filter and reload files
+        loadManagerFiles();
+    }
+
+    // Sort files
+    let currentSort = 'newest';
+    function sortFiles(sortType) {
+        currentSort = sortType;
+        loadManagerFiles();
     }
 
     // ─── TABS ───────────────────────────────────────────────────
@@ -274,16 +367,39 @@
 
             if (error) throw error;
 
-            document.getElementById('fileCountBadge').innerText = `${(data || []).length} records`;
+            // Filter by folder if selected
+            let filteredData = data || [];
+            if (currentFolder) {
+                filteredData = filteredData.filter(row => row.folder_name === currentFolder);
+            }
+
+            // Apply sorting
+            filteredData = applySort(filteredData);
+
+            document.getElementById('fileCountBadge').innerText = `${filteredData.length} records`;
 
             if (!data || data.length === 0) {
                 container.innerHTML = `<p class="text-white/40 text-center py-10 col-span-full">No files in database. Upload one above.</p>`;
                 return;
             }
 
-            container.innerHTML = data.map(row => renderFileCard(row, 'db')).join('');
+            container.innerHTML = filteredData.map(row => renderFileCard(row, 'db')).join('');
         } catch (err) {
             container.innerHTML = `<p class="text-red-400 text-center col-span-full">DB Error: ${err.message}</p>`;
+        }
+    }
+
+    function applySort(files) {
+        switch (currentSort) {
+            case 'oldest':
+                return files.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            case 'name':
+                return files.sort((a, b) => a.file_name.localeCompare(b.file_name));
+            case 'size':
+                return files.sort((a, b) => (b.file_size || 0) - (a.file_size || 0));
+            case 'newest':
+            default:
+                return files.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         }
     }
 
@@ -308,11 +424,23 @@
                 return;
             }
 
-            container.innerHTML = realFiles.map(file => {
+            // Filter by folder if selected
+            let filteredFiles = realFiles;
+            if (currentFolder) {
+                filteredFiles = realFiles.filter(f => {
+                    const folderName = f.name.includes('/') ? f.name.split('/')[0] : 'Root';
+                    return folderName === currentFolder;
+                });
+            }
+
+            // Apply sorting
+            filteredFiles = applySort(filteredFiles);
+
+            container.innerHTML = filteredFiles.map(file => {
                 const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
                 const displayName = file.name.split('/').pop();
                 const folderName = file.name.includes('/') ? file.name.split('/')[0] : 'Root';
-                const row = { id: file.id, file_name: displayName, folder_name: folderName, download_url: urlData.publicUrl, created_at: file.created_at, _storagePath: file.name };
+                const row = { id: file.id, file_name: displayName, folder_name: folderName, download_url: urlData.publicUrl, created_at: file.created_at, _storagePath: file.name, file_size: file.metadata?.size };
                 return renderFileCard(row, 'storage');
             }).join('');
         } catch (err) {
@@ -325,6 +453,7 @@
         const colorClasses = getFileColor(row.file_name);
         const [textColor, bgColor] = colorClasses.split(' ');
         const storagePath = row._storagePath || (row.folder_name && row.folder_name !== 'Root' ? `${row.folder_name}/${row.file_name}` : row.file_name);
+        const fileSize = formatFileSize(row.file_size);
 
         return `
         <div class="file-item glass-card p-5 rounded-2xl border border-white/5 hover:border-white/20 transition-all">
@@ -336,6 +465,8 @@
                     <p class="font-semibold text-white/80 text-sm truncate" title="${row.file_name}">${row.file_name}</p>
                     <p class="text-[10px] text-white/40 mt-0.5 flex items-center gap-1">
                         <span class="material-symbols-outlined text-[10px]">folder</span> ${row.folder_name || 'Root'}
+                        <span class="text-white/20">·</span>
+                        <span>${fileSize}</span>
                     </p>
                     ${row.created_at ? `<p class="text-[10px] text-white/30 mt-0.5">${formatDate(row.created_at)}</p>` : ''}
                 </div>
@@ -357,55 +488,87 @@
         const fileInput = document.getElementById('fileInput');
         const folderSelect = document.getElementById('folderSelect');
         const btn = document.getElementById('uploadBtn');
-        const file = fileInput.files[0];
+        const files = fileInput.files;
 
-        if (!file) { setStatus('Please select a file first.', 'yellow'); return; }
+        if (files.length === 0) { setStatus('Please select at least one file.', 'yellow'); return; }
 
         btn.disabled = true;
-        document.getElementById('btnText').innerText = 'Uploading to Storage...';
-        setStatus('Step 1/2 — Uploading to Storage...', 'blue');
+        const totalFiles = files.length;
+        let successCount = 0;
+        let errorCount = 0;
 
-        const folder = folderSelect.value;
-        const path = folder ? `${folder}/${file.name}` : file.name;
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            document.getElementById('btnText').innerText = `Uploading ${i + 1}/${totalFiles}...`;
+            setStatus(`Uploading ${i + 1}/${totalFiles}: ${file.name}...`, 'blue');
 
-        // STEP 1: Upload to Supabase Storage
-        const { error: uploadError } = await _supabase.storage
-            .from('vault-files')
-            .upload(path, file, { upsert: true });
+            const folder = folderSelect.value;
+            const path = folder ? `${folder}/${file.name}` : file.name;
 
-        if (uploadError) {
-            setStatus('Storage Error: ' + uploadError.message, 'red');
-            btn.disabled = false;
-            document.getElementById('btnText').innerText = 'Upload & Share';
-            return;
+            // STEP 1: Upload to Supabase Storage
+            const { error: uploadError } = await _supabase.storage
+                .from('vault-files')
+                .upload(path, file, { upsert: true });
+
+            if (uploadError) {
+                setStatus(`Storage Error for ${file.name}: ${uploadError.message}`, 'red');
+                errorCount++;
+                continue;
+            }
+
+            // STEP 2: Get public URL + save to DB
+            const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(path);
+
+            const { error: dbError } = await _supabase.from('files_list').insert({
+                file_name: file.name,
+                download_url: urlData.publicUrl,
+                folder_name: folder || 'Root'
+            });
+
+            if (dbError) {
+                setStatus(`⚠ ${file.name} uploaded but DB failed: ${dbError.message}`, 'yellow');
+                errorCount++;
+            } else {
+                successCount++;
+            }
         }
-
-        // STEP 2: Get public URL + save to DB
-        document.getElementById('btnText').innerText = 'Saving to Database...';
-        setStatus('Step 2/2 — Saving to Database...', 'blue');
-
-        const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(path);
-
-        const { error: dbError } = await _supabase.from('files_list').insert({
-            file_name: file.name,
-            download_url: urlData.publicUrl,
-            folder_name: folder || 'Root'
-        });
 
         btn.disabled = false;
         document.getElementById('btnText').innerText = 'Upload & Share';
 
-        if (dbError) {
-            // Storage succeeded but DB failed — warn but don't block
-            setStatus(`⚠ Uploaded to Storage but DB failed: ${dbError.message}. Run "Repair Sync" to fix.`, 'yellow');
+        if (successCount > 0 && errorCount === 0) {
+            setStatus(`✓ All ${successCount} file(s) uploaded and synced!`, 'green');
+        } else if (successCount > 0) {
+            setStatus(`⚠ ${successCount} succeeded, ${errorCount} failed. Run "Repair Sync" to fix.`, 'yellow');
         } else {
-            setStatus('✓ File uploaded and synced to both Storage & Database!', 'green');
+            setStatus(`✗ All ${errorCount} file(s) failed to upload.`, 'red');
         }
 
         fileInput.value = '';
         loadFolders();
+        renderSidebarFolders();
         loadManagerFiles();
     }
+
+    // Drag and drop for upload zone
+    const uploadZone = document.getElementById('uploadZone');
+    uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+    });
+    uploadZone.addEventListener('dragleave', () => {
+        uploadZone.classList.remove('dragover');
+    });
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        const fileInput = document.getElementById('fileInput');
+        fileInput.files = e.dataTransfer.files;
+        const count = fileInput.files.length;
+        if (count > 0) {
+            setStatus(`${count} file(s) selected - click "Upload & Share" to proceed`, 'blue');
+        }
+    });
 
     // ─── DELETE (synced) ────────────────────────────────────────
    async function deleteFile(storagePath, dbId) {
@@ -528,8 +691,27 @@ console.log('dbResult:', JSON.stringify(dbResult));
         const { data: { session } } = await _supabase.auth.getSession();
         if (!session) { window.location.href = 'login.html'; return; }
         await loadFolders();
+        renderSidebarFolders();
         await loadManagerFiles();
     }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        // Ctrl/Cmd + U: Open file upload dialog
+        if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+            e.preventDefault();
+            document.getElementById('fileInput').click();
+        }
+        // Ctrl/Cmd + R: Refresh files
+        if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+            e.preventDefault();
+            loadManagerFiles();
+        }
+        // Escape: Close sidebar
+        if (e.key === 'Escape') {
+            if (folderSidebarVisible) toggleFolderSidebar();
+        }
+    });
 
     async function signOut() {
         await _supabase.auth.signOut();

@@ -49,7 +49,7 @@
                 </div>
                 <h1 class="font-bold text-xl tracking-tight text-white">FileVault</h1>
             </div>
-            <div class="w-9 h-9 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
+            <div class="w-9 h-9 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg hover:scale-110 transition-transform cursor-pointer" onclick="toggleFolderSection()" title="Toggle Folders">
                 U
             </div>
         </div>
@@ -86,7 +86,14 @@
         <div id="fileListSection">
             <div class="flex justify-between items-end mb-3 border-b border-white/10 pb-2">
                 <h3 class="text-xs font-bold text-white/50 uppercase tracking-wider">All Files</h3>
-                <span id="fileCount" class="text-[10px] text-white/40 font-bold"></span>
+                <div class="flex items-center gap-2">
+                    <select id="sortSelect" onchange="sortFiles(this.value)" class="text-xs text-white/70 bg-white/5 border border-white/10 rounded-lg px-2 py-1 outline-none cursor-pointer hover:bg-white/10 transition-all">
+                        <option value="newest" class="text-black">Newest</option>
+                        <option value="oldest" class="text-black">Oldest</option>
+                        <option value="name" class="text-black">Name</option>
+                    </select>
+                    <span id="fileCount" class="text-[10px] text-white/40 font-bold"></span>
+                </div>
             </div>
             <div id="fileGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div class="col-span-full flex justify-center py-10">
@@ -140,6 +147,37 @@
     function formatDate(str) {
         if (!str) return '';
         return new Date(str).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    // ─── TOGGLE FOLDER SECTION ───────────────────────────────────
+    let folderSectionVisible = true;
+    function toggleFolderSection() {
+        const section = document.getElementById('folderSection');
+        folderSectionVisible = !folderSectionVisible;
+        if (folderSectionVisible) {
+            section.classList.remove('hidden');
+        } else {
+            section.classList.add('hidden');
+        }
+    }
+
+    // Sort files
+    let currentSort = 'newest';
+    function sortFiles(sortType) {
+        currentSort = sortType;
+        renderAll(allFiles);
+    }
+
+    function applyUserSort(files) {
+        switch (currentSort) {
+            case 'oldest':
+                return files.sort((a, b) => new Date(a.date) - new Date(b.date));
+            case 'name':
+                return files.sort((a, b) => a.name.localeCompare(b.name));
+            case 'newest':
+            default:
+                return files.sort((a, b) => new Date(b.date) - new Date(a.date));
+        }
     }
 
     // ─── FETCH: DB first, fall back to Storage ───────────────────
@@ -208,6 +246,9 @@
 
     // ─── RENDER ALL ──────────────────────────────────────────────
     function renderAll(files) {
+        // Apply sorting
+        files = applyUserSort([...files]);
+
         // Suggested: Top 4 newest
         const suggestedGrid = document.getElementById('suggestedGrid');
         const suggested = files.slice(0, 4);
@@ -312,6 +353,19 @@
         if (currentFolder) filtered = filtered.filter(f => f.folder === currentFolder);
         renderFileList(filtered);
     }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        // Ctrl/Cmd + F: Focus search
+        if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+            e.preventDefault();
+            document.getElementById('searchInput').focus();
+        }
+        // Escape: Close folder section
+        if (e.key === 'Escape') {
+            if (folderSectionVisible) toggleFolderSection();
+        }
+    });
 
     // Start
     fetchFiles();
