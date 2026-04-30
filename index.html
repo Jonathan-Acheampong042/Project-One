@@ -9,140 +9,31 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
     <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-            min-height: 100vh;
-        }
-        
-        .floating-shapes {
-            position: fixed;
-            inset: 0;
-            overflow: hidden;
-            pointer-events: none;
-            z-index: 0;
-        }
-        
-        .shape {
-            position: absolute;
-            border-radius: 50%;
-            opacity: 0.08;
-            animation: float 25s infinite ease-in-out;
-        }
-        
-        .shape-1 {
-            width: 400px;
-            height: 400px;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            top: -150px;
-            left: -150px;
-            animation-delay: 0s;
-        }
-        
-        .shape-2 {
-            width: 300px;
-            height: 300px;
-            background: linear-gradient(135deg, #06b6d4, #3b82f6);
-            bottom: -100px;
-            right: -100px;
-            animation-delay: -8s;
-        }
-        
-        .shape-3 {
-            width: 200px;
-            height: 200px;
-            background: linear-gradient(135deg, #8b5cf6, #ec4899);
-            top: 40%;
-            right: 5%;
-            animation-delay: -15s;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            25% { transform: translate(30px, -30px) rotate(5deg); }
-            50% { transform: translate(0, -50px) rotate(0deg); }
-            75% { transform: translate(-30px, -30px) rotate(-5deg); }
-        }
-        
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(40px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .animate-slide-up {
-            animation: slideUp 0.7s ease-out forwards;
-        }
-        
-        .glass-card {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        
-        .file-item {
-            transition: all 0.3s ease;
-        }
-        
-        .file-item:hover {
-            transform: translateX(8px);
-            background: rgba(255, 255, 255, 0.08);
-        }
-        
-        .folder-item {
-            transition: all 0.3s ease;
-        }
-        
-        .folder-item:hover {
-            transform: scale(1.02);
-            background: rgba(255, 255, 255, 0.1);
-        }
-        
-        .folder-item.active {
-            background: rgba(59, 130, 246, 0.2);
-            border-color: rgba(59, 130, 246, 0.4);
-        }
-        
-        .search-input {
-            transition: all 0.3s ease;
-        }
-        
-        .search-input:focus {
-            transform: scale(1.02);
-            box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
-        }
-        
-        .suggested-card {
-            transition: all 0.4s ease;
-        }
-        
-        .suggested-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.3);
-        }
-        
-        .glow-border {
-            position: relative;
-        }
-        
-        .glow-border::before {
-            content: '';
-            position: absolute;
-            inset: -1px;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.5), rgba(139, 92, 246, 0.5), rgba(6, 182, 212, 0.5));
-            border-radius: inherit;
-            z-index: -1;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        .glow-border:hover::before {
-            opacity: 1;
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); min-height: 100vh; }
+        .floating-shapes { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+        .shape { position: absolute; border-radius: 50%; opacity: 0.08; animation: float 25s infinite ease-in-out; }
+        .shape-1 { width: 400px; height: 400px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); top: -150px; left: -150px; animation-delay: 0s; }
+        .shape-2 { width: 300px; height: 300px; background: linear-gradient(135deg, #06b6d4, #3b82f6); bottom: -100px; right: -100px; animation-delay: -8s; }
+        .shape-3 { width: 200px; height: 200px; background: linear-gradient(135deg, #8b5cf6, #ec4899); top: 40%; right: 5%; animation-delay: -15s; }
+        @keyframes float { 0%, 100% { transform: translate(0, 0) rotate(0deg); } 25% { transform: translate(30px, -30px) rotate(5deg); } 50% { transform: translate(0, -50px) rotate(0deg); } 75% { transform: translate(-30px, -30px) rotate(-5deg); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .animate-slide-up { animation: slideUp 0.7s ease-out forwards; }
+        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .file-item { transition: all 0.3s ease; }
+        .file-item:hover { background: rgba(255, 255, 255, 0.07); }
+        .folder-item { transition: all 0.3s ease; }
+        .folder-item:hover { transform: scale(1.02); background: rgba(255, 255, 255, 0.1); }
+        .folder-item.active { background: rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.4); }
+        .search-input { transition: all 0.3s ease; }
+        .search-input:focus { box-shadow: 0 0 30px rgba(59, 130, 246, 0.2); }
+        .suggested-card { transition: all 0.4s ease; }
+        .suggested-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -15px rgba(0,0,0,0.3); }
+        .loading-spinner { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #3b82f6; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; }
     </style>
 </head>
 <body class="min-h-screen font-sans text-white relative">
 
-    <!-- Floating Background Shapes -->
     <div class="floating-shapes">
         <div class="shape shape-1"></div>
         <div class="shape shape-2"></div>
@@ -168,38 +59,39 @@
             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <span class="material-symbols-outlined text-white/40">search</span>
             </div>
-            <input 
-                id="searchInput"
-                oninput="filterFiles(this.value)" 
-                class="search-input block w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:border-blue-500/50 focus:bg-white/10 outline-none transition-all" 
-                placeholder="Search in FileVault..." 
-                type="text"
-            />
+            <input id="searchInput" oninput="filterFiles(this.value)"
+                class="search-input block w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:border-blue-500/50 focus:bg-white/10 outline-none transition-all"
+                placeholder="Search in FileVault..." type="text"/>
         </div>
     </div>
 
     <main class="max-w-7xl mx-auto px-4 py-6 pb-32 relative z-10">
-        
+
+        <!-- Suggested -->
         <div id="suggestedSection" class="mb-8 hidden">
             <h3 class="text-xs font-bold text-white/50 uppercase tracking-wider mb-3">Suggested For You</h3>
-            <div id="suggestedGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                </div>
+            <div id="suggestedGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
         </div>
 
+        <!-- Folders -->
         <div id="folderSection" class="mb-8">
             <h3 class="text-xs font-bold text-white/50 uppercase tracking-wider mb-3">Folders</h3>
             <div id="folderGrid" class="flex flex-wrap gap-2">
-                <div class="col-span-full text-white/40 text-sm italic">Loading folders...</div>
+                <div class="text-white/40 text-sm italic">Loading folders...</div>
             </div>
         </div>
 
+        <!-- File List -->
         <div id="fileListSection">
             <div class="flex justify-between items-end mb-3 border-b border-white/10 pb-2">
                 <h3 class="text-xs font-bold text-white/50 uppercase tracking-wider">All Files</h3>
                 <span id="fileCount" class="text-[10px] text-white/40 font-bold"></span>
             </div>
             <div id="fileGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="col-span-full flex justify-center py-10">
+                    <div class="loading-spinner"></div>
                 </div>
+            </div>
         </div>
 
     </main>
@@ -214,142 +106,162 @@
     </div>
 
 <script>
-    // 1. INITIALIZE SUPABASE
-    const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
+    const _supabase = supabase.createClient(
+        'https://lvhecpvwpzmstciewziv.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI'
+    );
 
-    let allFiles = []; // Master list
+    let allFiles = [];
+    let currentFolder = null;
 
-    // --- HELPER: ICONS ---
+    // ─── HELPERS ────────────────────────────────────────────────
     function getFileIcon(fileName) {
-        const name = fileName.toLowerCase();
-        if (name.endsWith('.pdf')) return 'picture_as_pdf';
-        if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'slideshow';
-        if (name.endsWith('.docx') || name.endsWith('.doc')) return 'description';
-        if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'table_chart';
-        if (name.endsWith('.zip') || name.endsWith('.rar')) return 'folder_zip';
-        if (name.endsWith('.jpg') || name.endsWith('.png') || name.endsWith('.jpeg')) return 'image';
-        return 'description'; 
+        const n = (fileName || '').toLowerCase();
+        if (n.endsWith('.pdf')) return 'picture_as_pdf';
+        if (n.endsWith('.pptx') || n.endsWith('.ppt')) return 'slideshow';
+        if (n.endsWith('.docx') || n.endsWith('.doc')) return 'description';
+        if (n.endsWith('.xlsx') || n.endsWith('.csv')) return 'table_chart';
+        if (n.endsWith('.zip') || n.endsWith('.rar')) return 'folder_zip';
+        if (n.endsWith('.jpg') || n.endsWith('.jpeg') || n.endsWith('.png')) return 'image';
+        return 'description';
     }
 
-    // --- HELPER: COLORS ---
     function getFileColor(fileName) {
-        const name = fileName.toLowerCase();
-        if (name.endsWith('.pdf')) return 'text-red-400 bg-red-500/10';
-        if (name.endsWith('.docx') || name.endsWith('.doc')) return 'text-blue-400 bg-blue-500/10';
-        if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'text-orange-400 bg-orange-500/10';
-        if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'text-green-400 bg-green-500/10';
-        if (name.endsWith('.jpg') || name.endsWith('.png')) return 'text-purple-400 bg-purple-500/10';
+        const n = (fileName || '').toLowerCase();
+        if (n.endsWith('.pdf')) return 'text-red-400 bg-red-500/10';
+        if (n.endsWith('.docx') || n.endsWith('.doc')) return 'text-blue-400 bg-blue-500/10';
+        if (n.endsWith('.pptx') || n.endsWith('.ppt')) return 'text-orange-400 bg-orange-500/10';
+        if (n.endsWith('.xlsx') || n.endsWith('.csv')) return 'text-green-400 bg-green-500/10';
+        if (n.endsWith('.jpg') || n.endsWith('.jpeg') || n.endsWith('.png')) return 'text-purple-400 bg-purple-500/10';
         return 'text-white/60 bg-white/5';
     }
 
-    // --- MAIN FETCH FUNCTION ---
-    async function fetchFiles() {
-    const fileGrid = document.getElementById('fileGrid');
-    
-    try {
-        // 1. Get List (Recursive)
-        const { data, error } = await _supabase.storage
-            .from('vault-files')
-            .list('', { limit: 100, sortBy: { column: 'created_at', order: 'desc' }, recursive: true });
-
-        if (error) throw error;
-
-        // 2. SIMPLIFIED FILTER: Just hide the system placeholders
-        // We removed the "id !== null" check because it might be hiding real files on your version
-        const realFiles = data.filter(f => 
-            f.name !== 'uploads' && 
-            !f.name.endsWith('.emptyFolderPlaceholder')
-        );
-
-        allFiles = realFiles.map(file => {
-            const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
-            const displayName = file.name.split('/').pop();
-            const folderName = file.name.includes('/') ? file.name.split('/')[0] : null;
-            
-            return {
-                name: displayName,
-                folder: folderName,
-                fullPath: file.name,
-                url: urlData.publicUrl,
-                date: new Date(file.created_at)
-            };
-        });
-
-        if (allFiles.length === 0) {
-            fileGrid.innerHTML = `<div class="text-center py-10 text-white/40">No files found. Manager is yet to upload.</div>`;
-            return;
-        }
-
-        renderAll(allFiles);
-
-    } catch (err) {
-        console.error(err);
-        fileGrid.innerHTML = `<div class="text-center py-10 text-red-400">Error loading library.</div>`;
+    function formatDate(str) {
+        if (!str) return '';
+        return new Date(str).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
     }
-}
 
-    // --- RENDER FUNCTION (Draws the whole UI) ---
+    // ─── FETCH: DB first, fall back to Storage ───────────────────
+    async function fetchFiles() {
+        const fileGrid = document.getElementById('fileGrid');
+
+        try {
+            // PRIMARY SOURCE: Database table
+            const { data: dbData, error: dbError } = await _supabase
+                .from('files_list')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (dbError) throw dbError;
+
+            if (dbData && dbData.length > 0) {
+                // Map DB rows into unified format
+                allFiles = dbData.map(row => ({
+                    name: row.file_name,
+                    folder: row.folder_name === 'Root' ? null : row.folder_name,
+                    url: row.download_url,
+                    date: new Date(row.created_at),
+                    source: 'db'
+                }));
+            } else {
+                // FALLBACK: Storage bucket (for files uploaded before DB sync)
+                const { data: storageData, error: storageError } = await _supabase.storage
+                    .from('vault-files')
+                    .list('', { limit: 200, sortBy: { column: 'created_at', order: 'desc' }, recursive: true });
+
+                if (storageError) throw storageError;
+
+                const realFiles = (storageData || []).filter(f =>
+                    f.id !== null &&
+                    !f.name.endsWith('.emptyFolderPlaceholder') &&
+                    f.name !== 'uploads'
+                );
+
+                allFiles = realFiles.map(file => {
+                    const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
+                    const displayName = file.name.split('/').pop();
+                    const folderName = file.name.includes('/') ? file.name.split('/')[0] : null;
+                    return {
+                        name: displayName,
+                        folder: folderName,
+                        url: urlData.publicUrl,
+                        date: new Date(file.created_at),
+                        source: 'storage'
+                    };
+                });
+            }
+
+            if (allFiles.length === 0) {
+                fileGrid.innerHTML = `<div class="text-center py-10 text-white/40 col-span-full">No files available yet. Manager is yet to upload.</div>`;
+                document.getElementById('folderGrid').innerHTML = '';
+                return;
+            }
+
+            renderAll(allFiles);
+
+        } catch (err) {
+            console.error(err);
+            fileGrid.innerHTML = `<div class="text-center py-10 text-red-400 col-span-full">Error loading library: ${err.message}</div>`;
+        }
+    }
+
+    // ─── RENDER ALL ──────────────────────────────────────────────
     function renderAll(files) {
-    // 1. SUGGESTED SECTION (Top 4 Newest)
-    const suggested = files.slice(0, 4); 
-    const suggestedGrid = document.getElementById('suggestedGrid');
-    
-    if (suggested.length > 0) {
-        document.getElementById('suggestedSection').classList.remove('hidden');
-        suggestedGrid.innerHTML = suggested.map(file => {
-            const icon = getFileIcon(file.name);
-            const colorClasses = getFileColor(file.name);
-            const [textColor, bgColor] = colorClasses.split(' ');
-            
-            return `
-                <div class="suggested-card glass-card p-5 rounded-2xl flex flex-col justify-between h-40 relative overflow-hidden group">
-                    <div class="${bgColor} w-14 h-14 rounded-xl flex items-center justify-center mb-3">
+        // Suggested: Top 4 newest
+        const suggestedGrid = document.getElementById('suggestedGrid');
+        const suggested = files.slice(0, 4);
+        if (suggested.length > 0) {
+            document.getElementById('suggestedSection').classList.remove('hidden');
+            suggestedGrid.innerHTML = suggested.map(file => {
+                const icon = getFileIcon(file.name);
+                const [textColor, bgColor] = getFileColor(file.name).split(' ');
+                return `
+                <div class="suggested-card glass-card p-5 rounded-2xl flex flex-col justify-between h-44 relative overflow-hidden group cursor-pointer" onclick="window.open('${file.url}','_blank')">
+                    <div class="${bgColor} w-14 h-14 rounded-xl flex items-center justify-center mb-3 shrink-0">
                         <span class="material-symbols-outlined ${textColor} text-3xl">${icon}</span>
                     </div>
                     <div class="z-10">
                         <p class="font-bold text-white text-sm truncate mb-1" title="${file.name}">${file.name}</p>
-                        <p class="text-[10px] text-white/40 flex items-center gap-1 mb-2">
+                        <p class="text-[10px] text-white/40 flex items-center gap-1 mb-1">
                             <span class="material-symbols-outlined text-[10px]">folder</span> ${file.folder || 'Root'}
                         </p>
-                        <a href="${file.url}" target="_blank" class="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors">
+                        ${file.date ? `<p class="text-[10px] text-white/30 mb-2">${formatDate(file.date)}</p>` : ''}
+                        <a href="${file.url}" target="_blank" onclick="event.stopPropagation()" class="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors">
                             <span class="material-symbols-outlined text-sm">download</span> Download
                         </a>
                     </div>
-                </div>
-            `;
-        }).join('');
+                </div>`;
+            }).join('');
+        }
+
+        // Folders
+        const folders = [...new Set(files.map(f => f.folder).filter(Boolean))].sort();
+        const folderGrid = document.getElementById('folderGrid');
+        if (folders.length > 0) {
+            let html = `
+                <div onclick="filterByFolder(null)" class="folder-item active glass-card px-4 py-2 rounded-xl cursor-pointer border border-white/10 hover:border-white/20 transition-all text-sm text-white/70 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">folder</span> All Files
+                </div>`;
+            folders.forEach(folder => {
+                const count = files.filter(f => f.folder === folder).length;
+                html += `
+                <div onclick="filterByFolder('${folder}')" class="folder-item glass-card px-4 py-2 rounded-xl cursor-pointer border border-white/10 hover:border-white/20 transition-all text-sm text-white/70 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">folder</span> ${folder}
+                    <span class="text-[10px] text-white/30 ml-1">${count}</span>
+                </div>`;
+            });
+            folderGrid.innerHTML = html;
+        } else {
+            folderGrid.innerHTML = '';
+        }
+
+        renderFileList(files);
     }
 
-    // 2. FOLDERS SECTION
-    const folders = [...new Set(files.map(f => f.folder).filter(f => f))].sort();
-    const folderGrid = document.getElementById('folderGrid');
-    
-    if (folders.length > 0) {
-        let folderHtml = `
-            <div onclick="filterByFolder(null)" class="folder-item glass-card px-4 py-2 rounded-xl cursor-pointer border border-white/10 hover:border-white/20 transition-all text-sm text-white/70">
-                <span class="material-symbols-outlined text-sm mr-1">folder</span> All Files
-            </div>
-        `;
-        folders.forEach(folder => {
-            folderHtml += `
-                <div onclick="filterByFolder('${folder}')" class="folder-item glass-card px-4 py-2 rounded-xl cursor-pointer border border-white/10 hover:border-white/20 transition-all text-sm text-white/70">
-                    <span class="material-symbols-outlined text-sm mr-1">folder</span> ${folder}
-                </div>
-            `;
-        });
-        folderGrid.innerHTML = folderHtml;
-    } else {
-        folderGrid.innerHTML = '';
-    }
-
-    // 3. RENDER THE FILE LIST
-    renderFileList(files);
-}
-
-    // --- RENDER JUST THE FILE LIST (Used by filters) ---
+    // ─── RENDER FILE LIST ─────────────────────────────────────────
     function renderFileList(filesToRender) {
         const fileGrid = document.getElementById('fileGrid');
-        document.getElementById('fileCount').innerText = `${filesToRender.length} files`;
+        document.getElementById('fileCount').innerText = `${filesToRender.length} file${filesToRender.length !== 1 ? 's' : ''}`;
 
         if (filesToRender.length === 0) {
             fileGrid.innerHTML = `<p class="text-center text-white/40 py-10 text-sm col-span-full">No files found.</p>`;
@@ -357,57 +269,51 @@
         }
 
         fileGrid.innerHTML = filesToRender.map(file => {
-            const icon = getFileIcon(file.name);
-            const colorClasses = getFileColor(file.name);
-            const [textColor, bgColor] = colorClasses.split(' ');
-            
-            return `
-                <div class="file-item glass-card p-4 rounded-2xl border border-white/5 hover:border-white/20 transition-all group">
-                    <div class="flex items-start gap-3 mb-3">
-                        <div class="${bgColor} w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
-                            <span class="material-symbols-outlined ${textColor} text-2xl">${icon}</span>
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <p class="font-semibold text-white/80 text-sm truncate" title="${file.name}">${file.name}</p>
-                            <p class="text-[10px] text-white/40 mt-1 flex items-center gap-1">
-                                <span class="material-symbols-outlined text-[10px]">folder</span> ${file.folder || 'Root'}
-                            </p>
-                        </div>
-                    </div>
-                    <a href="${file.url}" target="_blank" class="flex items-center justify-center gap-2 w-full py-2 rounded-lg bg-white/5 hover:bg-blue-500/20 text-white/60 hover:text-blue-400 text-sm transition-all">
-                        <span class="material-symbols-outlined text-lg">download</span>
-                        Download
-                    </a>
-                </div>
-            `;
-        }).join('');
+    const icon = getFileIcon(file.name);
+    const [textColor, bgColor] = getFileColor(file.name).split(' ');
+    return `
+    <div class="file-item glass-card p-3 rounded-xl border border-white/5 hover:border-white/20 transition-all flex items-center gap-3">
+        <div class="${bgColor} w-10 h-10 rounded-lg flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined ${textColor} text-xl">${icon}</span>
+        </div>
+        <div class="min-w-0 flex-1">
+            <p class="font-semibold text-white/80 text-sm truncate" title="${file.name}">${file.name}</p>
+            <p class="text-[10px] text-white/30 mt-0.5">${file.folder || 'Root'} ${file.date ? '· ' + formatDate(file.date) : ''}</p>
+        </div>
+        <div class="flex gap-1.5 shrink-0">
+            <a href="${file.url}" target="_blank"
+                class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-blue-500/20 text-white/50 hover:text-blue-400 text-xs transition-all">
+                <span class="material-symbols-outlined text-sm">visibility</span> View
+            </a>
+            <a href="${file.url}" download
+                class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-purple-500/20 text-white/50 hover:text-purple-400 text-xs transition-all">
+                <span class="material-symbols-outlined text-sm">download</span>
+            </a>
+        </div>
+    </div>`;
+}).join('');
     }
 
-    // --- FILTERS ---
-    let currentFolder = null;
-    
+    // ─── FILTERS ──────────────────────────────────────────────────
     function filterByFolder(folder) {
         currentFolder = folder;
-        if (folder === null) {
-            renderFileList(allFiles);
-        } else {
-            const filtered = allFiles.filter(f => f.folder === folder);
-            renderFileList(filtered);
-        }
+        // Update active state on folder buttons
+        document.querySelectorAll('.folder-item').forEach(btn => btn.classList.remove('active'));
+        event && event.currentTarget && event.currentTarget.classList.add('active');
+
+        const filtered = folder === null ? allFiles : allFiles.filter(f => f.folder === folder);
+        renderFileList(filtered);
     }
 
     function filterFiles(searchTerm) {
         const term = searchTerm.toLowerCase();
         let filtered = allFiles.filter(f => f.name.toLowerCase().includes(term));
-        if (currentFolder) {
-            filtered = filtered.filter(f => f.folder === currentFolder);
-        }
+        if (currentFolder) filtered = filtered.filter(f => f.folder === currentFolder);
         renderFileList(filtered);
     }
 
-    // Start App
+    // Start
     fetchFiles();
-
 </script>
 </body>
 </html>

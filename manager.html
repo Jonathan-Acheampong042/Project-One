@@ -9,482 +9,533 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
     <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-            min-height: 100vh;
-        }
-        
-        .floating-shapes {
-            position: fixed;
-            inset: 0;
-            overflow: hidden;
-            pointer-events: none;
-            z-index: 0;
-        }
-        
-        .shape {
-            position: absolute;
-            border-radius: 50%;
-            opacity: 0.08;
-            animation: float 25s infinite ease-in-out;
-        }
-        
-        .shape-1 {
-            width: 400px;
-            height: 400px;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            top: -150px;
-            left: -150px;
-            animation-delay: 0s;
-        }
-        
-        .shape-2 {
-            width: 300px;
-            height: 300px;
-            background: linear-gradient(135deg, #06b6d4, #3b82f6);
-            bottom: -100px;
-            right: -100px;
-            animation-delay: -8s;
-        }
-        
-        .shape-3 {
-            width: 200px;
-            height: 200px;
-            background: linear-gradient(135deg, #8b5cf6, #ec4899);
-            top: 40%;
-            right: 5%;
-            animation-delay: -15s;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            25% { transform: translate(30px, -30px) rotate(5deg); }
-            50% { transform: translate(0, -50px) rotate(0deg); }
-            75% { transform: translate(-30px, -30px) rotate(-5deg); }
-        }
-        
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(40px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.5); }
-        }
-        
-        .animate-slide-up {
-            animation: slideUp 0.7s ease-out forwards;
-        }
-        
-        .glass-card {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        
-        .upload-zone {
-            transition: all 0.3s ease;
-        }
-        
-        .upload-zone:hover {
-            border-color: rgba(59, 130, 246, 0.5);
-            background: rgba(59, 130, 246, 0.05);
-        }
-        
-        .file-item {
-            transition: all 0.3s ease;
-        }
-        
-        .file-item:hover {
-            transform: translateX(8px);
-            background: rgba(255, 255, 255, 0.08);
-        }
-        
-        .action-btn {
-            transition: all 0.3s ease;
-        }
-        
-        .action-btn:hover {
-            transform: scale(1.1);
-        }
-        
-        .delete-btn:hover {
-            color: #ef4444;
-            background: rgba(239, 68, 68, 0.1);
-        }
-        
-        .view-btn:hover {
-            color: #3b82f6;
-            background: rgba(59, 130, 246, 0.1);
-        }
-        
-        .loading-spinner {
-            border: 3px solid rgba(255,255,255,0.1);
-            border-top: 3px solid #3b82f6;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); min-height: 100vh; }
+        .floating-shapes { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+        .shape { position: absolute; border-radius: 50%; opacity: 0.08; animation: float 25s infinite ease-in-out; }
+        .shape-1 { width: 400px; height: 400px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); top: -150px; left: -150px; animation-delay: 0s; }
+        .shape-2 { width: 300px; height: 300px; background: linear-gradient(135deg, #06b6d4, #3b82f6); bottom: -100px; right: -100px; animation-delay: -8s; }
+        .shape-3 { width: 200px; height: 200px; background: linear-gradient(135deg, #8b5cf6, #ec4899); top: 40%; right: 5%; animation-delay: -15s; }
+        @keyframes float { 0%, 100% { transform: translate(0, 0) rotate(0deg); } 25% { transform: translate(30px, -30px) rotate(5deg); } 50% { transform: translate(0, -50px) rotate(0deg); } 75% { transform: translate(-30px, -30px) rotate(-5deg); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .animate-slide-up { animation: slideUp 0.7s ease-out forwards; }
+        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .upload-zone { transition: all 0.3s ease; }
+        .upload-zone:hover, .upload-zone.dragover { border-color: rgba(59, 130, 246, 0.5); background: rgba(59, 130, 246, 0.05); }
+        .file-item { transition: all 0.3s ease; }
+        .file-item:hover { background: rgba(255, 255, 255, 0.06); }
+        .loading-spinner { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #3b82f6; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
+        .sync-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .sync-ok { background: #22c55e; box-shadow: 0 0 6px #22c55e88; }
+        .sync-warn { background: #f59e0b; box-shadow: 0 0 6px #f59e0b88; }
+        .sync-err { background: #ef4444; box-shadow: 0 0 6px #ef444488; }
+        .tab-btn { transition: all 0.2s; }
+        .tab-btn.active { background: rgba(59,130,246,0.2); color: #60a5fa; border-color: rgba(59,130,246,0.4); }
     </style>
 </head>
 <body class="min-h-screen font-sans text-white relative">
-
-    <!-- Floating Background Shapes -->
     <div class="floating-shapes">
         <div class="shape shape-1"></div>
         <div class="shape shape-2"></div>
         <div class="shape shape-3"></div>
     </div>
-    
+
     <header class="glass-card border-b border-white/10 p-4 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
                     <span class="material-symbols-outlined text-white text-xl">admin_panel_settings</span>
                 </div>
-                <h1 class="font-bold text-xl text-white">Manager Dashboard</h1>
+                <div>
+                    <h1 class="font-bold text-xl text-white leading-tight">Manager Dashboard</h1>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                        <span class="sync-dot sync-ok" id="syncDot"></span>
+                        <span id="syncLabel" class="text-[10px] text-white/40 font-medium">Checking sync...</span>
+                    </div>
+                </div>
             </div>
             <button onclick="signOut()" class="text-sm font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 px-4 py-2 rounded-lg transition-all flex items-center gap-2">
-                <span class="material-symbols-outlined text-sm">logout</span>
-                Logout
+                <span class="material-symbols-outlined text-sm">logout</span> Logout
             </button>
         </div>
     </header>
 
-    <main class="max-w-4xl mx-auto p-8 relative z-10">
+    <main class="max-w-4xl mx-auto p-6 relative z-10 space-y-8">
+
         <!-- Upload Section -->
-        <section class="glass-card p-8 rounded-2xl border border-white/10 mb-12 animate-slide-up">
+        <section class="glass-card p-8 rounded-2xl border border-white/10 animate-slide-up">
             <div class="text-center mb-6">
                 <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 shadow-lg shadow-blue-500/30">
                     <span class="material-symbols-outlined text-white text-3xl">cloud_upload</span>
                 </div>
                 <h2 class="text-2xl font-bold text-white mb-2">Publish New File</h2>
-                <p class="text-white/50 text-sm">Upload PDF, PPTX, or DOCX for your users.</p>
+                <p class="text-white/50 text-sm">Uploads sync to both Storage and Database automatically.</p>
             </div>
-            
+
             <div class="space-y-4 mb-6 text-left">
                 <div>
-                    <label class="text-xs font-bold text-white/40 uppercase tracking-wider">Folder</label>
+                    <label class="text-xs font-bold text-white/40 uppercase tracking-wider block mb-2">Folder</label>
                     <div class="flex gap-2">
                         <select id="folderSelect" class="flex-1 p-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-blue-500/50 focus:bg-white/10 text-white text-sm transition-all">
-                            <option value="" class="text-black">Select a folder...</option>
+                            <option value="" class="text-black">No folder (root)</option>
                         </select>
-                        <button onclick="createNewFolder()" class="px-4 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-xl transition-all">
+                        <button onclick="createNewFolder()" class="px-4 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-xl transition-all" title="Create new folder">
                             <span class="material-symbols-outlined">create_new_folder</span>
                         </button>
                     </div>
                 </div>
-                <div class="upload-zone glass-card p-6 rounded-xl border-2 border-dashed border-white/10 text-center">
-                    <span class="material-symbols-outlined text-4xl text-white/30 mb-2">upload_file</span>
-                    <p class="text-white/50 text-sm mb-3">Click to select or drag and drop</p>
-                    <input type="file" id="fileInput" class="block w-full text-sm text-white/60 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-500/20 file:text-blue-400 hover:file:bg-blue-500/30 transition-all"/>
+                <div>
+                    <label class="text-xs font-bold text-white/40 uppercase tracking-wider block mb-2">File</label>
+                    <div id="uploadZone" class="upload-zone glass-card p-6 rounded-xl border-2 border-dashed border-white/10 text-center cursor-pointer">
+                        <span class="material-symbols-outlined text-4xl text-white/30 mb-2 block">upload_file</span>
+                        <p class="text-white/50 text-sm mb-3">Click to select or drag & drop</p>
+                        <input type="file" id="fileInput" class="block w-full text-sm text-white/60 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-500/20 file:text-blue-400 hover:file:bg-blue-500/30 transition-all"/>
+                    </div>
                 </div>
             </div>
-    
+
             <button onclick="uploadFile()" id="uploadBtn" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-10 py-4 rounded-xl font-bold hover:from-blue-600 hover:to-purple-700 transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2">
                 <span id="btnText">Upload & Share</span>
                 <span id="btnIcon" class="material-symbols-outlined">upload</span>
             </button>
-            <div id="status" class="mt-4 text-sm font-medium text-blue-400 text-center min-h-[20px]"></div>
+            <div id="status" class="mt-4 text-sm font-medium text-center min-h-[20px]"></div>
         </section>
 
-        <!-- Files List Section -->
+        <!-- Files Section -->
         <section class="glass-card p-8 rounded-2xl border border-white/10">
-            <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                <span class="material-symbols-outlined">folder_copy</span>
-                Library Files
-            </h3>
+            <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined">folder_copy</span>
+                    Library Files
+                    <span id="fileCountBadge" class="text-xs font-bold text-white/40 bg-white/5 px-2 py-0.5 rounded-full ml-1"></span>
+                </h3>
+                <div class="flex items-center gap-2">
+                    <button onclick="runSyncRepair()" class="text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 px-3 py-2 rounded-lg transition-all flex items-center gap-1 border border-amber-500/20">
+                        <span class="material-symbols-outlined text-sm">sync</span> Repair Sync
+                    </button>
+                    <button onclick="loadManagerFiles()" class="text-xs text-white/40 hover:text-white hover:bg-white/10 px-3 py-2 rounded-lg transition-all flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">refresh</span> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex gap-2 mb-6 p-1 bg-white/5 rounded-xl">
+                <button onclick="switchTab('db')" id="tab-db" class="tab-btn active flex-1 py-2 rounded-lg text-sm font-bold border border-transparent text-white/70">
+                    <span class="material-symbols-outlined text-sm mr-1">table_chart</span> Database View
+                </button>
+                <button onclick="switchTab('storage')" id="tab-storage" class="tab-btn flex-1 py-2 rounded-lg text-sm font-bold border border-transparent text-white/70">
+                    <span class="material-symbols-outlined text-sm mr-1">cloud</span> Storage View
+                </button>
+            </div>
+
             <div id="managerFileGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <p class="text-white/40 italic text-center py-4 col-span-full">Checking the vault...</p>
             </div>
         </section>
 
-        <!-- Technical Info -->
-        <section class="mt-8 pt-8 border-t border-white/10">
-            <div class="glass-card rounded-2xl p-6">
-                <h4 class="text-white/60 font-bold mb-4 flex items-center gap-2 text-sm">
-                    <span class="material-symbols-outlined">info</span>
-                    Technical Architecture
-                </h4>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-white/40">
-                    <div>
-                        <p class="font-bold text-white/60 mb-1">Frontend</p>
-                        <p>HTML5, Tailwind CSS, and Vanilla JavaScript for a responsive, fast UI.</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-white/60 mb-1">Backend-as-a-Service</p>
-                        <p>Powered by Supabase for Database, Storage, and Authentication.</p>
-                    </div>
-                    <div>
-                        <p class="font-bold text-white/60 mb-1">Security</p>
-                        <p>Protected by Row Level Security (RLS) policies and Email-based Auth.</p>
-                    </div>
+        <!-- Sync Status Panel -->
+        <section class="glass-card p-6 rounded-2xl border border-white/10">
+            <h4 class="text-white/60 font-bold mb-4 flex items-center gap-2 text-sm">
+                <span class="material-symbols-outlined">sync_alt</span> Sync Status
+            </h4>
+            <div id="syncPanel" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div class="bg-white/5 rounded-xl p-4">
+                    <p class="text-white/40 text-xs mb-1">Database Records</p>
+                    <p id="dbCount" class="text-2xl font-bold text-blue-400">—</p>
+                </div>
+                <div class="bg-white/5 rounded-xl p-4">
+                    <p class="text-white/40 text-xs mb-1">Storage Files</p>
+                    <p id="storageCount" class="text-2xl font-bold text-purple-400">—</p>
+                </div>
+                <div class="bg-white/5 rounded-xl p-4">
+                    <p class="text-white/40 text-xs mb-1">Status</p>
+                    <p id="syncStatus" class="text-2xl font-bold text-green-400">—</p>
                 </div>
             </div>
+            <div id="syncIssues" class="mt-4 hidden"></div>
         </section>
+
     </main>
 
     <script>
-    // --- 1. HELPER FUNCTIONS ---
+    // ─── SUPABASE ───────────────────────────────────────────────
+    const _supabase = supabase.createClient(
+        'https://lvhecpvwpzmstciewziv.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI'
+    );
+
+    let allFiles = [];
+    let availableFolders = [];
+    let currentTab = 'db';
+
+    // ─── HELPERS ────────────────────────────────────────────────
     function getFileIcon(fileName) {
         if (!fileName) return 'draft';
-        const name = fileName.toLowerCase();
-        if (name.endsWith('.pdf')) return 'picture_as_pdf';
-        if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'slideshow';
-        if (name.endsWith('.docx') || name.endsWith('.doc')) return 'description';
-        if (name.endsWith('.xlsx') || name.endsWith('.csv')) return 'table_chart';
-        if (name.endsWith('.zip') || name.endsWith('.rar')) return 'folder_zip';
-        return 'draft'; 
+        const n = fileName.toLowerCase();
+        if (n.endsWith('.pdf')) return 'picture_as_pdf';
+        if (n.endsWith('.pptx') || n.endsWith('.ppt')) return 'slideshow';
+        if (n.endsWith('.docx') || n.endsWith('.doc')) return 'description';
+        if (n.endsWith('.xlsx') || n.endsWith('.csv')) return 'table_chart';
+        if (n.endsWith('.zip') || n.endsWith('.rar')) return 'folder_zip';
+        if (n.endsWith('.jpg') || n.endsWith('.jpeg') || n.endsWith('.png')) return 'image';
+        return 'draft';
     }
 
     function getFileColor(fileName) {
         if (!fileName) return 'text-white/40 bg-white/5';
-        const name = fileName.toLowerCase();
-        if (name.endsWith('.pdf')) return 'text-red-400 bg-red-500/10';
-        if (name.endsWith('.docx') || name.endsWith('.doc')) return 'text-blue-400 bg-blue-500/10';
-        if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'text-orange-400 bg-orange-500/10';
+        const n = fileName.toLowerCase();
+        if (n.endsWith('.pdf')) return 'text-red-400 bg-red-500/10';
+        if (n.endsWith('.docx') || n.endsWith('.doc')) return 'text-blue-400 bg-blue-500/10';
+        if (n.endsWith('.pptx') || n.endsWith('.ppt')) return 'text-orange-400 bg-orange-500/10';
+        if (n.endsWith('.xlsx') || n.endsWith('.csv')) return 'text-green-400 bg-green-500/10';
+        if (n.endsWith('.jpg') || n.endsWith('.jpeg') || n.endsWith('.png')) return 'text-purple-400 bg-purple-500/10';
         return 'text-white/40 bg-white/5';
     }
 
-    // --- 2. INITIALIZE SUPABASE ---
-    const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
+    function formatDate(str) {
+        if (!str) return '';
+        return new Date(str).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
 
-    let allFiles = [];
-    let availableFolders = [];
+    function setStatus(msg, type = 'blue') {
+        const el = document.getElementById('status');
+        el.innerText = msg;
+        el.className = `mt-4 text-sm font-medium text-center min-h-[20px] text-${type}-400`;
+    }
 
-    // --- Load folders from existing files ---
+    // ─── TABS ───────────────────────────────────────────────────
+    function switchTab(tab) {
+        currentTab = tab;
+        document.getElementById('tab-db').classList.toggle('active', tab === 'db');
+        document.getElementById('tab-storage').classList.toggle('active', tab === 'storage');
+        loadManagerFiles();
+    }
+
+    // ─── FOLDERS ────────────────────────────────────────────────
     async function loadFolders() {
+        try {
+            // Pull folder names from both DB and storage
+            const [{ data: dbData }, { data: storageData }] = await Promise.all([
+                _supabase.from('files_list').select('folder_name'),
+                _supabase.storage.from('vault-files').list('', { limit: 200, recursive: true })
+            ]);
+
+            const folders = new Set();
+            (dbData || []).forEach(r => { if (r.folder_name && r.folder_name !== 'Root') folders.add(r.folder_name); });
+            (storageData || []).forEach(f => { if (f.name.includes('/')) folders.add(f.name.split('/')[0]); });
+
+            availableFolders = [...folders].sort();
+            const select = document.getElementById('folderSelect');
+            select.innerHTML = '<option value="" class="text-black">No folder (root)</option>';
+            availableFolders.forEach(f => {
+                select.innerHTML += `<option value="${f}" class="text-black">${f}</option>`;
+            });
+        } catch (err) { console.error('loadFolders error:', err); }
+    }
+
+    function createNewFolder() {
+        let folderName = prompt('Enter new folder name:');
+        if (!folderName || !folderName.trim()) return;
+        folderName = folderName.trim().replace(/[^a-zA-Z0-9_\- ]/g, '');
+        if (!folderName) { alert('Invalid folder name.'); return; }
+        if (availableFolders.includes(folderName)) {
+            setStatus('Folder already exists!', 'yellow'); return;
+        }
+        availableFolders.push(folderName);
+        availableFolders.sort();
+        const select = document.getElementById('folderSelect');
+        select.innerHTML = '<option value="" class="text-black">No folder (root)</option>';
+        availableFolders.forEach(f => { select.innerHTML += `<option value="${f}" class="text-black">${f}</option>`; });
+        select.value = folderName;
+        setStatus(`Folder "${folderName}" ready — it will be created on first upload.`, 'green');
+    }
+
+    // ─── LOAD FILES ─────────────────────────────────────────────
+    async function loadManagerFiles() {
+        const container = document.getElementById('managerFileGrid');
+        container.innerHTML = `<div class="col-span-full flex justify-center py-8"><div class="loading-spinner"></div></div>`;
+
+        if (currentTab === 'db') {
+            await loadFromDB(container);
+        } else {
+            await loadFromStorage(container);
+        }
+        await updateSyncStatus();
+    }
+
+    async function loadFromDB(container) {
+        try {
+            const { data, error } = await _supabase
+                .from('files_list')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            document.getElementById('fileCountBadge').innerText = `${(data || []).length} records`;
+
+            if (!data || data.length === 0) {
+                container.innerHTML = `<p class="text-white/40 text-center py-10 col-span-full">No files in database. Upload one above.</p>`;
+                return;
+            }
+
+            container.innerHTML = data.map(row => renderFileCard(row, 'db')).join('');
+        } catch (err) {
+            container.innerHTML = `<p class="text-red-400 text-center col-span-full">DB Error: ${err.message}</p>`;
+        }
+    }
+
+    async function loadFromStorage(container) {
         try {
             const { data, error } = await _supabase.storage
                 .from('vault-files')
-                .list('', { limit: 100, recursive: true });
-            
+                .list('', { limit: 200, sortBy: { column: 'created_at', order: 'desc' }, recursive: true });
+
             if (error) throw error;
-            
-            // Extract unique folder names
-            const folders = new Set();
-            data.forEach(file => {
-                if (file.name.includes('/')) {
-                    folders.add(file.name.split('/')[0]);
-                }
-            });
-            
-            availableFolders = [...folders].sort();
-            
-            // Update dropdown
-            const select = document.getElementById('folderSelect');
-            select.innerHTML = '<option value="" class="text-black">No folder (root)</option>';
-            availableFolders.forEach(folder => {
-                select.innerHTML += `<option value="${folder}" class="text-black">${folder}</option>`;
-            });
-            
+
+            const realFiles = (data || []).filter(f =>
+                f.id !== null &&
+                !f.name.endsWith('.emptyFolderPlaceholder') &&
+                f.name !== 'uploads'
+            );
+
+            document.getElementById('fileCountBadge').innerText = `${realFiles.length} storage files`;
+
+            if (realFiles.length === 0) {
+                container.innerHTML = `<p class="text-white/40 text-center py-10 col-span-full">No files in storage bucket.</p>`;
+                return;
+            }
+
+            container.innerHTML = realFiles.map(file => {
+                const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
+                const displayName = file.name.split('/').pop();
+                const folderName = file.name.includes('/') ? file.name.split('/')[0] : 'Root';
+                const row = { id: file.id, file_name: displayName, folder_name: folderName, download_url: urlData.publicUrl, created_at: file.created_at, _storagePath: file.name };
+                return renderFileCard(row, 'storage');
+            }).join('');
         } catch (err) {
-            console.error('Error loading folders:', err);
+            container.innerHTML = `<p class="text-red-400 text-center col-span-full">Storage Error: ${err.message}</p>`;
         }
     }
 
-    // --- Create new folder ---
-    async function createNewFolder() {
-        const folderName = prompt('Enter new folder name:');
-        if (!folderName || folderName.trim() === '') return;
-        
-        folderName = folderName.trim();
-        
-        if (availableFolders.includes(folderName)) {
-            document.getElementById('status').innerText = 'Folder already exists!';
-            document.getElementById('status').className = 'mt-4 text-sm font-medium text-yellow-400 text-center min-h-[20px]';
-            return;
-        }
-        
-        // Add to available folders
-        availableFolders.push(folderName);
-        availableFolders.sort();
-        
-        // Update dropdown
-        const select = document.getElementById('folderSelect');
-        select.innerHTML = '<option value="" class="text-black">No folder (root)</option>';
-        availableFolders.forEach(folder => {
-            select.innerHTML += `<option value="${folder}" class="text-black">${folder}</option>`;
-        });
-        
-        // Select the new folder
-        select.value = folderName;
-        document.getElementById('status').innerText = `Folder "${folderName}" created!`;
-        document.getElementById('status').className = 'mt-4 text-sm font-medium text-green-400 text-center min-h-[20px]';
+    function renderFileCard(row, source) {
+        const icon = getFileIcon(row.file_name);
+        const colorClasses = getFileColor(row.file_name);
+        const [textColor, bgColor] = colorClasses.split(' ');
+        const storagePath = row._storagePath || (row.folder_name && row.folder_name !== 'Root' ? `${row.folder_name}/${row.file_name}` : row.file_name);
+
+        return `
+        <div class="file-item glass-card p-5 rounded-2xl border border-white/5 hover:border-white/20 transition-all">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="${bgColor} w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined ${textColor} text-2xl">${icon}</span>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="font-semibold text-white/80 text-sm truncate" title="${row.file_name}">${row.file_name}</p>
+                    <p class="text-[10px] text-white/40 mt-0.5 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[10px]">folder</span> ${row.folder_name || 'Root'}
+                    </p>
+                    ${row.created_at ? `<p class="text-[10px] text-white/30 mt-0.5">${formatDate(row.created_at)}</p>` : ''}
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <a href="${row.download_url}" target="_blank" class="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-white/5 hover:bg-blue-500/20 text-white/60 hover:text-blue-400 text-xs font-bold transition-all">
+                    <span class="material-symbols-outlined text-sm">visibility</span> View
+                </a>
+                <button onclick="deleteFile('${storagePath}', ${row.id || 'null'})"
+                    class="px-3 py-2 rounded-lg bg-white/5 hover:bg-red-500/20 text-white/60 hover:text-red-400 text-sm transition-all" title="Delete">
+                    <span class="material-symbols-outlined">delete</span>
+                </button>
+            </div>
+        </div>`;
     }
 
-    // --- 3. CORE FUNCTIONS ---
-    async function checkAccess() {
-        const { data: { session } } = await _supabase.auth.getSession();
-        if (!session) {
-            window.location.href = "login.html"; 
-        } else {
-            loadFolders(); // Load folders first
-            loadManagerFiles(); 
-        }
-    }
-
-    async function loadManagerFiles() {
-    const container = document.getElementById('managerFileGrid');
-    container.innerHTML = `<div class="text-center py-4 text-white/40">Loading files...</div>`;
-
-    try {
-        // 1. Get recursive list of EVERYTHING
-        const { data, error } = await _supabase.storage
-            .from('vault-files')
-            .list('', { limit: 100, sortBy: { column: 'created_at', order: 'desc' }, recursive: true });
-
-        if (error) throw error;
-
-        // 2. FILTER: Keep ONLY real files (Must have an ID)
-        // This automatically hides "uploads", "Unsorted", and any other folder placeholders
-        const realFiles = data.filter(f => f.id !== null && !f.name.endsWith('.emptyFolderPlaceholder'));
-
-        if (!realFiles || realFiles.length === 0) {
-            container.innerHTML = "<p class='text-white/40 text-center py-10'>Vault is empty.</p>";
-            return;
-        }
-
-        container.innerHTML = realFiles.map(file => {
-            const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
-            
-            // Extract display names and folder
-            const displayName = file.name.split('/').pop(); 
-            const folderName = file.name.includes('/') ? file.name.split('/')[0] : null;
-
-            const icon = getFileIcon(displayName);
-            const colorClasses = getFileColor(displayName);
-            const [textColor, bgColor] = colorClasses.split(' ');
-
-            return `
-                <div class="file-item glass-card p-5 rounded-2xl border border-white/5 hover:border-white/20 transition-all group">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="${bgColor} w-12 h-12 rounded-xl flex items-center justify-center">
-                            <span class="material-symbols-outlined ${textColor} text-2xl">${icon}</span>
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <p class="font-semibold text-white/80 text-sm truncate" title="${displayName}">${displayName}</p>
-                            <p class="text-[10px] text-white/40 mt-1 flex items-center gap-1">
-                                ${folderName ? `<span class="material-symbols-outlined text-[10px]">folder</span> ${folderName}` : 'Root'}
-                            </p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <a href="${urlData.publicUrl}" target="_blank" class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-white/5 hover:bg-blue-500/20 text-white/60 hover:text-blue-400 text-sm transition-all">
-                            <span class="material-symbols-outlined text-lg">visibility</span>
-                            View
-                        </a>
-                        <button onclick="deleteFile('${file.name}')" class="delete-btn px-3 py-2 rounded-lg bg-white/5 hover:bg-red-500/20 text-white/60 hover:text-red-400 text-sm transition-all">
-                            <span class="material-symbols-outlined">delete</span>
-                        </button>
-                    </div>
-                </div>`;
-        }).join('');
-    } catch (err) {
-        container.innerHTML = `<p class="text-red-400 text-center">Error: ${err.message}</p>`;
-    }
-}
-
+    // ─── UPLOAD ─────────────────────────────────────────────────
     async function uploadFile() {
         const fileInput = document.getElementById('fileInput');
         const folderSelect = document.getElementById('folderSelect');
-        const status = document.getElementById('status');
+        const btn = document.getElementById('uploadBtn');
         const file = fileInput.files[0];
 
-        if (!file) {
-            status.innerText = "Please select a file first.";
-            status.classList.add('text-yellow-400');
-            return;
-        }
+        if (!file) { setStatus('Please select a file first.', 'yellow'); return; }
 
-        status.innerText = "Uploading...";
-        status.classList.remove('text-red-400', 'text-green-400');
-        status.classList.add('text-blue-400');
-        
-        // Build path with folder prefix
+        btn.disabled = true;
+        document.getElementById('btnText').innerText = 'Uploading to Storage...';
+        setStatus('Step 1/2 — Uploading to Storage...', 'blue');
+
         const folder = folderSelect.value;
         const path = folder ? `${folder}/${file.name}` : file.name;
-        
-        // 1. Upload to Storage
+
+        // STEP 1: Upload to Supabase Storage
         const { error: uploadError } = await _supabase.storage
             .from('vault-files')
             .upload(path, file, { upsert: true });
 
         if (uploadError) {
-            status.innerText = "Error: " + uploadError.message;
-            status.classList.add('text-red-400');
-            status.classList.remove('text-blue-400');
+            setStatus('Storage Error: ' + uploadError.message, 'red');
+            btn.disabled = false;
+            document.getElementById('btnText').innerText = 'Upload & Share';
+            return;
+        }
+
+        // STEP 2: Get public URL + save to DB
+        document.getElementById('btnText').innerText = 'Saving to Database...';
+        setStatus('Step 2/2 — Saving to Database...', 'blue');
+
+        const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(path);
+
+        const { error: dbError } = await _supabase.from('files_list').insert({
+            file_name: file.name,
+            download_url: urlData.publicUrl,
+            folder_name: folder || 'Root'
+        });
+
+        btn.disabled = false;
+        document.getElementById('btnText').innerText = 'Upload & Share';
+
+        if (dbError) {
+            // Storage succeeded but DB failed — warn but don't block
+            setStatus(`⚠ Uploaded to Storage but DB failed: ${dbError.message}. Run "Repair Sync" to fix.`, 'yellow');
         } else {
-            // 2. Get Public URL
-            const { data: urlData } = _supabase.storage
-                .from('vault-files')
-                .getPublicUrl(path);
+            setStatus('✓ File uploaded and synced to both Storage & Database!', 'green');
+        }
 
-            // 3. Save to Database
-            const { error: dbError } = await _supabase
-                .from('files_list')
-                .insert({
-                    file_name: file.name,
-                    download_url: urlData.publicUrl,
-                    folder_name: folder || "Root"
-                });
+        fileInput.value = '';
+        loadFolders();
+        loadManagerFiles();
+    }
 
-            if (dbError) {
-                console.error(dbError);
-                status.innerText = "Database Error!";
-                status.classList.add('text-red-400');
-                status.classList.remove('text-blue-400');
+    // ─── DELETE (synced) ────────────────────────────────────────
+   async function deleteFile(storagePath, dbId) {
+    const displayName = storagePath.split('/').pop();
+    console.log('storagePath:', storagePath);
+    console.log('displayName:', displayName);
+    if (!confirm(`Delete "${displayName}"?`)) return;
+
+    setStatus('Deleting...', 'blue');
+
+    const [storageResult, dbResult] = await Promise.all([
+    _supabase.storage.from('vault-files').remove([storagePath]),
+    _supabase.from('files_list').delete().eq('file_name', displayName)
+]);
+
+console.log('storageResult:', JSON.stringify(storageResult));
+console.log('dbResult:', JSON.stringify(dbResult));
+
+    if (!storageResult.error && !dbResult.error) {
+        setStatus('✓ Deleted successfully.', 'green');
+    } else if (storageResult.error) {
+        setStatus('Storage error: ' + storageResult.error.message, 'red');
+    } else {
+        setStatus('DB error: ' + dbResult.error.message, 'red');
+    }
+
+    await loadManagerFiles();
+}
+    // ─── SYNC STATUS ────────────────────────────────────────────
+    async function updateSyncStatus() {
+        try {
+            const [{ data: dbData }, { data: storageData }] = await Promise.all([
+                _supabase.from('files_list').select('file_name, folder_name'),
+                _supabase.storage.from('vault-files').list('', { limit: 200, recursive: true })
+            ]);
+
+            const dbCount = (dbData || []).length;
+            const storageFiles = (storageData || []).filter(f =>
+                f.id !== null && !f.name.endsWith('.emptyFolderPlaceholder') && f.name !== 'uploads'
+            );
+            const storageCount = storageFiles.length;
+
+            document.getElementById('dbCount').innerText = dbCount;
+            document.getElementById('storageCount').innerText = storageCount;
+
+            const dot = document.getElementById('syncDot');
+            const label = document.getElementById('syncLabel');
+            const statusEl = document.getElementById('syncStatus');
+
+            if (dbCount === storageCount) {
+                dot.className = 'sync-dot sync-ok';
+                label.innerText = 'Storage & DB in sync';
+                statusEl.innerText = '✓ Synced';
+                statusEl.className = 'text-2xl font-bold text-green-400';
+                document.getElementById('syncIssues').classList.add('hidden');
             } else {
-                status.innerText = "✓ File uploaded successfully!";
-                status.classList.add('text-green-400');
-                status.classList.remove('text-blue-400');
-                fileInput.value = '';
-                loadFolders(); // Refresh folder list
-                loadManagerFiles(); 
+                dot.className = 'sync-dot sync-warn';
+                label.innerText = `${Math.abs(dbCount - storageCount)} file(s) out of sync`;
+                statusEl.innerText = '⚠ Mismatch';
+                statusEl.className = 'text-2xl font-bold text-amber-400';
+
+                // Find which files are orphaned
+                const dbNames = new Set((dbData || []).map(r => r.file_name));
+                const storageNames = new Set(storageFiles.map(f => f.name.split('/').pop()));
+                const onlyInStorage = storageFiles.filter(f => !dbNames.has(f.name.split('/').pop())).map(f => f.name);
+                const onlyInDB = (dbData || []).filter(r => !storageNames.has(r.file_name)).map(r => r.file_name);
+
+                let issueHtml = '';
+                if (onlyInStorage.length) issueHtml += `<p class="text-amber-400 text-xs mb-1">In Storage only: ${onlyInStorage.join(', ')}</p>`;
+                if (onlyInDB.length) issueHtml += `<p class="text-amber-400 text-xs">In Database only: ${onlyInDB.join(', ')}</p>`;
+                const issuePanel = document.getElementById('syncIssues');
+                issuePanel.innerHTML = `<div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-sm">${issueHtml}<p class="text-white/40 text-xs mt-2">Use "Repair Sync" to add missing DB records for storage-only files.</p></div>`;
+                issuePanel.classList.remove('hidden');
             }
+        } catch (err) { console.error('Sync check error:', err); }
+    }
+
+    // ─── REPAIR SYNC ────────────────────────────────────────────
+    async function runSyncRepair() {
+        setStatus('Running sync repair...', 'blue');
+        try {
+            const [{ data: dbData }, { data: storageData }] = await Promise.all([
+                _supabase.from('files_list').select('file_name'),
+                _supabase.storage.from('vault-files').list('', { limit: 200, recursive: true })
+            ]);
+
+            const dbNames = new Set((dbData || []).map(r => r.file_name));
+            const orphans = (storageData || []).filter(f =>
+                f.id !== null &&
+                !f.name.endsWith('.emptyFolderPlaceholder') &&
+                f.name !== 'uploads' &&
+                !dbNames.has(f.name.split('/').pop())
+            );
+
+            if (orphans.length === 0) {
+                setStatus('✓ No sync issues found. Everything is in order.', 'green');
+                await updateSyncStatus();
+                return;
+            }
+
+            const inserts = orphans.map(file => {
+                const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(file.name);
+                const displayName = file.name.split('/').pop();
+                const folderName = file.name.includes('/') ? file.name.split('/')[0] : 'Root';
+                return { file_name: displayName, download_url: urlData.publicUrl, folder_name: folderName };
+            });
+
+            const { error } = await _supabase.from('files_list').insert(inserts);
+            if (error) throw error;
+
+            setStatus(`✓ Repair complete! Added ${orphans.length} missing DB record(s).`, 'green');
+            loadManagerFiles();
+        } catch (err) {
+            setStatus('Repair failed: ' + err.message, 'red');
         }
     }
 
-    async function deleteFile(fullPath) {
-    if (!confirm(`Are you sure you want to delete this file?\n\n${fullPath}`)) return;
-
-    const status = document.getElementById('status');
-    status.innerText = "Deleting...";
-    status.classList.add('text-blue-400');
-    status.classList.remove('text-red-400', 'text-green-400');
-
-    // Use the full path (e.g. "Folder/file.pdf")
-    const { error } = await _supabase.storage
-        .from('vault-files')
-        .remove([fullPath]);
-
-    if (error) {
-        status.innerText = "Delete Failed: " + error.message;
-        status.classList.add('text-red-400');
-        status.classList.remove('text-blue-400');
-    } else {
-        // Refresh the list immediately
-        loadManagerFiles();
-        status.innerText = "✓ File deleted successfully!";
-        status.classList.add('text-green-400');
-        status.classList.remove('text-blue-400');
+    // ─── AUTH ────────────────────────────────────────────────────
+    async function checkAccess() {
+        const { data: { session } } = await _supabase.auth.getSession();
+        if (!session) { window.location.href = 'login.html'; return; }
+        await loadFolders();
+        await loadManagerFiles();
     }
-}
 
     async function signOut() {
         await _supabase.auth.signOut();
-        window.location.href = "login.html";
+        window.location.href = 'login.html';
     }
 
     checkAccess();
-</script>
+    </script>
 </body>
 </html>
