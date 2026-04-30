@@ -150,7 +150,7 @@ async function getAIResponse(userMessage) {
     
     try {
         // 2. Fetch from YOUR server, not the external API
-        const response = await fetch('http://localhost:3000/api/chat', {
+        const response = await fetch('https://project-one-187u.onrender.com/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
