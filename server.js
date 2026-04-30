@@ -17,8 +17,9 @@ app.post('/api/chat', async (req, res) => {
         
         // Use the FULL resource name which often bypasses versioning confusion
         const model = genAI.getGenerativeModel({ 
-            model: "models/gemini-1.5-flash" 
-        });
+    model: "gemini-2.0-flash" 
+});
+
 
         // Ensure history is formatted correctly for the SDK
         const chat = model.startChat({
