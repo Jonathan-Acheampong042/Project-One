@@ -64,7 +64,7 @@
     </header>
 
     <!-- Folder Sidebar -->
-    <div id="folderSidebar" class="fixed left-0 top-[73px] bottom-0 w-64 bg-slate-900/95 backdrop-blur-lg border-r border-white/10 z-40 overflow-y-auto transition-transform">
+    <div id="folderSidebar" class="fixed left-0 top-[73px] bottom-0 w-64 bg-slate-900/95 backdrop-blur-lg border-r border-white/10 z-40 overflow-y-auto transition-transform -translate-x-full md:translate-x-0">
         <div class="p-4">
             <h4 class="text-xs font-bold text-white/40 uppercase tracking-wider mb-4 flex items-center justify-between">
                 <span>Folders</span>
@@ -78,7 +78,10 @@
         </div>
     </div>
 
-<main class="max-w-4xl mx-auto p-6 relative z-10 space-y-8 ml-64 md:ml-64" id="mainContent">
+    <!-- Mobile backdrop -->
+    <div id="sidebarBackdrop" onclick="toggleFolderSidebar()" class="hidden fixed inset-0 bg-black/50 z-30 md:hidden"></div>
+
+<main class="max-w-4xl mx-auto p-6 relative z-10 space-y-8 ml-0 md:ml-64" id="mainContent">
 
         <!-- Upload Section -->
         <section class="glass-card p-8 rounded-2xl border border-white/10 animate-slide-up">
@@ -240,28 +243,51 @@
     }
 
 // ─── TOGGLE FOLDER SIDEBAR ───────────────────────────────────
-    let folderSidebarVisible = true;
+    let folderSidebarVisible = false; // starts hidden on mobile; desktop CSS handles it
     function toggleFolderSidebar() {
         const sidebar = document.getElementById('folderSidebar');
         const main = document.getElementById('mainContent');
+        const backdrop = document.getElementById('sidebarBackdrop');
         const isMobile = window.innerWidth < 768;
-        
+
         folderSidebarVisible = !folderSidebarVisible;
+
         if (folderSidebarVisible) {
             sidebar.classList.remove('-translate-x-full');
             if (isMobile) {
-                main.classList.remove('ml-0');
-                main.classList.add('ml-0');
+                // On mobile: overlay mode — show backdrop, don't push main
+                backdrop.classList.remove('hidden');
             } else {
-                main.classList.remove('ml-0');
+                // On desktop: push main content
                 main.classList.add('ml-64');
             }
         } else {
             sidebar.classList.add('-translate-x-full');
-            main.classList.remove('ml-64');
-            main.classList.add('ml-0');
+            backdrop.classList.add('hidden');
+            if (!isMobile) {
+                main.classList.remove('ml-64');
+            }
         }
     }
+
+    // On desktop, sidebar starts visible — sync state
+    if (window.innerWidth >= 768) {
+        folderSidebarVisible = true;
+    }
+
+    // Handle resize — fix state if user resizes between mobile/desktop
+    window.addEventListener('resize', () => {
+        const isMobile = window.innerWidth < 768;
+        const backdrop = document.getElementById('sidebarBackdrop');
+        const main = document.getElementById('mainContent');
+        if (!isMobile) {
+            backdrop.classList.add('hidden');
+            if (folderSidebarVisible) main.classList.add('ml-64');
+        } else {
+            main.classList.remove('ml-64');
+            if (!folderSidebarVisible) backdrop.classList.add('hidden');
+        }
+    });
 
     // Populate sidebar with folders
     function renderSidebarFolders() {
@@ -703,15 +729,24 @@ console.log('dbResult:', JSON.stringify(dbResult));
         try {
             const { data: profile } = await _supabase
                 .from('user_profiles')
-                .select('role')
+                .select('role, email')
                 .eq('id', session.user.id)
                 .single();
             
-            if (!profile || profile.role !== 'admin') {
-                // Not an admin, redirect to user page
+            if (!profile || (profile.role !== 'admin' && profile.role !== 'manager')) {
+                // Not privileged — redirect to user page
                 window.location.href = 'index.html';
                 return;
             }
+
+            // Show role badge in header
+            const roleLabel = profile.role === 'admin' ? '🛡️ Admin' : '🔧 Manager';
+            const roleBadge = document.createElement('span');
+            roleBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full ml-2 ' + 
+                (profile.role === 'admin' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400');
+            roleBadge.innerText = roleLabel;
+            document.querySelector('header h1').appendChild(roleBadge);
+
         } catch (err) {
             // Table might not exist yet - allow access for now
             console.warn('Could not check user role:', err.message);

@@ -106,10 +106,15 @@
 
 <div id="authSection" class="fixed bottom-0 left-0 right-0 glass-card border-t border-white/10 p-4 z-50">
         <div class="max-w-7xl mx-auto text-center">
-            <div id="loggedOutMsg" class="hidden">
+            <div id="loggedOutMsg" class="hidden flex items-center justify-center gap-4">
                 <a href="login.html" class="inline-flex items-center gap-2 text-xs font-bold text-white/40 hover:text-blue-400 transition-colors">
                     <span class="material-symbols-outlined text-sm">lock</span>
-                    Login to Upload Files
+                    Sign In
+                </a>
+                <span class="text-white/20">·</span>
+                <a href="login.html#signup" onclick="localStorage.setItem('loginTab','signup')" class="inline-flex items-center gap-2 text-xs font-bold text-white/40 hover:text-purple-400 transition-colors">
+                    <span class="material-symbols-outlined text-sm">person_add</span>
+                    Create Account
                 </a>
             </div>
             <div id="loggedInMsg" class="hidden">
@@ -137,7 +142,24 @@ let allFiles = [];
         const { data: { session } } = await _supabase.auth.getSession();
         if (session) {
             currentUser = session.user;
-            document.getElementById('loggedInMsg').classList.remove('hidden');
+            // Check if user has manager/admin role
+            const { data: profile } = await _supabase
+                .from('user_profiles')
+                .select('role')
+                .eq('id', session.user.id)
+                .single()
+                .catch(() => ({ data: null }));
+            
+            const isPrivileged = profile?.role === 'admin' || profile?.role === 'manager';
+            const loggedInMsg = document.getElementById('loggedInMsg');
+            loggedInMsg.classList.remove('hidden');
+            loggedInMsg.innerHTML = isPrivileged
+                ? `<a href="manager.html" class="inline-flex items-center gap-2 text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors">
+                    <span class="material-symbols-outlined text-sm">dashboard</span>
+                    Go to Manager Portal
+                  </a>`
+                : `<p class="text-xs text-white/40">Signed in as <span class="text-white/60">${session.user.email}</span> &nbsp;·&nbsp;
+                   <a href="#" onclick="(async()=>{await _supabase.auth.signOut();checkAuth();})()" class="text-red-400 hover:text-red-300 transition-colors">Sign out</a></p>`;
             document.getElementById('loggedOutMsg').classList.add('hidden');
         } else {
             currentUser = null;
