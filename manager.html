@@ -78,7 +78,7 @@
         </div>
     </div>
 
-    <main class="max-w-4xl mx-auto p-6 relative z-10 space-y-8 ml-64" id="mainContent">
+<main class="max-w-4xl mx-auto p-6 relative z-10 space-y-8 ml-64 md:ml-64" id="mainContent">
 
         <!-- Upload Section -->
         <section class="glass-card p-8 rounded-2xl border border-white/10 animate-slide-up">
@@ -239,16 +239,23 @@
         el.className = `mt-4 text-sm font-medium text-center min-h-[20px] text-${type}-400`;
     }
 
-    // ─── TOGGLE FOLDER SIDEBAR ───────────────────────────────────
+// ─── TOGGLE FOLDER SIDEBAR ───────────────────────────────────
     let folderSidebarVisible = true;
     function toggleFolderSidebar() {
         const sidebar = document.getElementById('folderSidebar');
         const main = document.getElementById('mainContent');
+        const isMobile = window.innerWidth < 768;
+        
         folderSidebarVisible = !folderSidebarVisible;
         if (folderSidebarVisible) {
             sidebar.classList.remove('-translate-x-full');
-            main.classList.remove('ml-0');
-            main.classList.add('ml-64');
+            if (isMobile) {
+                main.classList.remove('ml-0');
+                main.classList.add('ml-0');
+            } else {
+                main.classList.remove('ml-0');
+                main.classList.add('ml-64');
+            }
         } else {
             sidebar.classList.add('-translate-x-full');
             main.classList.remove('ml-64');
@@ -687,10 +694,29 @@ console.log('dbResult:', JSON.stringify(dbResult));
         }
     }
 
-    // ─── AUTH ────────────────────────────────────────────────────
+// ─── AUTH ────────────────────────────────────────────────────
     async function checkAccess() {
         const { data: { session } } = await _supabase.auth.getSession();
         if (!session) { window.location.href = 'login.html'; return; }
+        
+        // Check user role from user_profiles table
+        try {
+            const { data: profile } = await _supabase
+                .from('user_profiles')
+                .select('role')
+                .eq('id', session.user.id)
+                .single();
+            
+            if (!profile || profile.role !== 'admin') {
+                // Not an admin, redirect to user page
+                window.location.href = 'index.html';
+                return;
+            }
+        } catch (err) {
+            // Table might not exist yet - allow access for now
+            console.warn('Could not check user role:', err.message);
+        }
+        
         await loadFolders();
         renderSidebarFolders();
         await loadManagerFiles();

@@ -43,14 +43,14 @@
 
     <header class="glass-card border-b border-white/10 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-3">
+<div class="flex items-center gap-3 cursor-pointer" onclick="toggleFolderSection()" title="Toggle Folders">
                 <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
                     <span class="material-symbols-outlined text-white text-xl">cloud_circle</span>
                 </div>
                 <h1 class="font-bold text-xl tracking-tight text-white">FileVault</h1>
             </div>
-            <div class="w-9 h-9 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg hover:scale-110 transition-transform cursor-pointer" onclick="toggleFolderSection()" title="Toggle Folders">
-                U
+            <div class="w-9 h-9 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
+                <span class="material-symbols-outlined text-white text-xl">cloud_circle</span>
             </div>
         </div>
     </header>
@@ -104,12 +104,20 @@
 
     </main>
 
-    <div class="fixed bottom-0 left-0 right-0 glass-card border-t border-white/10 p-4 z-50">
+<div id="authSection" class="fixed bottom-0 left-0 right-0 glass-card border-t border-white/10 p-4 z-50">
         <div class="max-w-7xl mx-auto text-center">
-            <a href="login.html" class="inline-flex items-center gap-2 text-xs font-bold text-white/40 hover:text-blue-400 transition-colors">
-                <span class="material-symbols-outlined text-sm">lock</span>
-                Manager Portal Access
-            </a>
+            <div id="loggedOutMsg" class="hidden">
+                <a href="login.html" class="inline-flex items-center gap-2 text-xs font-bold text-white/40 hover:text-blue-400 transition-colors">
+                    <span class="material-symbols-outlined text-sm">lock</span>
+                    Login to Upload Files
+                </a>
+            </div>
+            <div id="loggedInMsg" class="hidden">
+                <a href="manager.html" class="inline-flex items-center gap-2 text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors">
+                    <span class="material-symbols-outlined text-sm">dashboard</span>
+                    Go to Manager Portal
+                </a>
+            </div>
         </div>
     </div>
 
@@ -119,9 +127,29 @@
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI'
     );
 
-    let allFiles = [];
+let allFiles = [];
     let currentFolder = null;
     let isOnline = navigator.onLine;
+    let currentUser = null;
+
+    // ─── AUTH CHECK ───────────────────────────────────────────────
+    async function checkAuth() {
+        const { data: { session } } = await _supabase.auth.getSession();
+        if (session) {
+            currentUser = session.user;
+            document.getElementById('loggedInMsg').classList.remove('hidden');
+            document.getElementById('loggedOutMsg').classList.add('hidden');
+        } else {
+            currentUser = null;
+            document.getElementById('loggedInMsg').classList.add('hidden');
+            document.getElementById('loggedOutMsg').classList.remove('hidden');
+        }
+    }
+
+    // Listen for auth changes
+    _supabase.auth.onAuthStateChange((event, session) => {
+        checkAuth();
+    });
 
     // ─── HELPERS ────────────────────────────────────────────────
     function getFileIcon(fileName) {
@@ -414,10 +442,11 @@
         if (originalFetchFiles) await originalFetchFiles();
     };
 
-    // Initialize online status
+// Initialize online status
     updateOnlineStatus();
 
-    // Start
+    // Check auth status and start
+    checkAuth();
     fetchFiles();
 </script>
     <script src="chat-widget.js"></script>
