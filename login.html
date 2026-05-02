@@ -399,7 +399,9 @@
                 // Check role and redirect
                 const { data: profile } = await _supabase.from('user_profiles').select('role').eq('id', data.user.id).single().catch(() => ({ data: null }));
                 setTimeout(() => {
-                    window.location.href = (profile?.role === 'admin' || profile?.role === 'manager') ? 'manager.html' : 'index.html';
+                    window.location.href = (profile?.role === 'admin' || profile?.role === 'manager')
+                        ? 'https://jonathan-acheampong042.github.io/Project-One/manager.html'
+                        : 'https://jonathan-acheampong042.github.io/Project-One/index.html';
                 }, 600);
             }
         }
@@ -466,7 +468,7 @@
             showMsg('Redirecting to ' + provider + '...', 'blue');
             const { error } = await _supabase.auth.signInWithOAuth({
                 provider: provider,
-                options: { redirectTo: window.location.origin + '/index.html' }
+                options: { redirectTo: 'https://jonathan-acheampong042.github.io/Project-One/index.html' }
             });
             if (error) showMsg(error.message);
         }

@@ -723,7 +723,7 @@ console.log('dbResult:', JSON.stringify(dbResult));
 // ─── AUTH ────────────────────────────────────────────────────
     async function checkAccess() {
         const { data: { session } } = await _supabase.auth.getSession();
-        if (!session) { window.location.href = 'login.html'; return; }
+        if (!session) { window.location.href = 'https://jonathan-acheampong042.github.io/Project-One/login.html'; return; }
         
         // Check user role from user_profiles table
         try {
@@ -735,7 +735,7 @@ console.log('dbResult:', JSON.stringify(dbResult));
             
             if (!profile || (profile.role !== 'admin' && profile.role !== 'manager')) {
                 // Not privileged — redirect to user page
-                window.location.href = 'index.html';
+                window.location.href = 'https://jonathan-acheampong042.github.io/Project-One/index.html';
                 return;
             }
 
