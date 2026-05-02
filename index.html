@@ -142,15 +142,26 @@ let allFiles = [];
         const { data: { session } } = await _supabase.auth.getSession();
         if (session) {
             currentUser = session.user;
-            // Check if user has manager/admin role
-            const { data: profile } = await _supabase
-                .from('user_profiles')
-                .select('role')
-                .eq('id', session.user.id)
-                .single()
-                .catch(() => ({ data: null }));
-            
-            const isPrivileged = profile?.role === 'admin' || profile?.role === 'manager';
+
+            // Check role
+            let role = null;
+            try {
+                const { data: profile, error } = await _supabase
+                    .from('user_profiles')
+                    .select('role')
+                    .eq('id', session.user.id)
+                    .single();
+                if (!error && profile) role = profile.role;
+            } catch (e) {}
+
+            const isPrivileged = role === 'admin' || role === 'manager';
+
+            // Redirect privileged users to manager page automatically
+            if (isPrivileged && !window.location.pathname.includes('manager')) {
+                window.location.href = 'manager.html';
+                return;
+            }
+
             const loggedInMsg = document.getElementById('loggedInMsg');
             loggedInMsg.classList.remove('hidden');
             loggedInMsg.innerHTML = isPrivileged
