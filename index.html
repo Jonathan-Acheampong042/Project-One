@@ -132,11 +132,6 @@ let allFiles = [];
     let isOnline = navigator.onLine;
     let currentUser = null;
 
-    // ── Detect session from URL (OAuth redirect / magic link) ──
-    if (window.location.hash || window.location.search.includes('code=')) {
-        await _supabase.auth.getSession();
-    }
-
     // ─── AUTH CHECK ───────────────────────────────────────────────
     async function checkAuth() {
         const { data: { session } } = await _supabase.auth.getSession();
@@ -163,20 +158,18 @@ let allFiles = [];
                 return;
             }
 
-            // Update profile UI
+            // Update profile avatar in header
             const email = session.user.email || session.user.user_metadata?.email || '';
             const initial = email ? email[0].toUpperCase() : '?';
-            document.getElementById('profileAvatar').textContent = initial;
-            document.getElementById('profileEmail').textContent = email;
-            document.getElementById('profileRole').textContent = role === 'manager' ? '🔧 Manager' : role === 'admin' ? '🛡️ Admin' : '👤 User';
-            if (isPrivileged) document.getElementById('managerLink').classList.remove('hidden');
+            const avatar = document.getElementById('profileAvatar');
+            if (avatar) avatar.textContent = initial;
 
-            document.getElementById('profileLoggedOut').classList.add('hidden');
-            document.getElementById('profileLoggedIn').classList.remove('hidden');
+            document.getElementById('profileLoggedOut')?.classList.add('hidden');
+            document.getElementById('profileLoggedIn')?.classList.remove('hidden');
         } else {
             currentUser = null;
-            document.getElementById('profileLoggedOut').classList.remove('hidden');
-            document.getElementById('profileLoggedIn').classList.add('hidden');
+            document.getElementById('profileLoggedOut')?.classList.remove('hidden');
+            document.getElementById('profileLoggedIn')?.classList.add('hidden');
         }
     }
 
@@ -476,12 +469,12 @@ let allFiles = [];
         if (originalFetchFiles) await originalFetchFiles();
     };
 
-// Initialize online status
-    updateOnlineStatus();
-
-    // Check auth status and start
-    checkAuth();
-    fetchFiles();
+// Initialize
+    (async () => {
+        updateOnlineStatus();
+        await checkAuth();
+        fetchFiles();
+    })();
 </script>
     <script src="chat-widget.js"></script>
 </body>

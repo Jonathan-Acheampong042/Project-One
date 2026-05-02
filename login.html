@@ -326,6 +326,22 @@
     </div>
 
     <script>
+        // Handle auth callback from OAuth or email link
+_supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+        (async () => {
+            const { data: profile } = await _supabase
+                .from('user_profiles')
+                .select('role')
+                .eq('id', session.user.id)
+                .single()
+                .catch(() => ({ data: null }));
+            window.location.href = (profile?.role === 'admin' || profile?.role === 'manager')
+                ? 'https://jonathan-acheampong042.github.io/Project-One/manager.html'
+                : 'https://jonathan-acheampong042.github.io/Project-One/profile.html';
+        })();
+    }
+});
         const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
 
         let currentTab = 'login';
@@ -335,7 +351,9 @@
             const { data: { session } } = await _supabase.auth.getSession();
             if (session) {
                 const { data: profile } = await _supabase.from('user_profiles').select('role').eq('id', session.user.id).single().catch(() => ({ data: null }));
-                window.location.href = (profile?.role === 'admin' || profile?.role === 'manager') ? 'manager.html' : 'index.html';
+                window.location.href = (profile?.role === 'admin' || profile?.role === 'manager')
+                    ? 'https://jonathan-acheampong042.github.io/Project-One/manager.html'
+                    : 'https://jonathan-acheampong042.github.io/Project-One/profile.html';
             }
         })();
 
@@ -420,18 +438,22 @@
             if (error) {
                 setLoading(false);
                 showMsg(error.message);
-            } else {
-                // Auto-create user_profiles row with 'user' role
-                if (data.user) {
-                    await _supabase.from('user_profiles').upsert({
-                        id: data.user.id,
-                        email: data.user.email,
-                        role: 'user'
-                    }).catch(() => {});
-                }
-                setLoading(false, '✓ Account created!');
-                showMsg('Account created! Check your email to confirm, then sign in.', 'green');
-                setTimeout(() => switchTab('login'), 2500);
+            } else if (data.user && !data.session) {
+                // Email confirmation required
+                setLoading(false, '✓ Almost there!');
+                showMsg('Check your email for a confirmation link, then come back to sign in.', 'green');
+                setTimeout(() => switchTab('login'), 3000);
+            } else if (data.session) {
+                // No email confirmation — signed in immediately
+                await _supabase.from('user_profiles').upsert({
+                    id: data.user.id,
+                    email: data.user.email,
+                    role: 'user'
+                }).catch(() => {});
+                setLoading(false, '✓ Welcome!');
+                setTimeout(() => {
+                    window.location.href = 'https://jonathan-acheampong042.github.io/Project-One/profile.html';
+                }, 600);
             }
         }
 
@@ -479,4 +501,4 @@
         }
     </script>
 </body>
-</html>ss
+</html>
