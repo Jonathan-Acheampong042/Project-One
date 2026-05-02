@@ -137,6 +137,11 @@ let allFiles = [];
     let isOnline = navigator.onLine;
     let currentUser = null;
 
+    // ── Detect session from URL (OAuth redirect / magic link) ──
+    if (window.location.hash || window.location.search.includes('code=')) {
+        await _supabase.auth.getSession(); // triggers Supabase to parse the URL
+    }
+
     // ─── AUTH CHECK ───────────────────────────────────────────────
     async function checkAuth() {
         const { data: { session } } = await _supabase.auth.getSession();
