@@ -396,12 +396,11 @@
                 setTimeout(() => document.getElementById('loginBtn').closest('.space-y-4').classList.remove('error-shake'), 500);
             } else {
                 setLoading(false, 'Success! Redirecting...');
-                // Check role and redirect
                 const { data: profile } = await _supabase.from('user_profiles').select('role').eq('id', data.user.id).single().catch(() => ({ data: null }));
                 setTimeout(() => {
                     window.location.href = (profile?.role === 'admin' || profile?.role === 'manager')
                         ? 'https://jonathan-acheampong042.github.io/Project-One/manager.html'
-                        : 'https://jonathan-acheampong042.github.io/Project-One/index.html';
+                        : 'https://jonathan-acheampong042.github.io/Project-One/profile.html';
                 }, 600);
             }
         }
@@ -468,7 +467,7 @@
             showMsg('Redirecting to ' + provider + '...', 'blue');
             const { error } = await _supabase.auth.signInWithOAuth({
                 provider: provider,
-                options: { redirectTo: 'https://jonathan-acheampong042.github.io/Project-One/index.html' }
+                options: { redirectTo: 'https://jonathan-acheampong042.github.io/Project-One/profile.html' }
             });
             if (error) showMsg(error.message);
         }
@@ -480,4 +479,4 @@
         }
     </script>
 </body>
-</html>
+</html>ss

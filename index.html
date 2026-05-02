@@ -60,28 +60,11 @@
                 </div>
                 <!-- Logged in: show avatar -->
                 <div id="profileLoggedIn" class="hidden">
-                    <button onclick="toggleProfileMenu()" class="flex items-center gap-2 hover:opacity-80 transition-all">
+                    <a href="https://jonathan-acheampong042.github.io/Project-One/profile.html" class="flex items-center gap-2 hover:opacity-80 transition-all">
                         <div id="profileAvatar" class="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg text-white font-bold text-sm">
                             ?
                         </div>
-                    </button>
-                    <!-- Dropdown menu -->
-                    <div id="profileMenu" class="hidden absolute right-0 top-12 w-56 glass-card rounded-2xl border border-white/10 shadow-2xl overflow-hidden z-50">
-                        <div class="p-3 border-b border-white/10">
-                            <p id="profileEmail" class="text-xs text-white/50 truncate"></p>
-                            <p id="profileRole" class="text-xs font-bold text-blue-400 mt-0.5"></p>
-                        </div>
-                        <div class="p-2 space-y-1">
-                            <a id="managerLink" href="https://jonathan-acheampong042.github.io/Project-One/manager.html" class="hidden w-full flex items-center gap-2 px-3 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all">
-                                <span class="material-symbols-outlined text-sm">dashboard</span>
-                                Manager Portal
-                            </a>
-                            <button onclick="signOut()" class="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all">
-                                <span class="material-symbols-outlined text-sm">logout</span>
-                                Sign Out
-                            </button>
-                        </div>
-                    </div>
+                    </a>
                 </div>
             </div>
         </div>
@@ -195,22 +178,6 @@ let allFiles = [];
             document.getElementById('profileLoggedOut').classList.remove('hidden');
             document.getElementById('profileLoggedIn').classList.add('hidden');
         }
-    }
-
-    function toggleProfileMenu() {
-        document.getElementById('profileMenu').classList.toggle('hidden');
-    }
-
-    // Close menu when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!document.getElementById('profileDropdownWrapper').contains(e.target)) {
-            document.getElementById('profileMenu')?.classList.add('hidden');
-        }
-    });
-
-    async function signOut() {
-        await _supabase.auth.signOut();
-        window.location.href = 'https://jonathan-acheampong042.github.io/Project-One/login.html';
     }
 
     // Listen for auth changes
