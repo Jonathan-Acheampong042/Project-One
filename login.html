@@ -111,6 +111,14 @@
             transform: translateY(-2px);
             box-shadow: 0 10px 40px -10px rgba(59, 130, 246, 0.4);
         }
+
+        /* Hide browser-native password reveal controls so only the custom icon appears */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear,
+        input[type="password"]::-webkit-password-reveal-button,
+        input[type="password"]::-webkit-textfield-decoration-container {
+            display: none !important;
+        }
         
         .input-icon {
             transition: all 0.3s ease;
