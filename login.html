@@ -3,383 +3,215 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>FileVault | Admin Login</title>
+    <title>FileVault | Sign In</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%233b82f6'/><stop offset='100%25' stop-color='%237c3aed'/></linearGradient></defs><path d='M50 2 L90 15 L90 55 Q90 88 50 98 Q10 88 10 55 L10 15 Z' fill='url(%23g)'/><circle cx='40' cy='45' r='11' fill='white' opacity='.25'/><circle cx='50' cy='40' r='13' fill='white' opacity='.25'/><circle cx='61' cy='45' r='10' fill='white' opacity='.25'/><rect x='31' y='45' width='38' height='14' rx='2' fill='white' opacity='.25'/><rect x='42' y='51' width='16' height='12' rx='3' fill='white' opacity='.9'/><path d='M45 51 L45 47 Q50 41 55 47 L55 51' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' opacity='.9'/><circle cx='50' cy='56' r='2' fill='%236366f1'/><rect x='49' y='56' width='2' height='4' rx='1' fill='%236366f1'/></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%233b82f6'/><stop offset='100%25' stop-color='%237c3aed'/></linearGradient></defs><path d='M50 2 L90 15 L90 55 Q90 88 50 98 Q10 88 10 55 L10 15 Z' fill='url(%23g)'/><rect x='42' y='51' width='16' height='12' rx='3' fill='white' opacity='.9'/><path d='M45 51 L45 47 Q50 41 55 47 L55 51' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' opacity='.9'/></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
     <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-            min-height: 100vh;
-        }
-        
-        .floating-shapes {
-            position: fixed;
-            inset: 0;
-            overflow: hidden;
-            pointer-events: none;
-        }
-        
-        .shape {
-            position: absolute;
-            border-radius: 50%;
-            opacity: 0.1;
-            animation: float 20s infinite ease-in-out;
-        }
-        
-        .shape-1 {
-            width: 300px;
-            height: 300px;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            top: -100px;
-            left: -100px;
-            animation-delay: 0s;
-        }
-        
-        .shape-2 {
-            width: 200px;
-            height: 200px;
-            background: linear-gradient(135deg, #06b6d4, #3b82f6);
-            bottom: -50px;
-            right: -50px;
-            animation-delay: -5s;
-        }
-        
-        .shape-4 {
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(135deg, #10b981, #06b6d4);
-            top: 30%;
-            left: 5%;
-            animation-delay: -15s;
-        }
-        
-        .shape-3 {
-            width: 150px;
-            height: 150px;
-            background: linear-gradient(135deg, #8b5cf6, #ec4899);
-            top: 50%;
-            right: 10%;
-            animation-delay: -10s;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            25% { transform: translate(20px, -20px) rotate(5deg); }
-            50% { transform: translate(0, -40px) rotate(0deg); }
-            75% { transform: translate(-20px, -20px) rotate(-5deg); }
-        }
-        
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.5); }
-        }
-        
-        .animate-slide-up {
-            animation: slideUp 0.8s ease-out forwards;
-        }
-        
-        .animate-fade-in {
-            animation: fadeIn 1s ease-out forwards;
-        }
-        
-        .animate-pulse-glow {
-            animation: pulse-glow 3s infinite;
-        }
-        
-        .input-group {
-            position: relative;
-        }
-        
-        .input-group input {
-            transition: all 0.3s ease;
-        }
-        
-        .input-group input:focus {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 40px -10px rgba(59, 130, 246, 0.4);
-        }
-
-        /* Hide browser-native password reveal controls so only the custom icon appears */
-        input[type="password"]::-ms-reveal,
-        input[type="password"]::-ms-clear,
-        input[type="password"]::-webkit-password-reveal-button,
-        input[type="password"]::-webkit-textfield-decoration-container {
-            display: none !important;
-        }
-        
-        .input-icon {
-            transition: all 0.3s ease;
-        }
-        
-        .input-group:focus-within .input-icon {
-            color: #3b82f6;
-            transform: scale(1.1);
-        }
-        
-        .login-btn {
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        
-        .login-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s ease;
-        }
-        
-        .login-btn:hover::before {
-            left: 100%;
-        }
-        
-        .login-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 20px 40px -15px rgba(37, 99, 235, 0.5);
-        }
-        
-        .back-btn {
-            transition: all 0.3s ease;
-        }
-        
-        .back-btn:hover {
-            transform: translateX(-5px);
-        }
-        
-        .error-shake {
-            animation: shake 0.5s ease-in-out;
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-10px); }
-            40%, 80% { transform: translateX(10px); }
-        }
-        
-        .loading-spinner {
-            border: 3px solid rgba(255,255,255,0.3);
-            border-top: 3px solid white;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); min-height: 100vh; }
+        .floating-shapes { position: fixed; inset: 0; overflow: hidden; pointer-events: none; }
+        .shape { position: absolute; border-radius: 50%; opacity: 0.1; animation: float 20s infinite ease-in-out; }
+        .shape-1 { width: 300px; height: 300px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); top: -100px; left: -100px; }
+        .shape-2 { width: 200px; height: 200px; background: linear-gradient(135deg, #06b6d4, #3b82f6); bottom: -50px; right: -50px; animation-delay: -5s; }
+        .shape-3 { width: 150px; height: 150px; background: linear-gradient(135deg, #8b5cf6, #ec4899); top: 50%; right: 10%; animation-delay: -10s; }
+        .shape-4 { width: 100px; height: 100px; background: linear-gradient(135deg, #10b981, #06b6d4); top: 30%; left: 5%; animation-delay: -15s; }
+        @keyframes float { 0%,100%{transform:translate(0,0)} 25%{transform:translate(20px,-20px)} 50%{transform:translate(0,-40px)} 75%{transform:translate(-20px,-20px)} }
+        @keyframes slideUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-10px)} 40%,80%{transform:translateX(10px)} }
+        .animate-slide-up { animation: slideUp 0.5s ease-out forwards; }
+        .animate-fade-in { animation: fadeIn 0.8s ease-out 0.3s both; }
+        .error-shake { animation: shake 0.5s ease-in-out; }
+        .login-btn { position: relative; overflow: hidden; }
+        .login-btn::before { content:''; position:absolute; top:0; left:-100%; width:100%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent); transition:left 0.5s ease; }
+        .login-btn:hover::before { left:100%; }
+        .login-btn:hover { transform:translateY(-3px); box-shadow:0 20px 40px -15px rgba(37,99,235,0.5); }
+        input:-webkit-autofill { -webkit-box-shadow:0 0 0 1000px rgba(255,255,255,0.05) inset!important; -webkit-text-fill-color:white!important; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-6 relative">
-    <!-- Floating Background Shapes -->
+<body class="min-h-screen flex items-center justify-center p-4 relative">
     <div class="floating-shapes">
-        <div class="shape shape-1"></div>
-        <div class="shape shape-2"></div>
-        <div class="shape shape-3"></div>
-        <div class="shape shape-4"></div>
+        <div class="shape shape-1"></div><div class="shape shape-2"></div>
+        <div class="shape shape-3"></div><div class="shape shape-4"></div>
     </div>
 
     <!-- Back Button -->
-    <a href="index.html" class="fixed top-6 left-6 back-btn flex items-center gap-2 text-white/70 hover:text-white text-sm font-medium px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all z-10">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-        </svg>
+    <a href="https://jonathan-acheampong042.github.io/Project-One/index.html" class="fixed top-6 left-6 flex items-center gap-2 text-white/70 hover:text-white text-sm font-medium px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all z-10">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
         Back to FileVault
     </a>
 
-    <!-- Login Card -->
     <div class="relative w-full max-w-md">
-        <!-- Decorative glow -->
         <div class="absolute -inset-1 bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 rounded-3xl blur-2xl opacity-30"></div>
-        
-        <div class="relative bg-slate-900/80 backdrop-blur-xl p-10 rounded-3xl border border-white/10 shadow-2xl animate-slide-up">
-            <!-- Logo/Header -->
+
+        <div class="relative bg-slate-900/80 backdrop-blur-xl p-8 rounded-3xl border border-white/10 shadow-2xl animate-slide-up">
+            <!-- Logo -->
             <div class="text-center mb-6">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 shadow-lg shadow-blue-500/30 animate-pulse-glow">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-3 shadow-lg shadow-blue-500/30">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                     </svg>
                 </div>
-                <h2 id="formTitle" class="text-3xl font-bold text-white mb-1">Welcome Back</h2>
-                <p id="formSubtitle" class="text-white/50 text-sm">Sign in to your FileVault account</p>
+                <h2 class="text-2xl font-bold text-white mb-1">Admin Login</h2>
+                <p class="text-white/50 text-sm">Sign in to access the manager portal</p>
             </div>
 
-            <div class="mb-6 text-center">
-                <div class="inline-flex items-center justify-center gap-2 px-4 py-3 bg-white/5 rounded-2xl text-sm text-white/70">
-                    <span class="material-symbols-outlined text-base">Admin Panel</span>
-                    Admin access only: Enter Administrator Credentials.
-                </div>
-            </div>
-
-            <!-- Shared Fields -->
-            <div class="space-y-4">
-                <div class="input-group">
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <svg class="input-icon w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
-                            </svg>
-                        </div>
-                        <input type="email" id="email" placeholder="Email address" 
-                            class="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-xl outline-none text-white placeholder-white/40 focus:border-blue-500/50 focus:bg-white/10 transition-all"/>
+            <div class="space-y-4" id="formFields">
+                <!-- Email -->
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg class="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/></svg>
                     </div>
+                    <input type="email" id="email" placeholder="Admin email address" class="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl outline-none text-white placeholder-white/40 focus:border-blue-500/50 focus:bg-white/10 transition-all"/>
                 </div>
 
-                <div class="input-group">
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <svg class="input-icon w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                            </svg>
-                        </div>
-                        <input type="password" id="password" placeholder="Password" 
-                            class="w-full pl-12 pr-12 py-4 bg-white/5 border border-white/10 rounded-xl outline-none text-white placeholder-white/40 focus:border-blue-500/50 focus:bg-white/10 transition-all"/>
-                        <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-4 flex items-center">
-                            <svg id="eyeIcon" class="w-5 h-5 text-white/40 hover:text-white/70 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                            </svg>
-                        </button>
+                <!-- Password -->
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg class="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                     </div>
+                    <input type="password" id="password" placeholder="Password" class="w-full pl-12 pr-12 py-3.5 bg-white/5 border border-white/10 rounded-xl outline-none text-white placeholder-white/40 focus:border-blue-500/50 focus:bg-white/10 transition-all"/>
+                    <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-4 flex items-center">
+                        <svg id="eyeIcon" class="w-5 h-5 text-white/40 hover:text-white/70 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                    </button>
                 </div>
 
-                <!-- Login extras -->
-                <div id="loginExtras" class="flex items-center justify-between">
+                <div class="flex items-center justify-between">
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="rememberMe" class="w-4 h-4 rounded border-white/20 bg-white/5 text-blue-500 focus:ring-blue-500/50 focus:ring-offset-0 cursor-pointer"/>
+                        <input type="checkbox" class="w-4 h-4 rounded border-white/20 bg-white/5 text-blue-500"/>
                         <span class="text-white/50 text-sm">Remember me</span>
                     </label>
                     <a href="#" onclick="forgotPassword()" class="text-sm text-blue-400 hover:text-blue-300 transition-colors">Forgot password?</a>
                 </div>
 
-                <button onclick="handleSubmit()" id="loginBtn" class="login-btn w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 rounded-xl font-bold hover:from-blue-600 hover:to-purple-700 transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2">
+                <button onclick="handleSubmit()" id="loginBtn" class="login-btn w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3.5 rounded-xl font-bold hover:from-blue-600 hover:to-purple-700 transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2">
                     <span id="btnText">Sign In</span>
-                    <svg id="btnIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                    </svg>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                 </button>
             </div>
 
-            <!-- Message -->
-            <p id="msg" class="mt-3 text-center text-red-400 text-sm min-h-[20px]"></p>
+            <p id="msg" class="mt-3 text-center text-sm min-h-[20px] text-red-400"></p>
         </div>
-        
-        <!-- Footer -->
-        <p class="text-center text-white/30 text-xs mt-6 animate-fade-in">
-            Secure access to FileVault
-        </p>
+
+        <!-- Reset Password Card (shown when recovery link is clicked) -->
+        <div id="resetCard" class="hidden relative bg-slate-900/80 backdrop-blur-xl p-8 rounded-3xl border border-white/10 shadow-2xl animate-slide-up">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-green-500 to-teal-600 rounded-2xl mb-3 shadow-lg">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-1">Set New Password</h2>
+                <p class="text-white/50 text-sm">Enter your new password below</p>
+            </div>
+            <div class="space-y-4">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg class="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    </div>
+                    <input type="password" id="newPassword" placeholder="New password" class="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl outline-none text-white placeholder-white/40 focus:border-green-500/50 focus:bg-white/10 transition-all"/>
+                </div>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg class="w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <input type="password" id="confirmNewPassword" placeholder="Confirm new password" class="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl outline-none text-white placeholder-white/40 focus:border-green-500/50 focus:bg-white/10 transition-all"/>
+                </div>
+                <button onclick="setNewPassword()" id="resetBtn" class="login-btn w-full bg-gradient-to-r from-green-500 to-teal-600 text-white py-3.5 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2">
+                    <span id="resetBtnText">Update Password</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                </button>
+            </div>
+            <p id="resetMsg" class="mt-3 text-center text-sm min-h-[20px] text-red-400"></p>
+        </div>
+
+        <p class="text-center text-white/30 text-xs mt-5 animate-fade-in">Secure admin access · FileVault</p>
     </div>
 
     <script>
-        const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
-        const ADMIN_EMAIL_ALLOWLIST = ['admin@nharnharblay21@gmail.com']; // Replace with your actual admin email(s)
+        const BASE = 'https://jonathan-acheampong042.github.io/Project-One';
+        const _supabase = supabase.createClient(
+            'https://lvhecpvwpzmstciewziv.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI'
+        );
 
-        // Handle auth callback from OAuth or email link
+        // ── Handle password recovery link ─────────────────────────
         _supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN' && session) {
-                (async () => {
-                    const { data: profile } = await _supabase
-                        .from('user_profiles')
-                        .select('role')
-                        .eq('id', session.user.id)
-                        .single()
-                        .catch(() => ({ data: null }));
-                    const isAdmin = profile?.role === 'admin' || profile?.role === 'manager' || ADMIN_EMAIL_ALLOWLIST.includes(session.user.email || '');
-                    window.location.href = isAdmin
-                        ? 'https://jonathan-acheampong042.github.io/Project-One/manager.html'
-                        : 'https://jonathan-acheampong042.github.io/Project-One/index.html';
-                })();
+            if (event === 'PASSWORD_RECOVERY') {
+                // Show reset form, hide login form
+                document.querySelector('.relative.bg-slate-900\\/80').classList.add('hidden');
+                document.getElementById('resetCard').classList.remove('hidden');
             }
         });
 
-        // If already logged in, redirect to appropriate page
+        // ── If already logged in as admin, go straight to manager ──
         (async () => {
             const { data: { session } } = await _supabase.auth.getSession();
             if (session) {
-                const { data: profile } = await _supabase.from('user_profiles').select('role').eq('id', session.user.id).single().catch(() => ({ data: null }));
-                const isAdmin = profile?.role === 'admin' || profile?.role === 'manager' || ADMIN_EMAIL_ALLOWLIST.includes(session.user.email || '');
-                window.location.href = isAdmin
-                    ? 'https://jonathan-acheampong042.github.io/Project-One/manager.html'
-                    : 'https://jonathan-acheampong042.github.io/Project-One/index.html';
+                try {
+                    const { data: profile } = await _supabase
+                        .from('user_profiles').select('role').eq('id', session.user.id).single();
+                    if (profile?.role === 'admin' || profile?.role === 'manager') {
+                        window.location.href = BASE + '/manager.html';
+                    }
+                } catch(e) {}
             }
         })();
 
-        function setLoading(loading, successText) {
+        function setLoading(loading, text) {
             const btn = document.getElementById('loginBtn');
-            const btnText = document.getElementById('btnText');
             btn.disabled = loading;
-            btn.classList.toggle('opacity-75', loading);
-            btn.classList.toggle('cursor-not-allowed', loading);
-            if (loading) {
-                btnText.innerText = 'Signing in...';
-            } else if (successText) {
-                btnText.innerText = successText;
-            } else {
-                btnText.innerText = 'Sign In';
-            }
+            btn.classList.toggle('opacity-70', loading);
+            document.getElementById('btnText').innerText = text || 'Sign In';
         }
 
         function showMsg(text, color = 'red') {
-            const msg = document.getElementById('msg');
-            msg.innerText = text;
-            msg.className = `mt-5 text-center text-sm min-h-[20px] text-${color}-400`;
+            const el = document.getElementById('msg');
+            el.innerText = text;
+            el.className = `mt-3 text-center text-sm min-h-[20px] text-${color}-400`;
         }
 
         async function handleSubmit() {
-            await signIn();
-        }
-
-        async function signIn() {
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             if (!email || !password) { showMsg('Please enter both email and password'); return; }
 
-            setLoading(true);
+            setLoading(true, 'Signing in...');
+
             const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
 
             if (error) {
                 setLoading(false);
                 showMsg(error.message);
-                document.getElementById('loginBtn').closest('.space-y-4').classList.add('error-shake');
-                setTimeout(() => document.getElementById('loginBtn').closest('.space-y-4').classList.remove('error-shake'), 500);
-            } else {
-                const { data: profile } = await _supabase.from('user_profiles').select('role').eq('id', data.user.id).single().catch(() => ({ data: null }));
-                const isAdmin = profile?.role === 'admin' || profile?.role === 'manager' || ADMIN_EMAIL_ALLOWLIST.includes(data.user.email || '');
-                if (!isAdmin) {
+                document.getElementById('loginBtn').classList.add('error-shake');
+                setTimeout(() => document.getElementById('loginBtn').classList.remove('error-shake'), 500);
+                return;
+            }
+
+            // Now check role — only allow admin/manager through
+            try {
+                const { data: profile } = await _supabase
+                    .from('user_profiles').select('role').eq('id', data.user.id).single();
+
+                if (profile?.role === 'admin' || profile?.role === 'manager') {
+                    setLoading(false, '✓ Redirecting...');
+                    setTimeout(() => { window.location.href = BASE + '/manager.html'; }, 500);
+                } else {
                     await _supabase.auth.signOut();
                     setLoading(false);
-                    showMsg('Access denied. Admin login only.', 'red');
-                    return;
+                    showMsg('Access denied. Admin credentials only.');
                 }
-                setLoading(false, 'Success! Redirecting...');
-                setTimeout(() => {
-                    window.location.href = 'https://jonathan-acheampong042.github.io/Project-One/manager.html';
-                }, 600);
+            } catch(e) {
+                await _supabase.auth.signOut();
+                setLoading(false);
+                showMsg('Could not verify role. Please try again.');
             }
         }
-
-        // Enter key support
-        ['email', 'password'].forEach(id => {
-            document.getElementById(id)?.addEventListener('keypress', e => { if (e.key === 'Enter') handleSubmit(); });
-        });
 
         function togglePassword() {
             const input = document.getElementById('password');
@@ -393,17 +225,47 @@
             }
         }
 
-        function forgotPassword() {
-            const email = document.getElementById('email').value.trim();
-            if (!email) { showMsg('Please enter your email first'); return; }
-            _supabase.auth.resetPasswordForEmail(email).then(() => {
-                showMsg('Password reset link sent to your email', 'green');
-            }).catch(err => showMsg(err.message));
+        async function setNewPassword() {
+            const newPwd = document.getElementById('newPassword').value;
+            const confirmPwd = document.getElementById('confirmNewPassword').value;
+            const resetMsg = document.getElementById('resetMsg');
+
+            if (!newPwd) { resetMsg.className = 'mt-3 text-center text-sm min-h-[20px] text-red-400'; resetMsg.innerText = 'Please enter a new password'; return; }
+            if (newPwd.length < 6) { resetMsg.className = 'mt-3 text-center text-sm min-h-[20px] text-red-400'; resetMsg.innerText = 'Password must be at least 6 characters'; return; }
+            if (newPwd !== confirmPwd) { resetMsg.className = 'mt-3 text-center text-sm min-h-[20px] text-red-400'; resetMsg.innerText = 'Passwords do not match'; return; }
+
+            const btn = document.getElementById('resetBtn');
+            btn.disabled = true;
+            document.getElementById('resetBtnText').innerText = 'Updating...';
+
+            const { error } = await _supabase.auth.updateUser({ password: newPwd });
+
+            if (error) {
+                btn.disabled = false;
+                document.getElementById('resetBtnText').innerText = 'Update Password';
+                resetMsg.className = 'mt-3 text-center text-sm min-h-[20px] text-red-400';
+                resetMsg.innerText = error.message;
+            } else {
+                document.getElementById('resetBtnText').innerText = '✓ Password updated!';
+                resetMsg.className = 'mt-3 text-center text-sm min-h-[20px] text-green-400';
+                resetMsg.innerText = 'Password updated successfully. Redirecting to manager...';
+                setTimeout(() => { window.location.href = BASE + '/manager.html'; }, 2000);
+            }
         }
 
-        window.addEventListener('offline', () => showMsg('You are offline. Please check your connection.', 'yellow'));
+        function forgotPassword() {
+            const email = document.getElementById('email').value.trim();
+            if (!email) { showMsg('Enter your email first'); return; }
+            _supabase.auth.resetPasswordForEmail(email, { redirectTo: BASE + '/login.html' })
+                .then(() => showMsg('Password reset link sent!', 'green'))
+                .catch(e => showMsg(e.message));
+        }
 
-        // Single unified OAuth handler no longer available for admin-only login.
+        ['email', 'password'].forEach(id => {
+            document.getElementById(id)?.addEventListener('keypress', e => { if (e.key === 'Enter') handleSubmit(); });
+        });
+
+        window.addEventListener('offline', () => showMsg('You are offline', 'yellow'));
     </script>
 </body>
 </html>
