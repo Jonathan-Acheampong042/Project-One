@@ -432,7 +432,8 @@
         select.innerHTML = '<option value="" class="text-black">No folder (root)</option>';
         availableFolders.forEach(f => { select.innerHTML += `<option value="${f}" class="text-black">${f}</option>`; });
         select.value = folderName;
-        renderSidebarFolders();
+        renderMainFolders();
+        populateRequestFolderSelect();
         setStatus(`Folder "${folderName}" ready — it will be created on first upload.`, 'green');
     }
 
@@ -458,7 +459,8 @@
             await _supabase.from('files_list').update({ folder_name: newName }).eq('folder_name', oldName);
             await loadFolders();
             availableFolders = availableFolders.map(f => f === oldName ? newName : f).sort();
-            renderSidebarFolders();
+            renderMainFolders();
+        populateRequestFolderSelect();
             if (currentFolder === oldName) filterByFolder(newName);
             setStatus(`✓ Folder renamed to "${newName}".`, 'green');
         } catch (err) {
@@ -485,6 +487,17 @@
 
     // ─── LOAD FILES ─────────────────────────────────────────────
     async function loadManagerFiles() {
+        if (!navigator.onLine) {
+            const container = document.getElementById('managerFileGrid');
+            container.innerHTML = `<div class="col-span-full text-center py-10">
+                <span class="material-symbols-outlined text-4xl text-white/30 mb-4 block">wifi_off</span>
+                <p class="text-white/60 font-medium mb-2">You're offline</p>
+                <p class="text-white/40 text-sm">Please check your connection and try again.</p>
+                <button onclick="loadManagerFiles()" class="mt-4 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg text-sm transition-all">
+                    <span class="material-symbols-outlined text-sm mr-1">refresh</span> Retry
+                </button></div>`;
+            return;
+        }
         const container = document.getElementById('managerFileGrid');
         container.innerHTML = `<div class="col-span-full flex justify-center py-8"><div class="loading-spinner"></div></div>`;
 
@@ -691,7 +704,9 @@
             const content = await zip.generateAsync({ type: 'blob' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(content);
-            a.download = 'FileVault-Export.zip';
+            const zipDate = new Date().toISOString().slice(0,10);
+            const zipFolder = currentFolder ? currentFolder.replace(/[^a-zA-Z0-9_-]/g,'_') : 'Export';
+            a.download = `FileVault_${zipFolder}_${zipDate}.zip`;
             a.click();
         } else {
             // Fallback: open each file in new tab
@@ -748,7 +763,8 @@
 
         setStatus(`✓ Moved to "${newFolder}".`, 'green');
         loadFolders();
-        renderSidebarFolders();
+        renderMainFolders();
+        populateRequestFolderSelect();
         loadManagerFiles();
     }
 
@@ -777,7 +793,8 @@
 
         setStatus(`✓ Folder "${folderName}" deleted.`, 'green');
         loadFolders();
-        renderSidebarFolders();
+        renderMainFolders();
+        populateRequestFolderSelect();
         loadManagerFiles();
     }
 
@@ -854,6 +871,7 @@
 
     // ─── UPLOAD ─────────────────────────────────────────────────
     async function uploadFile() {
+        if (!navigator.onLine) { setStatus('✗ Cannot upload while offline.', 'red'); return; }
         const fileInput = document.getElementById('fileInput');
         const folderSelect = document.getElementById('folderSelect');
         const btn = document.getElementById('uploadBtn');
@@ -927,7 +945,8 @@
         document.getElementById('fileDescription').value = '';
         document.getElementById('expiryDays').value = '';
         loadFolders();
-        renderSidebarFolders();
+        renderMainFolders();
+        populateRequestFolderSelect();
         loadManagerFiles();
     }
 
@@ -1127,7 +1146,8 @@ console.log('dbResult:', JSON.stringify(dbResult));
         }
         
         await loadFolders();
-        renderSidebarFolders();
+        renderMainFolders();
+        populateRequestFolderSelect();
         await loadManagerFiles();
     }
 
@@ -1170,39 +1190,14 @@ console.log('dbResult:', JSON.stringify(dbResult));
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
 
-    // Override fetch functions to handle offline
-    const originalLoadManagerFiles = window.loadManagerFiles;
-    window.loadManagerFiles = async function() {
-        if (!navigator.onLine) {
-            const container = document.getElementById('managerFileGrid');
-            container.innerHTML = `
-                <div class="col-span-full text-center py-10">
-                    <span class="material-symbols-outlined text-4xl text-white/30 mb-4 block">wifi_off</span>
-                    <p class="text-white/60 font-medium mb-2">You're offline</p>
-                    <p class="text-white/40 text-sm">Please check your internet connection and try again.</p>
-                    <button onclick="loadManagerFiles()" class="mt-4 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg text-sm transition-all">
-                        <span class="material-symbols-outlined text-sm mr-1">refresh</span> Retry
-                    </button>
-                </div>`;
-            return;
-        }
-        if (originalLoadManagerFiles) await originalLoadManagerFiles();
-    };
 
-    const originalUploadFile = window.uploadFile;
-    window.uploadFile = async function() {
-        if (!navigator.onLine) {
-            setStatus('✗ Cannot upload while offline. Please check your connection.', 'red');
-            return;
-        }
-        if (originalUploadFile) await originalUploadFile();
-    };
 
     // Initialize online status
     updateOnlineStatus();
 
     checkAccess();
     </script>
+    <footer class="text-center text-white/20 text-xs py-6">Built by <span class="text-white/40 font-semibold">Jonathan Acheampong</span> · FileVault</footer>
     <script src="chat-widget.js"></script>
 </body>
 </html>

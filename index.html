@@ -378,7 +378,9 @@
             const zipBlob = await zip.generateAsync({ type: 'blob' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(zipBlob);
-            link.download = 'Vault_' + new Date().toISOString().slice(0, 10) + '.zip';
+            const _zipDate = new Date().toISOString().slice(0,10);
+            const _zipLabel = currentFolder ? currentFolder.replace(/[^a-zA-Z0-9_-]/g,'_') : 'Vault';
+            link.download = `FileVault_${_zipLabel}_${_zipDate}.zip`;
             link.click();
         }
         
