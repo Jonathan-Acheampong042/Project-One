@@ -427,22 +427,49 @@
 
         setStatus(`Renaming folder "${oldName}" to "${newName}"…`, 'blue');
         try {
-            const { data: storageData, error: listErr } = await _supabase.storage.from('vault-files').list(oldName, { limit: 200 });
-            if (listErr) { throw listErr; }
-            for (const file of (storageData || [])) {
+            // List all files inside old folder (recursive to catch subfolders)
+            const { data: storageData, error: listErr } = await _supabase.storage
+                .from('vault-files').list(oldName, { limit: 500 });
+            if (listErr) throw listErr;
+
+            const realFiles = (storageData || []).filter(f => f.id && !f.name.endsWith('.emptyFolderPlaceholder'));
+
+            // Copy each file to new folder path, then delete old
+            for (const file of realFiles) {
                 const oldPath = `${oldName}/${file.name}`;
                 const newPath = `${newName}/${file.name}`;
                 const { error: copyErr } = await _supabase.storage.from('vault-files').copy(oldPath, newPath);
-                if (copyErr) { throw copyErr; }
+                if (copyErr) throw copyErr;
                 await _supabase.storage.from('vault-files').remove([oldPath]);
             }
-            await _supabase.from('files_list').update({ folder_name: newName }).eq('folder_name', oldName);
-            await loadFolders();
+
+            // Update download_url for all moved files in DB
+            const { data: dbFiles } = await _supabase.from('files_list')
+                .select('id, file_name').eq('folder_name', oldName);
+            for (const dbFile of (dbFiles || [])) {
+                const { data: urlData } = _supabase.storage.from('vault-files')
+                    .getPublicUrl(`${newName}/${dbFile.file_name}`);
+                await _supabase.from('files_list')
+                    .update({ folder_name: newName, download_url: urlData.publicUrl })
+                    .eq('id', dbFile.id);
+            }
+
+            // Update availableFolders in memory — do NOT call loadFolders() before this
+            // or the old name can reappear from the DB before cleanup completes
             availableFolders = availableFolders.map(f => f === oldName ? newName : f).sort();
+
+            // Update folder select dropdowns
+            const folderSelect = document.getElementById('folderSelect');
+            folderSelect.innerHTML = '<option value="" class="text-black">No folder (root)</option>';
+            availableFolders.forEach(f => {
+                folderSelect.innerHTML += `<option value="${f}" class="text-black">${f}</option>`;
+            });
+
             renderMainFolders();
-        populateRequestFolderSelect();
-            if (currentFolder === oldName) filterByFolder(newName);
+            populateRequestFolderSelect();
+            if (currentFolder === oldName) currentFolder = newName;
             setStatus(`✓ Folder renamed to "${newName}".`, 'green');
+            loadManagerFiles();
         } catch (err) {
             console.error('renameFolder error:', err);
             setStatus('Folder rename failed: ' + (err.message || 'unknown error'), 'red');
