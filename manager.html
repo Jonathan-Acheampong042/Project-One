@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html lang="en">
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
@@ -11,7 +11,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; min-height: 100vh; color: #e2e8f0; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; min-height: 100vh; color: #e2e8f0; overflow-x: hidden; }
+        * { box-sizing: border-box; }
         .bg-fixed-image { position: fixed; inset: 0; background-image: url('screen.png'); background-size: cover; background-position: center; background-repeat: no-repeat; filter: saturate(0.72) brightness(0.5); z-index: -2; }
         .bg-overlay { position: fixed; inset: 0; background: radial-gradient(circle at top left, rgba(59,130,246,0.15), transparent 24%), radial-gradient(circle at bottom right, rgba(139,92,246,0.14), transparent 20%), linear-gradient(180deg, rgba(8, 12, 27, 0.88), rgba(4, 7, 18, 0.96)); z-index: -1; pointer-events: none; }
         @keyframes float { 0%, 100% { transform: translate(0, 0) rotate(0deg); } 25% { transform: translate(30px, -30px) rotate(5deg); } 50% { transform: translate(0, -50px) rotate(0deg); } 75% { transform: translate(-30px, -30px) rotate(-5deg); } }
@@ -41,10 +42,9 @@
     </style>
     <!-- chat-widget loaded at bottom of body -->
 </head>
-<body class="overflow-x-hidden">
+<body class="min-h-screen font-sans text-white relative overflow-x-hidden">
     <div class="bg-fixed-image"></div>
     <div class="bg-overlay"></div>
-    <div class="flex flex-col min-h-screen overflow-x-hidden">
 
     <header class="glass-card border-b border-white/10 p-4 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
@@ -429,38 +429,37 @@
 
         setStatus(`Renaming folder "${oldName}" to "${newName}"…`, 'blue');
         try {
-            // List all files inside old folder (recursive to catch subfolders)
             const { data: storageData, error: listErr } = await _supabase.storage
                 .from('vault-files').list(oldName, { limit: 500 });
-            if (listErr) throw listErr;
+            if (listErr) throw new Error('Could not list folder: ' + listErr.message);
 
             const realFiles = (storageData || []).filter(f => f.id && !f.name.endsWith('.emptyFolderPlaceholder'));
 
-            // Copy each file to new folder path, then delete old
             for (const file of realFiles) {
                 const oldPath = `${oldName}/${file.name}`;
                 const newPath = `${newName}/${file.name}`;
+                // Delete destination first — Supabase copy silently fails if dest exists
+                await _supabase.storage.from('vault-files').remove([newPath]);
                 const { error: copyErr } = await _supabase.storage.from('vault-files').copy(oldPath, newPath);
-                if (copyErr) throw copyErr;
+                if (copyErr) throw new Error(`Copy failed for "${file.name}": ${copyErr.message}`);
                 await _supabase.storage.from('vault-files').remove([oldPath]);
             }
 
-            // Update download_url for all moved files in DB
-            const { data: dbFiles } = await _supabase.from('files_list')
-                .select('id, file_name').eq('folder_name', oldName);
+            // Update DB records
+            const { data: dbFiles, error: dbListErr } = await _supabase
+                .from('files_list').select('id, file_name').eq('folder_name', oldName);
+            if (dbListErr) throw new Error('DB list failed: ' + dbListErr.message);
+
             for (const dbFile of (dbFiles || [])) {
                 const { data: urlData } = _supabase.storage.from('vault-files')
                     .getPublicUrl(`${newName}/${dbFile.file_name}`);
-                await _supabase.from('files_list')
+                const { error: updateErr } = await _supabase.from('files_list')
                     .update({ folder_name: newName, download_url: urlData.publicUrl })
                     .eq('id', dbFile.id);
+                if (updateErr) throw new Error('DB update failed: ' + updateErr.message);
             }
 
-            // Update availableFolders in memory — do NOT call loadFolders() before this
-            // or the old name can reappear from the DB before cleanup completes
             availableFolders = availableFolders.map(f => f === oldName ? newName : f).sort();
-
-            // Update folder select dropdowns
             const folderSelect = document.getElementById('folderSelect');
             folderSelect.innerHTML = '<option value="" class="text-black">No folder (root)</option>';
             availableFolders.forEach(f => {
@@ -740,7 +739,7 @@
         const folder = storagePath.includes('/') ? storagePath.split('/').slice(0, -1).join('/') : '';
         const newPath = folder ? `${folder}/${trimmed}` : trimmed;
 
-        // Delete destination first so copy doesn't fail on existing path
+        // Delete destination first — Supabase copy silently fails if dest exists
         await _supabase.storage.from('vault-files').remove([newPath]);
 
         const { error: copyErr } = await _supabase.storage.from('vault-files').copy(storagePath, newPath);
@@ -749,20 +748,13 @@
 
         // Update DB — treat string 'null' same as real null
         const { data: urlData } = _supabase.storage.from('vault-files').getPublicUrl(newPath);
-        const realId = (dbId && dbId !== 'null' && dbId !== null) ? dbId : null;
-        let dbErr;
-        if (realId) {
-            ({ error: dbErr } = await _supabase.from('files_list')
-                .update({ file_name: trimmed, download_url: urlData.publicUrl })
-                .eq('id', realId));
-        } else {
-            ({ error: dbErr } = await _supabase.from('files_list')
-                .update({ file_name: trimmed, download_url: urlData.publicUrl })
-                .eq('file_name', oldName));
-        }
+        const realId = (dbId && dbId !== 'null') ? dbId : null;
+        const { error: dbErr } = realId
+            ? await _supabase.from('files_list').update({ file_name: trimmed, download_url: urlData.publicUrl }).eq('id', realId)
+            : await _supabase.from('files_list').update({ file_name: trimmed, download_url: urlData.publicUrl }).eq('file_name', oldName);
 
         if (dbErr) {
-            setStatus('Storage renamed but DB update failed: ' + dbErr.message, 'yellow');
+            setStatus('File moved in storage but DB update failed: ' + dbErr.message, 'yellow');
         } else {
             setStatus(`✓ Renamed to "${trimmed}".`, 'green');
         }
@@ -1249,7 +1241,6 @@
     checkAccess();
     </script>
     <footer class="text-center text-white/20 text-xs py-6">Built by <span class="text-white/40 font-semibold">Jonathan Acheampong</span> · FileVault</footer>
-    </div><!-- end overflow wrapper -->
     <script src="chat-widget.js"></script>
 </body>
 </html>

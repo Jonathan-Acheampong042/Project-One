@@ -277,16 +277,6 @@ function initChatWidget() {
             #chatMessages::-webkit-scrollbar { width: 4px; }
             #chatMessages::-webkit-scrollbar-track { background: transparent; }
             #chatMessages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-            /* Contain the widget — never let it push the page wider */
-            #aiChatWidget { box-sizing: border-box; }
-            #chatWindow { box-sizing: border-box; }
-            /* On mobile: shrink to fit inside the viewport */
-            @media (max-width: 600px) {
-                #chatWindow {
-                    width: calc(100vw - 32px);
-                    right: 0;
-                }
-            }
         `;
         document.head.appendChild(s);
     }
@@ -413,24 +403,13 @@ async function sendChatMessage() {
     document.getElementById('chatInput')?.focus();
 }
 
-function initAndMaybeHide() {
-    initChatWidget();
-    // On manager page, hide the widget immediately after mounting.
-    // manager.html will call showChatWidget() once auth is confirmed.
-    if (CURRENT_PAGE === 'manager') {
-        const widget = document.getElementById('aiChatWidget');
-        if (widget) widget.style.display = 'none';
-    }
-}
-
-// Exported so manager.html can call it after auth passes
+// Just init — never hide the widget. If auth fails, the page redirects anyway.
 function showChatWidget() {
-    const widget = document.getElementById('aiChatWidget');
-    if (widget) widget.style.display = 'block';
+    // kept for backward compatibility — no longer needed
 }
 
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initAndMaybeHide);
+    document.addEventListener('DOMContentLoaded', initChatWidget);
 } else {
-    initAndMaybeHide(); // DOM already ready — run immediately
+    initChatWidget();
 }
