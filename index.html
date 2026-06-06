@@ -35,6 +35,26 @@
         .folder-btn.active { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
         .site-logo { width: 40px; height: 40px; border-radius: 1rem; overflow: hidden; }
         .site-logo img { width: 100%; height: 100%; object-fit: contain; }
+
+        /* Preview modal */
+        #previewModal { display:none; position:fixed; inset:0; z-index:9998; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:16px; }
+        #previewModal.open { display:flex; }
+        #previewBox { background:rgba(15,23,42,0.95); border:1px solid rgba(255,255,255,0.1); border-radius:20px; width:100%; max-width:860px; max-height:90vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 32px 80px rgba(0,0,0,0.6); }
+        #previewHeader { padding:14px 18px; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; gap:12px; }
+        #previewBody { flex:1; overflow:auto; display:flex; align-items:center; justify-content:center; min-height:300px; background:rgba(0,0,0,0.2); }
+        #previewBody iframe { width:100%; height:70vh; border:none; }
+        #previewBody img { max-width:100%; max-height:70vh; object-fit:contain; }
+        /* Toast notifications */
+        #toastContainer { position:fixed; top:20px; right:20px; z-index:99999; display:flex; flex-direction:column; gap:10px; pointer-events:none; }
+        .toast { display:flex; align-items:center; gap:10px; padding:12px 16px; border-radius:14px; font-size:13px; font-weight:600; color:white; backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 32px rgba(0,0,0,0.4); pointer-events:auto; min-width:240px; max-width:320px; animation:toastIn 0.3s ease; }
+        .toast.success { background:rgba(16,185,129,0.18); border-color:rgba(16,185,129,0.3); }
+        .toast.error   { background:rgba(239,68,68,0.18);  border-color:rgba(239,68,68,0.3); }
+        .toast.info    { background:rgba(59,130,246,0.18); border-color:rgba(59,130,246,0.3); }
+        .toast.warning { background:rgba(245,158,11,0.18); border-color:rgba(245,158,11,0.3); }
+        @keyframes toastIn  { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }
+        @keyframes toastOut { from { opacity:1; transform:translateX(0); }   to { opacity:0; transform:translateX(40px); } }
+        /* Search highlight */
+        .search-highlight { background:rgba(59,130,246,0.35); color:#93c5fd; border-radius:3px; padding:0 2px; font-weight:700; }
         /* Mobile layout fixes */
         @media (max-width: 1023px) {
             .lg\:ml-64 { margin-left: 0 !important; }
@@ -74,14 +94,14 @@
             </a>
         </div>
     </aside>
-    <div class="lg:ml-64 flex flex-col min-h-screen overflow-x-hidden w-full max-w-full">
+    <div class="lg:ml-64 flex flex-col min-h-screen overflow-x-hidden">
         <header class="sticky top-0 z-50 w-full glass-card backdrop-blur-2xl border-b flex items-center px-4 sm:px-6 py-3 gap-3">
             <div class="flex-1 relative">
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 material-symbols-outlined">search</span>
                 <input id="searchInput" oninput="filterFiles(this.value)" placeholder="Search database..." class="w-full pl-10 pr-4 py-2.5 bg-slate-900/50 border border-white/10 rounded-xl text-sm text-white focus:outline-none"/>
             </div>
         </header>
-        <main class="flex-1 p-3 sm:p-6 lg:p-10 max-w-7xl mx-auto w-full overflow-x-hidden">
+        <main class="flex-1 p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto w-full">
             <h2 class="text-2xl sm:text-3xl font-extrabold text-white mb-4 sm:mb-6">FileVault</h2>
 
             <!-- Folders Section — always visible, hidden only when truly empty -->
@@ -94,8 +114,8 @@
                     <p class="col-span-full text-slate-500 text-sm italic">No folders yet.</p>
                 </div>
             </section>
-            <div class="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-4 sm:gap-6 mb-6 sm:mb-8">
-                <section id="recentSection" class="glass-card p-4 sm:p-6 rounded-3xl overflow-hidden min-w-0">
+            <div class="grid gap-4 sm:gap-6 xl:grid-cols-[1fr_320px] mb-6 sm:mb-8">
+                <section id="recentSection" class="glass-card p-4 sm:p-6 rounded-3xl">
                     <div class="flex items-center justify-between mb-4">
                         <div>
                             <p class="text-sm text-slate-400 uppercase tracking-[0.2em]">Recent</p>
@@ -107,7 +127,7 @@
                         <div class="px-4 py-6 rounded-3xl bg-slate-950/50 border border-white/5 text-sm text-slate-400">No recent files yet.</div>
                     </div>
                 </section>
-                <aside class="glass-card p-4 sm:p-6 rounded-3xl overflow-hidden min-w-0">
+                <aside class="glass-card p-4 sm:p-6 rounded-3xl">
                     <div class="flex items-center justify-between mb-4">
                         <div>
                             <p class="text-sm text-slate-400 uppercase tracking-[0.2em]">Support</p>
@@ -174,6 +194,67 @@
         </main>
     </div>
     <script>
+
+        // ── TOAST ───────────────────────────────────────────────
+        function showToast(msg, type, duration) {
+            type = type || 'info';
+            duration = duration || 3000;
+            var icons = { success:'check_circle', error:'error', info:'info', warning:'warning' };
+            var container = document.getElementById('toastContainer');
+            var t = document.createElement('div');
+            t.className = 'toast ' + type;
+            t.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px;flex-shrink:0">' + icons[type] + '</span>' +
+                '<span style="flex:1">' + msg + '</span>' +
+                '<button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.4);font-size:18px;line-height:1;flex-shrink:0">&times;</button>';
+            container.appendChild(t);
+            setTimeout(function() {
+                t.style.animation = 'toastOut 0.3s ease forwards';
+                setTimeout(function() { if (t.parentNode) t.remove(); }, 300);
+            }, duration);
+        }
+
+        // ── PREVIEW ─────────────────────────────────────────────
+        function openPreview(url, name, folder, size) {
+            var ext = name.split('.').pop().toLowerCase();
+            var isImg = ['jpg','jpeg','png','gif','webp','svg'].indexOf(ext) !== -1;
+            var isPdf = ext === 'pdf';
+
+            document.getElementById('previewName').textContent = name;
+            document.getElementById('previewMeta').textContent = (folder || 'ROOT') + (size ? ' · ' + formatFileSize(size) : '');
+            document.getElementById('previewIcon').textContent = getFileIcon(name);
+            document.getElementById('previewDownload').href = url;
+            document.getElementById('previewDownload').setAttribute('download', name);
+
+            var body = document.getElementById('previewBody');
+            if (isImg) {
+                body.innerHTML = '<img src="' + url + '" alt="' + name + '">';
+            } else if (isPdf) {
+                body.innerHTML = '<iframe src="' + url + '#toolbar=1" title="' + name + '"></iframe>';
+            } else {
+                body.innerHTML = '<div style="text-align:center;padding:48px 24px">' +
+                    '<span class="material-symbols-outlined" style="font-size:56px;color:rgba(255,255,255,0.15);display:block;margin-bottom:16px">' + getFileIcon(name) + '</span>' +
+                    '<p style="color:rgba(255,255,255,0.4);font-size:14px;margin-bottom:20px">Preview not available for this file type.</p>' +
+                    '<a href="' + url + '" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:rgba(59,130,246,0.2);color:#93c5fd;border-radius:12px;font-size:13px;font-weight:700;text-decoration:none">Open in new tab <span class="material-symbols-outlined" style="font-size:16px">open_in_new</span></a>' +
+                '</div>';
+            }
+
+            document.getElementById('previewModal').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePreview() {
+            document.getElementById('previewModal').classList.remove('open');
+            document.getElementById('previewBody').innerHTML = '<div style="color:#64748b;font-size:14px">Loading preview…</div>';
+            document.body.style.overflow = '';
+        }
+
+        // ── SEARCH HIGHLIGHT ────────────────────────────────────
+        function highlightText(text, term) {
+            if (!term) return text;
+            var escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return text.replace(new RegExp('(' + escaped + ')', 'gi'), '<mark class="search-highlight">$1</mark>');
+        }
+
         const _supabase = supabase.createClient('https://lvhecpvwpzmstciewziv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aGVjcHZ3cHptc3RjaWV3eml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODIzODIsImV4cCI6MjA4NTY1ODM4Mn0.kjaJKidkubl-_-K87WEAe91puG1qoEvJqnfcOiaG2kI');
         const ADMIN_EMAILS = ['admin@nharnharblay21@gmail.com'];
         let allFiles = [], currentFolder = null, currentSort = 'newest', viewType = 'grid', currentSearchTerm = '', selectedFiles = new Set();
@@ -331,6 +412,7 @@
                 renderAll(allFiles);
             } catch (error) {
                 fileGrid.innerHTML = '<div class="col-span-full text-red-400">Error: ' + error.message + '</div>';
+                showToast('Failed to load files: ' + error.message, 'error');
             }
         }
         
@@ -407,7 +489,7 @@
                     '<input type="checkbox" ' + (isSelected ? 'checked' : '') + ' onchange="toggleSelect(\'' + safeUrl + '\',\'' + safeName + '\',this,' + (file.file_size||0) + ')" class="w-4 h-4 rounded text-primary cursor-pointer shrink-0">' +
                     '<div class="' + getFileColor(file.name) + ' w-10 h-10 rounded-xl flex items-center justify-center border shrink-0"><span class="material-symbols-outlined text-xl">' + getFileIcon(file.name) + '</span></div>' +
                     '<div class="flex-1 min-w-0 overflow-hidden">' +
-                        '<p class="font-semibold text-white truncate text-sm leading-snug">' + file.name + '</p>' +
+                        '<p class="font-semibold text-white truncate text-sm leading-snug">' + highlightText(file.name, currentSearchTerm) + '</p>' +
                         '<div class="mt-0.5 flex flex-wrap items-center gap-1 text-[10px] text-slate-500">' +
                             '<span class="uppercase truncate max-w-[100px]">' + (file.folder || 'ROOT') + '</span>' +
                             (sizeLabel ? '<span>·</span><span class="text-slate-400 font-medium">' + sizeLabel + '</span>' : '') +
@@ -416,7 +498,10 @@
                         '</div>' +
                         (file.description ? '<p class="mt-0.5 text-[11px] text-slate-400 italic truncate">' + file.description + '</p>' : '') +
                     '</div>' +
-                    '<div class="flex gap-0.5 opacity-60 group-hover:opacity-100 shrink-0"><a href="' + safeUrl + '" target="_blank" onclick="track(\'' + file.id + '\',\'' + safeName + '\',\'' + safeUrl + '\')" class="p-2 text-slate-400 hover:text-primary material-symbols-outlined text-xl">visibility</a><a href="' + safeUrl + '" download onclick="track(\'' + file.id + '\',\'' + safeName + '\',\'' + safeUrl + '\')" class="p-2 text-slate-400 hover:text-green-400 material-symbols-outlined text-xl">download</a></div></div>';
+                    '<div class="flex gap-0.5 opacity-60 group-hover:opacity-100 shrink-0">' +
+                    '<button onclick="openPreview(' + JSON.stringify(safeUrl) + ',' + JSON.stringify(safeName) + ',\'' + (file.folder||'') + '\',' + (file.file_size||0) + ')" class="p-2 text-slate-400 hover:text-primary material-symbols-outlined text-xl" title="Preview">visibility</button>' +
+                    '<a href="' + safeUrl + '" download onclick="track(\'' + file.id + '\',\'' + safeName + '\',\'' + safeUrl + '\')" class="p-2 text-slate-400 hover:text-green-400 material-symbols-outlined text-xl" title="Download">download</a>' +
+                    '</div></div>';
             }).join('');
         }
         
@@ -454,13 +539,15 @@
                 return;
             }
             
+            showToast('Preparing ZIP for ' + items.length + ' file' + (items.length > 1 ? 's' : '') + '…', 'info', 6000);
             const zip = new JSZip();
+            let _failed = 0;
             for (const { name, url } of items) {
                 try {
                     const response = await fetch(url);
                     const blob = await response.blob();
                     zip.file(name, blob);
-                } catch (e) {}
+                } catch (e) { _failed++; }
             }
             
             const zipBlob = await zip.generateAsync({ type: 'blob' });
@@ -470,6 +557,7 @@
             const _zipLabel = currentFolder ? currentFolder.replace(/[^a-zA-Z0-9_-]/g,'_') : 'Vault';
             link.download = `FileVault_${_zipLabel}_${_zipDate}.zip`;
             link.click();
+            showToast('Downloaded ' + (items.length - _failed) + ' file' + ((items.length - _failed) !== 1 ? 's' : '') + ' as ZIP' + (_failed ? ' (' + _failed + ' failed)' : '') + '.', _failed ? 'warning' : 'success');
         }
         
         function filterByFolder(folder, button) {
@@ -489,9 +577,8 @@
         }
         
         function track(id, name, url) {
-            if (id) {
-                _supabase.rpc('increment_download_count', { file_id: id }).catch(() => {});
-            }
+            if (id) { _supabase.rpc('increment_download_count', { file_id: id }).catch(function(){}); }
+            showToast('Downloading ' + name, 'success', 2500);
         }
         
         (async () => {
@@ -504,9 +591,38 @@
                 e.preventDefault();
                 document.getElementById('searchInput').focus();
             }
+            if (e.key === 'Escape') closePreview();
         });
     </script>
     
+    <!-- Preview Modal -->
+    <div id="previewModal" onclick="if(event.target===this)closePreview()">
+        <div id="previewBox">
+            <div id="previewHeader">
+                <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1">
+                    <span id="previewIcon" class="material-symbols-outlined text-primary" style="font-size:28px;flex-shrink:0">description</span>
+                    <div style="min-width:0">
+                        <p id="previewName" style="color:white;font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></p>
+                        <p id="previewMeta" style="color:#94a3b8;font-size:11px;margin-top:2px"></p>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+                    <a id="previewDownload" href="#" download style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(59,130,246,0.2);color:#93c5fd;border-radius:12px;font-size:12px;font-weight:700;text-decoration:none;transition:background 0.2s">
+                        <span class="material-symbols-outlined" style="font-size:16px">download</span>Download
+                    </a>
+                    <button onclick="closePreview()" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);border:none;border-radius:10px;cursor:pointer;color:#94a3b8">
+                        <span class="material-symbols-outlined" style="font-size:18px">close</span>
+                    </button>
+                </div>
+            </div>
+            <div id="previewBody">
+                <div style="color:#64748b;font-size:14px">Loading preview…</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer"></div>
+
     <!-- Mobile Bottom Navigation -->
     <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass-card border-t border-white/10 flex items-center justify-around px-2 py-2 pb-safe" style="padding-bottom:max(8px,env(safe-area-inset-bottom))">
         <a href="#" onclick="filterByFolder(null,this)" class="flex flex-col items-center gap-0.5 px-3 py-1 text-primary">
