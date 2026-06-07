@@ -81,6 +81,32 @@
         .type-btn.active, .type-btn:hover { background:rgba(59,130,246,.2);border-color:rgba(59,130,246,.4);color:#60a5fa; }
         .type-btn.active { box-shadow:0 0 0 1px rgba(59,130,246,.25); }
 
+        /* ── Back to top button ── */
+        #backToTop { position:fixed;bottom:80px;right:20px;z-index:9000;width:42px;height:42px;border-radius:50%;background:rgba(59,130,246,0.85);border:1px solid rgba(59,130,246,0.5);backdrop-filter:blur(12px);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(59,130,246,0.35);opacity:0;pointer-events:none;transition:opacity .3s,transform .3s; }
+        #backToTop.visible { opacity:1;pointer-events:auto; }
+        #backToTop:hover { transform:translateY(-3px); }
+        @media (min-width:1024px) { #backToTop { bottom:40px; } }
+
+        /* ── Skeleton loading ── */
+        .skeleton { position:relative;overflow:hidden;background:rgba(30,41,59,0.4);border-radius:12px; }
+        .skeleton::after { content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.06) 50%,transparent 100%);background-size:200% 100%;animation:shimmer 1.4s ease-in-out infinite; }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+        .skeleton-card { glass-card:unset;background:rgba(30,41,59,0.25);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:16px;display:flex;align-items:center;gap:12px; }
+
+        /* ── File card entrance animation ── */
+        @keyframes cardIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+        .file-card-animate { animation:cardIn 0.35s ease-out both; }
+
+        /* ── Description tooltip on hover ── */
+        .desc-tooltip { position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:rgba(15,23,42,0.97);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:8px 12px;font-size:11px;color:#cbd5e1;white-space:normal;width:220px;text-align:left;z-index:500;pointer-events:none;opacity:0;transition:opacity .2s;line-height:1.5;box-shadow:0 8px 32px rgba(0,0,0,.5); }
+        .desc-tooltip.show { opacity:1; }
+        .file-card { position:relative; }
+
+        /* ── Mobile toast: bottom-center ── */
+        @media (max-width:767px) {
+            #toastContainer { top:auto !important;bottom:90px;right:50%;transform:translateX(50%);align-items:center; }
+        }
+
         /* ── Keyboard shortcut modal ── */
         #shortcutModal { display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px; }
         #shortcutModal.open { display:flex; }
@@ -239,7 +265,13 @@
                 <button onclick="clearSelection()" class="material-symbols-outlined text-slate-400 cursor-pointer">close</button>
             </div>
             <div id="fileGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-                <div class="col-span-full text-center py-20 text-slate-500">Loading...</div>
+                <!-- skeleton placeholders -->
+                <div class="skeleton-card glass-card p-4 rounded-2xl flex items-center gap-3"><div class="skeleton w-10 h-10 rounded-xl shrink-0"></div><div class="flex-1 space-y-2"><div class="skeleton h-3.5 rounded w-3/4"></div><div class="skeleton h-2.5 rounded w-1/2"></div></div></div>
+                <div class="skeleton-card glass-card p-4 rounded-2xl flex items-center gap-3"><div class="skeleton w-10 h-10 rounded-xl shrink-0"></div><div class="flex-1 space-y-2"><div class="skeleton h-3.5 rounded w-2/3"></div><div class="skeleton h-2.5 rounded w-2/5"></div></div></div>
+                <div class="skeleton-card glass-card p-4 rounded-2xl flex items-center gap-3"><div class="skeleton w-10 h-10 rounded-xl shrink-0"></div><div class="flex-1 space-y-2"><div class="skeleton h-3.5 rounded w-4/5"></div><div class="skeleton h-2.5 rounded w-1/3"></div></div></div>
+                <div class="skeleton-card glass-card p-4 rounded-2xl flex items-center gap-3 sm:hidden xl:flex"><div class="skeleton w-10 h-10 rounded-xl shrink-0"></div><div class="flex-1 space-y-2"><div class="skeleton h-3.5 rounded w-1/2"></div><div class="skeleton h-2.5 rounded w-3/5"></div></div></div>
+                <div class="skeleton-card glass-card p-4 rounded-2xl flex items-center gap-3 hidden sm:flex"><div class="skeleton w-10 h-10 rounded-xl shrink-0"></div><div class="flex-1 space-y-2"><div class="skeleton h-3.5 rounded w-3/5"></div><div class="skeleton h-2.5 rounded w-2/5"></div></div></div>
+                <div class="skeleton-card glass-card p-4 rounded-2xl flex items-center gap-3 hidden xl:flex"><div class="skeleton w-10 h-10 rounded-xl shrink-0"></div><div class="flex-1 space-y-2"><div class="skeleton h-3.5 rounded w-2/3"></div><div class="skeleton h-2.5 rounded w-1/2"></div></div></div>
             </div>
         </main>
     </div>
@@ -479,7 +511,8 @@
                         date: row.created_at,
                         expires_at: row.expires_at,
                         description: row.description || null,
-                        file_size: row.file_size || null
+                        file_size: row.file_size || null,
+                        download_count: row.download_count || 0
                     }));
                 } else {
                     // List root-level items first
@@ -507,6 +540,11 @@
                     });
                 }
                 renderAll(allFiles);
+                // Restore last folder from sessionStorage
+                const _savedFolder = sessionStorage.getItem('fvLastFolder');
+                if (_savedFolder && allFiles.some(f => f.folder === _savedFolder)) {
+                    filterByFolder(_savedFolder, null);
+                }
             } catch (error) {
                 fileGrid.innerHTML = '<div class="col-span-full text-red-400">Error: ' + error.message + '</div>';
                 showToast('Failed to load files: ' + error.message, 'error');
@@ -521,7 +559,9 @@
             const folderSection = document.getElementById('folderSection');
             let pillHtml = '<button onclick="filterByFolder(null,this)" class="folder-btn active glass-card px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 border-primary/40 bg-primary/20 text-primary whitespace-nowrap"><span class="material-symbols-outlined">apps</span>All</button>';
             folders.forEach(folder => {
-                pillHtml += '<button onclick="filterByFolder(\'' + folder + '\',this)" class="folder-btn glass-card px-5 py-2.5 rounded-xl text-sm text-slate-400 whitespace-nowrap"><span class="material-symbols-outlined">folder</span>' + folder + '</button>';
+                const now0 = new Date();
+                const pCount = files.filter(f => f.folder === folder && (!f.expires_at || new Date(f.expires_at) > now0)).length;
+                pillHtml += '<button onclick="filterByFolder(\'' + folder + '\',this)" class="folder-btn glass-card px-5 py-2.5 rounded-xl text-sm text-slate-400 whitespace-nowrap"><span class="material-symbols-outlined">folder</span>' + folder + ' <span style="font-size:10px;background:rgba(255,255,255,0.07);border-radius:99px;padding:1px 7px;margin-left:3px;font-weight:700;color:#64748b">'+pCount+'</span></button>';
             });
             folderSection.innerHTML = pillHtml;
 
@@ -532,11 +572,17 @@
             } else {
                 folderGrid.innerHTML = folders.map(folder => {
                     const now2 = new Date(); const count = files.filter(f => f.folder === folder && (!f.expires_at || new Date(f.expires_at) > now2)).length;
+                    const folderFiles = files.filter(f => f.folder === folder && (!f.expires_at || new Date(f.expires_at) > now2));
+                    const typeColors = { pdf:'#f87171', docx:'#60a5fa', xlsx:'#4ade80', pptx:'#fb923c', jpg:'#c084fc', jpeg:'#c084fc', png:'#c084fc', zip:'#94a3b8' };
+                    const seenTypes = new Set(); const dots = [];
+                    folderFiles.forEach(f => { const ext = (f.name||'').split('.').pop().toLowerCase(); if (typeColors[ext] && !seenTypes.has(ext)) { seenTypes.add(ext); dots.push('<span style="width:7px;height:7px;border-radius:50%;background:'+typeColors[ext]+';display:inline-block;flex-shrink:0" title="'+ext.toUpperCase()+'"></span>'); } });
+                    const dotsHtml = dots.length ? '<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px">' + dots.slice(0,6).join('') + '</div>' : '';
                     return '<button onclick="filterByFolder(\'' + folder + '\',null)" class="folder-btn group flex items-center gap-3 p-3 rounded-2xl bg-white/3 border border-white/5 hover:border-primary/40 hover:bg-primary/5 transition-all text-left w-full">' +
                         '<span class="material-symbols-outlined text-primary text-xl shrink-0">folder</span>' +
                         '<div class="min-w-0 flex-1">' +
                             '<p class="text-sm font-semibold text-white truncate">' + folder + '</p>' +
                             '<p class="text-[11px] text-slate-500 mt-0.5">' + count + ' file' + (count !== 1 ? 's' : '') + '</p>' +
+                            dotsHtml +
                         '</div>' +
                     '</button>';
                 }).join('');
@@ -569,27 +615,41 @@
             fileGrid.className = viewType === 'list' ? 'space-y-3 sm:space-y-4' : 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6';
             
             if (!files.length) {
-                fileGrid.innerHTML = '<div class="col-span-full text-center py-20 text-slate-500">No files.</div>';
+                const emptyMsg = currentSearchTerm
+                    ? 'No files found for <strong style="color:#93c5fd">&ldquo;' + currentSearchTerm + '&rdquo;</strong><br><span style="font-size:12px;margin-top:6px;display:block">Try a different keyword or clear your search.</span>'
+                    : (currentFolder ? 'No files in <strong style="color:#93c5fd">' + currentFolder + '</strong> yet.' : 'No files yet.');
+                fileGrid.innerHTML = '<div class="col-span-full text-center py-20 text-slate-500" style="line-height:1.7">' + emptyMsg + '</div>';
                 return;
             }
             
             _fileRegistry = files.filter(file => !(file.expires_at && new Date(file.expires_at) <= now));
             var _ri = -1;
+            var _ci = -1; // card index for animation stagger
             fileGrid.innerHTML = files.filter(file => {
                 if (file.expires_at && new Date(file.expires_at) <= now) return false;
                 return true;
             }).map(file => {
                 _ri++;
+                _ci++;
                 const isSelected = [...selectedFiles].some(x => x.url === file.url);
                 const safeUrl = file.url.replace(/'/g, "\'");
                 const safeName = file.name.replace(/'/g, "\'");
                 const expText = file.expires_at ? '<span class="text-[9px] bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded ml-auto">Exp: ' + Math.ceil((new Date(file.expires_at) - now) / (1000*60*60*24)) + 'd</span>' : '';
                 const sizeLabel = file.file_size ? formatFileSize(file.file_size) : null;
-                return '<div class="file-card glass-card p-4 rounded-2xl flex items-center gap-3 group overflow-hidden">' +
+                const dlCount = (file.download_count && file.download_count > 0)
+                    ? '<span title="' + file.download_count + ' download' + (file.download_count !== 1 ? 's' : '') + '" style="display:inline-flex;align-items:center;gap:2px;font-size:9px;background:rgba(59,130,246,0.1);color:#60a5fa;border:1px solid rgba(59,130,246,0.2);border-radius:99px;padding:1px 6px;font-weight:700;vertical-align:middle"><span class="material-symbols-outlined" style="font-size:10px">download</span>' + file.download_count + '</span>' : '';
+                const descTooltip = (file.description && !isListView())
+                    ? '<div class="desc-tooltip" id="tt-'+_ri+'">' + file.description.replace(/</g,'&lt;') + '</div>' : '';
+                const safeDesc = file.description ? file.description.replace(/'/g,"\\'").replace(/"/g,'&quot;') : '';
+                const hoverAttrs = (file.description && !isListView())
+                    ? 'onmouseenter="showTip('+_ri+')" onmouseleave="hideTip('+_ri+')"' : '';
+                const staggerStyle = 'animation-delay:' + Math.min(_ci * 40, 400) + 'ms';
+                return '<div class="file-card file-card-animate glass-card p-4 rounded-2xl flex items-center gap-3 group overflow-hidden" style="' + staggerStyle + '" ' + hoverAttrs + '>' +
+                    descTooltip +
                     '<input type="checkbox" ' + (isSelected ? 'checked' : '') + ' onchange="toggleSelect(\'' + safeUrl + '\',\'' + safeName + '\',this,' + (file.file_size||0) + ')" class="w-4 h-4 rounded text-primary cursor-pointer shrink-0">' +
                     '<div class="' + getFileColor(file.name) + ' w-10 h-10 rounded-xl flex items-center justify-center border shrink-0"><span class="material-symbols-outlined text-xl">' + getFileIcon(file.name) + '</span></div>' +
                     '<div class="flex-1 min-w-0 overflow-hidden">' +
-                        '<p class="font-semibold text-white truncate text-sm leading-snug">' + highlightText(file.name, currentSearchTerm) + (isNewFile(file.date) ? ' <span class="badge-new">NEW</span>' : '') + '</p>' +
+                        '<p class="font-semibold text-white truncate text-sm leading-snug">' + highlightText(file.name, currentSearchTerm) + (isNewFile(file.date) ? ' <span class="badge-new">NEW</span>' : '') + ' ' + dlCount + '</p>' +
                         '<div class="mt-0.5 flex flex-wrap items-center gap-1 text-[10px] text-slate-500">' +
                             '<span class="uppercase truncate max-w-[100px]">' + highlightText(file.folder || 'ROOT', currentSearchTerm) + '</span>' +
                             (sizeLabel ? '<span>·</span><span class="text-slate-400 font-medium">' + sizeLabel + '</span>' : '') +
@@ -695,6 +755,7 @@
 
         function sidebarFilterAll(el) {
             currentFolder = null;
+            sessionStorage.removeItem('fvLastFolder');
             _clearAllFolderHighlights();
             document.getElementById('sidebarMyVault').classList.add('active-nav');
             // Highlight the "All" pill
@@ -708,6 +769,7 @@
 
         function filterByFolder(folder, button) {
             currentFolder = folder;
+            sessionStorage.setItem('fvLastFolder', folder || '');
             _clearAllFolderHighlights();
 
             if (folder) {
@@ -777,6 +839,24 @@
             fetchFiles();
         })();
         
+        function isListView() { return viewType === 'list'; }
+
+        function showTip(idx) {
+            const el = document.getElementById('tt-' + idx);
+            if (el) el.classList.add('show');
+        }
+        function hideTip(idx) {
+            const el = document.getElementById('tt-' + idx);
+            if (el) el.classList.remove('show');
+        }
+
+        // ── Back to top visibility ──
+        window.addEventListener('scroll', function() {
+            const btn = document.getElementById('backToTop');
+            if (!btn) return;
+            btn.classList.toggle('visible', window.scrollY > 400);
+        }, { passive: true });
+
         document.addEventListener('keydown', e => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
                 e.preventDefault();
@@ -857,6 +937,11 @@
             <p style="color:rgba(255,255,255,.15);font-size:10px;text-align:center;margin-top:18px">Press <kbd style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:4px;padding:1px 5px;font-size:10px;color:#94a3b8">Esc</kbd> to close</p>
         </div>
     </div>
+
+    <!-- Back to Top -->
+    <button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">
+        <span class="material-symbols-outlined" style="font-size:20px">keyboard_arrow_up</span>
+    </button>
 
     <div id="toastContainer"></div>
 
