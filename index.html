@@ -737,12 +737,17 @@
         // Sidebar "My Vault" — show all files, clear folder filter
         function sidebarFilterAll(el) {
             currentFolder = null;
-            // Highlight My Vault, deactivate all folder buttons
+            // Clear ALL highlight classes from every folder button (pills + sidebar)
             document.querySelectorAll('.folder-btn').forEach(btn => {
-                btn.classList.remove('active', 'text-primary', 'bg-primary/10');
+                btn.classList.remove('active', 'text-primary', 'bg-primary/10', 'bg-primary/20', 'border-primary/40', 'shadow-lg', 'active-nav');
             });
+            // Also clear active-nav from any sidebar folder buttons specifically
+            document.querySelectorAll('#sidebarFolderList button').forEach(btn => {
+                btn.classList.remove('active', 'text-primary', 'bg-primary/10', 'active-nav');
+            });
+            // Restore My Vault highlight
             document.getElementById('sidebarMyVault').classList.add('active-nav');
-            // Also reset the pills row to "All"
+            // Reset the pills row — re-highlight the "All" pill
             document.querySelectorAll('#folderSection .folder-btn').forEach(btn => {
                 btn.classList.remove('active', 'border-primary/40', 'bg-primary/20', 'text-primary', 'shadow-lg');
             });
