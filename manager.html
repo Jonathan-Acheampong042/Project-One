@@ -1076,7 +1076,10 @@
             } catch(e) { /* use anon key */ }
 
             const xhr = new XMLHttpRequest();
-            const encodedPath = path.split('/').map(encodeURIComponent).join('/');
+            // Encode each path segment but preserve folder separators
+            // encodeURIComponent handles special chars like spaces, parentheses,
+            // underscores, hyphens, brackets etc. in filenames
+            const encodedPath = path.split('/').map(seg => encodeURIComponent(seg)).join('/');
             xhr.open('POST', `${SUPABASE_URL}/storage/v1/object/vault-files/${encodedPath}`);
             xhr.setRequestHeader('Authorization', `Bearer ${authToken}`);
             xhr.setRequestHeader('apikey', ANON_KEY);
@@ -1110,13 +1113,29 @@
     // ─── DUPLICATE CHECK ─────────────────────────────────────────
     async function checkDuplicate(fileName, folder) {
         const folderName = folder || 'Root';
-        const { data } = await _supabase
+
+        // Check DB — escape special ilike chars so filenames with % or _ work correctly
+        const escapedName = fileName.replace(/[%_]/g, '\\$&');
+        const { data: dbData } = await _supabase
             .from('files_list').select('id')
-            .eq('file_name', fileName).eq('folder_name', folderName).limit(1);
-        if (!data || data.length === 0) return 'new';
-        // File exists — ask
+            .eq('folder_name', folderName)
+            .ilike('file_name', escapedName)
+            .limit(1);
+
+        // Also check storage bucket directly for files not yet in DB
+        const storageFolder = folder || '';
+        const { data: storageList } = await _supabase.storage
+            .from('vault-files').list(storageFolder, { limit: 500 });
+        const existsInStorage = (storageList || []).some(f =>
+            f.name.toLowerCase() === fileName.toLowerCase()
+        );
+
+        const exists = (dbData && dbData.length > 0) || existsInStorage;
+        if (!exists) return 'new';
+
+        // File exists — ask user what to do
         const replace = confirm(
-            `"${fileName}" already exists in ${folderName}.\n\nOK → Replace it\nCancel → Keep both (saves a copy)`
+            `"${fileName}" already exists in ${folderName}.\n\nOK → Replace it\nCancel → Keep both (saves a copy with timestamp)`
         );
         return replace ? 'replace' : 'keep';
     }
