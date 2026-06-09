@@ -144,6 +144,19 @@
         html.high-contrast body { background:#000 !important; color:#fff !important; }
         html.high-contrast .glass-card { background:#111 !important; border:2px solid #fff !important; }
         html.high-contrast .file-item { background:#111 !important; border:2px solid #fff !important; }
+        /* ── Light mode ── */
+        html.light body { background:#f1f5f9 !important; color:#0f172a !important; }
+        html.light .bg-fixed-image { filter:saturate(0.5) brightness(0.85) !important; }
+        html.light .bg-overlay { background:linear-gradient(180deg,rgba(241,245,249,0.94),rgba(226,232,240,0.97)) !important; }
+        html.light .glass-card { background:rgba(255,255,255,0.78) !important; border-color:rgba(0,0,0,0.08) !important; }
+        html.light .file-item { background:rgba(255,255,255,0.6) !important; }
+        html.light .file-item:hover { background:rgba(255,255,255,0.9) !important; }
+        html.light .text-white { color:#0f172a !important; }
+        html.light .text-white\/40 { color:#64748b !important; }
+        html.light .text-white\/50 { color:#64748b !important; }
+        html.light .text-white\/60 { color:#475569 !important; }
+        html.light header { background:rgba(255,255,255,0.88) !important; border-bottom-color:rgba(0,0,0,0.08) !important; }
+        html.light select, html.light input { background:rgba(255,255,255,0.9) !important; color:#0f172a !important; border-color:rgba(0,0,0,0.12) !important; }
         /* ── 31: New-since-last-visit badge ── */
         .folder-new-badge { display:inline-flex;align-items:center;font-size:8px;font-weight:800;background:rgba(16,185,129,0.2);color:#34d399;border:1px solid rgba(52,211,153,0.35);padding:1px 5px;border-radius:99px;margin-left:4px; }
 
@@ -171,6 +184,7 @@
                 </div>
             </div>
             <button onclick="toggleMgrHighContrast()" title="Toggle high contrast" aria-label="Toggle high contrast mode" class="text-sm text-slate-400 hover:text-white hover:bg-white/10 px-2 py-2 rounded-lg transition-all flex items-center gap-1 mr-1"><span class="material-symbols-outlined text-sm">contrast</span></button>
+            <button id="mgrThemeBtn" onclick="toggleMgrTheme()" title="Toggle light/dark mode" aria-label="Toggle light/dark mode" class="text-sm text-slate-400 hover:text-white hover:bg-white/10 px-2 py-2 rounded-lg transition-all flex items-center gap-1 mr-1"><span id="mgrThemeIcon" class="material-symbols-outlined text-sm">light_mode</span></button>
             <button onclick="signOut()" class="text-sm font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-2 rounded-lg transition-all flex items-center gap-2">
                 <span class="material-symbols-outlined text-sm">logout</span><span class="hidden sm:inline">Logout</span>
             </button>
@@ -179,6 +193,43 @@
 
 
 <main class="w-full p-4 sm:p-6 sm:max-w-4xl sm:mx-auto relative z-10 space-y-6 sm:space-y-8" id="mainContent">
+
+        <!-- ── Dashboard Summary Cards ── -->
+        <section id="dashboardCards" class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <div class="glass-card p-4 rounded-2xl border border-white/10 flex flex-col gap-1">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="material-symbols-outlined text-blue-400" style="font-size:18px">folder_open</span>
+                    <span class="text-[10px] font-bold text-white/40 uppercase tracking-wider">Total Files</span>
+                </div>
+                <p id="dashTotalFiles" class="text-2xl font-extrabold text-white">—</p>
+                <p id="dashTotalFolders" class="text-[11px] text-white/40">across — folders</p>
+            </div>
+            <div class="glass-card p-4 rounded-2xl border border-white/10 flex flex-col gap-1">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="material-symbols-outlined text-green-400" style="font-size:18px">download</span>
+                    <span class="text-[10px] font-bold text-white/40 uppercase tracking-wider">Downloads</span>
+                </div>
+                <p id="dashDownloadsWeek" class="text-2xl font-extrabold text-white">—</p>
+                <p class="text-[11px] text-white/40">total all-time</p>
+            </div>
+            <div class="glass-card p-4 rounded-2xl border border-white/10 flex flex-col gap-1">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="material-symbols-outlined text-purple-400" style="font-size:18px">database</span>
+                    <span class="text-[10px] font-bold text-white/40 uppercase tracking-wider">Storage</span>
+                </div>
+                <p id="dashStorage" class="text-2xl font-extrabold text-white">—</p>
+                <p class="text-[11px] text-white/40">total size</p>
+            </div>
+            <div class="glass-card p-4 rounded-2xl border border-white/10 flex flex-col gap-1">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="material-symbols-outlined text-amber-400" style="font-size:18px">schedule</span>
+                    <span class="text-[10px] font-bold text-white/40 uppercase tracking-wider">Expiring</span>
+                </div>
+                <p id="dashExpiring" class="text-2xl font-extrabold text-white">—</p>
+                <p class="text-[11px] text-white/40">within 7 days</p>
+            </div>
+        </section>
+
         <!-- Folders Section -->
         <section class="glass-card p-4 sm:p-6 rounded-2xl border border-white/10">
             <div class="flex items-center justify-between mb-4">
@@ -1647,6 +1698,22 @@
         localStorage.setItem('fvHighContrast', on ? '1' : '0');
         setStatus('High contrast ' + (on ? 'enabled' : 'disabled'), 'blue');
     }
+    function initMgrTheme() {
+        const saved = localStorage.getItem('fvTheme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const isLight = saved ? saved === 'light' : !prefersDark;
+        document.documentElement.classList.toggle('light', isLight);
+        _updateMgrThemeIcon();
+    }
+    function toggleMgrTheme() {
+        const isLight = document.documentElement.classList.toggle('light');
+        localStorage.setItem('fvTheme', isLight ? 'light' : 'dark');
+        _updateMgrThemeIcon();
+    }
+    function _updateMgrThemeIcon() {
+        const icon = document.getElementById('mgrThemeIcon');
+        if (icon) icon.textContent = document.documentElement.classList.contains('light') ? 'dark_mode' : 'light_mode';
+    }
 
     // ── Patch renderFileCard: expiry bar + aria-labels ──
     const _origRFC = renderFileCard;
@@ -1679,7 +1746,45 @@
 
     initMgrLastVisit();
     initMgrHighContrast();
+    initMgrTheme();
 
+    // ── DASHBOARD SUMMARY CARDS ──────────────────────────────
+    async function loadDashboardStats() {
+        try {
+            const { data, error } = await _supabase
+                .from('files_list')
+                .select('folder_name, download_count, file_size, expires_at');
+            if (error) throw error;
+            const rows = data || [];
+            const now = new Date();
+            const sevenDays = new Date(now.getTime() + 7 * 86400000);
+
+            const totalFiles = rows.length;
+            const folders = new Set(rows.map(r => r.folder_name).filter(Boolean));
+            const totalDL = rows.reduce((s, r) => s + (r.download_count || 0), 0);
+            const totalBytes = rows.reduce((s, r) => s + (r.file_size || 0), 0);
+            const expiringCount = rows.filter(r => r.expires_at && new Date(r.expires_at) > now && new Date(r.expires_at) <= sevenDays).length;
+
+            const el = id => document.getElementById(id);
+            if (el('dashTotalFiles')) el('dashTotalFiles').textContent = totalFiles;
+            if (el('dashTotalFolders')) el('dashTotalFolders').textContent = 'across ' + folders.size + ' folder' + (folders.size !== 1 ? 's' : '');
+            if (el('dashDownloadsWeek')) el('dashDownloadsWeek').textContent = totalDL.toLocaleString();
+            if (el('dashStorage')) el('dashStorage').textContent = totalBytes > 0 ? formatFileSize(totalBytes) : '—';
+            if (el('dashExpiring')) {
+                el('dashExpiring').textContent = expiringCount;
+                if (expiringCount > 0) el('dashExpiring').style.color = '#f59e0b';
+            }
+        } catch (err) {
+            console.warn('Dashboard stats failed:', err.message);
+        }
+    }
+
+    // Patch checkAccess to also load dashboard after auth
+    const _origCheckAccess = checkAccess;
+    checkAccess = async function() {
+        await _origCheckAccess();
+        loadDashboardStats();
+    };
     </script>
     <section id="mgrPopularSection" class="glass-card p-4 sm:p-6 rounded-2xl border border-white/10 mb-4" style="display:none;max-width:896px;margin:0 auto 16px">
         <h4 class="text-white/60 font-bold mb-4 flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-amber-400">trending_up</span> Most Downloaded</h4>

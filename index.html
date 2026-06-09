@@ -191,6 +191,45 @@
         /* ── 31: New-since-last-visit badge ── */
         .folder-new-badge { display:inline-flex;align-items:center;font-size:8px;font-weight:800;background:rgba(16,185,129,0.2);color:#34d399;border:1px solid rgba(52,211,153,0.35);padding:1px 5px;border-radius:99px;margin-left:4px;vertical-align:middle; }
 
+        /* ══ LIGHT MODE ══ */
+        html.light body { background:#f1f5f9 !important; color:#0f172a !important; }
+        html.light .bg-fixed-image { filter: saturate(0.5) brightness(0.85) !important; }
+        html.light .bg-overlay { background: radial-gradient(circle at top left,rgba(59,130,246,0.07),transparent 24%), radial-gradient(circle at bottom right,rgba(139,92,246,0.07),transparent 20%), linear-gradient(180deg,rgba(241,245,249,0.94),rgba(226,232,240,0.97)) !important; }
+        html.light .glass-card { background:rgba(255,255,255,0.72) !important; border-color:rgba(0,0,0,0.08) !important; box-shadow:0 2px 16px rgba(0,0,0,0.06) !important; }
+        html.light .sidebar-glass { background:rgba(255,255,255,0.85) !important; border-right-color:rgba(0,0,0,0.08) !important; }
+        html.light header { background:rgba(255,255,255,0.88) !important; border-bottom-color:rgba(0,0,0,0.08) !important; }
+        html.light .text-white { color:#0f172a !important; }
+        html.light .text-slate-300 { color:#334155 !important; }
+        html.light .text-slate-400 { color:#475569 !important; }
+        html.light .text-slate-500 { color:#64748b !important; }
+        html.light .file-card { background:rgba(255,255,255,0.8) !important; border-color:rgba(0,0,0,0.07) !important; }
+        html.light .file-card:hover { background:rgba(255,255,255,0.95) !important; }
+        html.light #searchInput { background:rgba(0,0,0,0.04) !important; color:#0f172a !important; border-color:rgba(0,0,0,0.12) !important; }
+        html.light #searchInput::placeholder { color:#94a3b8 !important; }
+        html.light #searchSuggestions { background:rgba(255,255,255,0.98) !important; border-color:rgba(0,0,0,0.1) !important; }
+        html.light .sugg-item { color:#334155 !important; }
+        html.light .sugg-item:hover,.sugg-item.focused { background:rgba(59,130,246,0.08) !important; }
+        html.light #settingsPanel { background:rgba(255,255,255,0.98) !important; border-color:rgba(0,0,0,0.1) !important; }
+        html.light .setting-label { color:#64748b !important; }
+        html.light nav.lg\:hidden { background:rgba(255,255,255,0.92) !important; border-top-color:rgba(0,0,0,0.08) !important; }
+        html.light #shortcutBox { background:rgba(255,255,255,0.98) !important; border-color:rgba(0,0,0,0.1) !important; }
+        html.light kbd { background:rgba(0,0,0,0.06) !important; border-color:rgba(0,0,0,0.15) !important; color:#334155 !important; }
+        html.light .sc-row { border-bottom-color:rgba(0,0,0,0.05) !important; }
+        html.light #previewBox { background:rgba(255,255,255,0.97) !important; border-color:rgba(0,0,0,0.1) !important; }
+        html.light #previewHeader { border-bottom-color:rgba(0,0,0,0.08) !important; }
+        html.light #previewBody { background:rgba(0,0,0,0.03) !important; }
+        html.light .toast { color:#0f172a !important; }
+        html.light .toast.success { background:rgba(16,185,129,0.12) !important; }
+        html.light .toast.error { background:rgba(239,68,68,0.12) !important; }
+        html.light .toast.info { background:rgba(59,130,246,0.12) !important; }
+        html.light footer { color:rgba(0,0,0,0.3) !important; }
+        html.light #backToTop { background:rgba(59,130,246,0.9) !important; }
+        html.light .select { background:rgba(255,255,255,0.7) !important; color:#0f172a !important; }
+        html.light select { background:rgba(255,255,255,0.9) !important; color:#0f172a !important; border-color:rgba(0,0,0,0.12) !important; }
+        html.light #zipProgressBar { background:rgba(255,255,255,0.97) !important; border-color:rgba(0,0,0,0.1) !important; }
+        html.light #noteBox { background:rgba(255,255,255,0.98) !important; border-color:rgba(0,0,0,0.1) !important; }
+        html.light #noteTextarea { background:rgba(0,0,0,0.04) !important; color:#0f172a !important; border-color:rgba(0,0,0,0.1) !important; }
+
         /* ══ 53: ACCENT COLOR ══ */
         :root { --accent:#3b82f6; --accent-light:rgba(59,130,246,0.2); --accent-border:rgba(59,130,246,0.4); }
         .text-primary { color: var(--accent) !important; }
@@ -336,12 +375,22 @@
                     <!-- injected by JS -->
                 </div>
             </div>
+            <button id="searchEverywhereBtn" onclick="toggleSearchEverywhere()" title="Search across all folders" style="display:none;flex-shrink:0;align-items:center;gap:4px;padding:6px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#94a3b8;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap">
+                <span class="material-symbols-outlined" style="font-size:14px">travel_explore</span>
+                <span id="searchEverywhereLabel">All folders</span>
+            </button>
             <!-- Collapse search btn (mobile only, shown when search active) -->
             <button id="searchCollapseBtn" onclick="collapseSearch()" title="Close search">
                 <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span>
             </button>
             <!-- Header icon buttons wrapped for mobile hide/show -->
             <div id="headerIcons">
+            <button id="pushBellBtn" onclick="togglePushSubscription()" title="Enable push notifications" class="flex-shrink-0 w-9 h-9 rounded-xl bg-white/5 hover:bg-primary/20 border border-white/10 hover:border-primary/30 text-slate-400 hover:text-primary transition flex items-center justify-center">
+                <span id="pushBellIcon" class="material-symbols-outlined" style="font-size:18px">notifications</span>
+            </button>
+            <button id="themeToggleBtn" onclick="toggleTheme()" title="Toggle light/dark mode" class="flex-shrink-0 w-9 h-9 rounded-xl bg-white/5 hover:bg-primary/20 border border-white/10 hover:border-primary/30 text-slate-400 hover:text-primary transition flex items-center justify-center">
+                <span id="themeToggleIcon" class="material-symbols-outlined" style="font-size:18px">light_mode</span>
+            </button>
             <button id="pwaInstallBtn" onclick="installPWA()" title="Install FileVault app" class="flex-shrink-0 w-9 h-9 rounded-xl bg-white/5 hover:bg-primary/20 border border-white/10 hover:border-primary/30 text-slate-400 hover:text-primary transition items-center justify-center">
                 <span class="material-symbols-outlined text-lg">install_mobile</span>
             </button>
@@ -510,6 +559,10 @@
     <script>
 
         // ── TOAST ───────────────────────────────────────────────
+        const _CHAT_API_URL = window.location.hostname === 'localhost'
+            ? 'http://localhost:3000/api/chat'
+            : 'https://project-one-187u.onrender.com/api/chat';
+
         function showToast(msg, type, duration) {
             type = type || 'info';
             duration = duration || 3000;
@@ -2147,6 +2200,251 @@
             }
         });
 
+        // ══ WEB PUSH NOTIFICATIONS ═════════════════════════════
+        let _pushSubscription = null;
+
+        async function initPush() {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+            // Fetch VAPID public key from server
+            try {
+                const res = await fetch(_CHAT_API_URL.replace('/api/chat', '/api/push/vapid-public-key'));
+                const { key } = await res.json();
+                if (!key) return; // Push not configured on server yet
+                window._vapidPublicKey = key;
+            } catch(e) { return; } // server offline
+            // Check if already subscribed
+            try {
+                const reg = await navigator.serviceWorker.ready;
+                const existing = await reg.pushManager.getSubscription();
+                if (existing) {
+                    _pushSubscription = existing;
+                    _updatePushBell(true);
+                }
+            } catch(e) {}
+        }
+
+        function _urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+            return outputArray;
+        }
+
+        function _updatePushBell(subscribed) {
+            const btn = document.getElementById('pushBellBtn');
+            const icon = document.getElementById('pushBellIcon');
+            if (!btn || !icon) return;
+            if (subscribed) {
+                btn.style.color = '#22c55e';
+                btn.style.borderColor = 'rgba(34,197,94,0.3)';
+                btn.style.background = 'rgba(34,197,94,0.1)';
+                btn.title = 'Push notifications on — click to disable';
+                icon.textContent = 'notifications_active';
+            } else {
+                btn.style.color = '';
+                btn.style.borderColor = '';
+                btn.style.background = '';
+                btn.title = 'Enable push notifications';
+                icon.textContent = 'notifications';
+            }
+        }
+
+        async function togglePushSubscription() {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                showToast('Push notifications not supported by this browser.', 'warning', 3000);
+                return;
+            }
+            if (!window._vapidPublicKey) {
+                showToast('Push not configured on server yet.', 'warning', 3000);
+                return;
+            }
+            try {
+                const reg = await navigator.serviceWorker.ready;
+                if (_pushSubscription) {
+                    // Unsubscribe
+                    await fetch(_CHAT_API_URL.replace('/api/chat', '/api/push/unsubscribe'), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ endpoint: _pushSubscription.endpoint })
+                    });
+                    await _pushSubscription.unsubscribe();
+                    _pushSubscription = null;
+                    _updatePushBell(false);
+                    showToast('Push notifications disabled.', 'info', 2000);
+                } else {
+                    // Request permission first
+                    const perm = await Notification.requestPermission();
+                    if (perm !== 'granted') {
+                        showToast('Notification permission denied.', 'warning', 3000);
+                        return;
+                    }
+                    const sub = await reg.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: _urlBase64ToUint8Array(window._vapidPublicKey)
+                    });
+                    await fetch(_CHAT_API_URL.replace('/api/chat', '/api/push/subscribe'), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ subscription: sub.toJSON() })
+                    });
+                    _pushSubscription = sub;
+                    _updatePushBell(true);
+                    showToast('🔔 Push notifications enabled!', 'success', 2500);
+                }
+            } catch(err) {
+                showToast('Push setup failed: ' + err.message, 'error', 3500);
+                console.error('Push error:', err);
+            }
+        }
+
+        // Init push after service worker is ready
+        window.addEventListener('load', () => {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready.then(() => initPush()).catch(() => {});
+            }
+        });
+
+        // ══ LIGHT / DARK MODE ══════════════════════════════════
+        function initTheme() {
+            const saved = localStorage.getItem('fvTheme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isLight = saved ? saved === 'light' : !prefersDark;
+            document.documentElement.classList.toggle('light', isLight);
+            _updateThemeIcon();
+        }
+        function toggleTheme() {
+            const isLight = document.documentElement.classList.toggle('light');
+            localStorage.setItem('fvTheme', isLight ? 'light' : 'dark');
+            _updateThemeIcon();
+            showToast(isLight ? '☀️ Light mode on' : '🌙 Dark mode on', 'info', 1600);
+        }
+        function _updateThemeIcon() {
+            const icon = document.getElementById('themeToggleIcon');
+            if (!icon) return;
+            icon.textContent = document.documentElement.classList.contains('light') ? 'dark_mode' : 'light_mode';
+        }
+        initTheme();
+
+        // ══ SEARCH EVERYWHERE (ignore active folder filter) ════
+        let _searchEverywhereActive = false;
+        function toggleSearchEverywhere() {
+            _searchEverywhereActive = !_searchEverywhereActive;
+            const btn = document.getElementById('searchEverywhereBtn');
+            const lbl = document.getElementById('searchEverywhereLabel');
+            if (_searchEverywhereActive) {
+                btn.style.background = 'rgba(59,130,246,0.2)';
+                btn.style.borderColor = 'rgba(59,130,246,0.4)';
+                btn.style.color = 'var(--accent)';
+                if (lbl) lbl.textContent = 'All folders ✓';
+            } else {
+                btn.style.background = 'rgba(255,255,255,0.05)';
+                btn.style.borderColor = 'rgba(255,255,255,0.12)';
+                btn.style.color = '#94a3b8';
+                if (lbl) lbl.textContent = 'All folders';
+            }
+            renderFileList(getFilteredFiles());
+        }
+        // Patch getFilteredFiles to respect search everywhere
+        const _origGetFiltered = getFilteredFiles;
+        getFilteredFiles = function() {
+            if (_searchEverywhereActive && currentSearchTerm) {
+                const savedFolder = currentFolder;
+                currentFolder = null;
+                const results = _origGetFiltered();
+                currentFolder = savedFolder;
+                return results;
+            }
+            return _origGetFiltered();
+        };
+        // Show/hide the btn when search is active; reset when cleared
+        const _origFilterFilesEv = filterFiles;
+        filterFiles = function(term) {
+            _origFilterFilesEv(term);
+            const btn = document.getElementById('searchEverywhereBtn');
+            if (btn) btn.style.display = term ? 'inline-flex' : 'none';
+            if (!term && _searchEverywhereActive) {
+                _searchEverywhereActive = false;
+                if (btn) { btn.style.background='rgba(255,255,255,0.05)'; btn.style.borderColor='rgba(255,255,255,0.12)'; btn.style.color='#94a3b8'; }
+                const lbl = document.getElementById('searchEverywhereLabel');
+                if (lbl) lbl.textContent = 'All folders';
+            }
+        };
+
+        // ══ "DID YOU MEAN?" FUZZY SUGGESTIONS ═════════════════
+        function _fuzzyScore(str, term) {
+            str = str.toLowerCase(); term = term.toLowerCase();
+            if (str.includes(term)) return 100;
+            let score = 0, si = 0;
+            for (let i = 0; i < term.length; i++) {
+                const idx = str.indexOf(term[i], si);
+                if (idx === -1) continue;
+                score += 10 - Math.min(9, idx - si);
+                si = idx + 1;
+            }
+            return score;
+        }
+        function _getFuzzySuggestions(term) {
+            if (!term || term.length < 3) return [];
+            const candidates = [
+                ...allFiles.map(f => f.name),
+                ...[...new Set(allFiles.map(f => f.folder).filter(Boolean))],
+                ...allFiles.map(f => f.description).filter(Boolean)
+            ];
+            return [...new Set(candidates)]
+                .map(c => ({ text: c, score: _fuzzyScore(c, term) }))
+                .filter(x => x.score > 15)
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 4)
+                .map(x => x.text);
+        }
+        // Patch renderFileList to append "did you mean?" on empty
+        const _origRFLDym = renderFileList;
+        renderFileList = function(files) {
+            _origRFLDym(files);
+            if (!files.length && currentSearchTerm) {
+                const suggestions = _getFuzzySuggestions(currentSearchTerm);
+                if (suggestions.length) {
+                    const grid = document.getElementById('fileGrid');
+                    const existing = grid && grid.querySelector('.col-span-full');
+                    if (existing) {
+                        function _esc(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
+                        const sugHtml = suggestions.map(s =>
+                            '<button onmousedown="event.preventDefault();document.getElementById(\'searchInput\').value=\'' + s.replace(/'/g,"\\'") + '\';filterFiles(\'' + s.replace(/'/g,"\\'") + '\')" ' +
+                            'style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);border-radius:99px;color:#93c5fd;font-size:12px;font-weight:600;cursor:pointer;margin:3px;font-family:inherit">' +
+                            '<span class="material-symbols-outlined" style="font-size:13px">search</span>' + _esc(s) + '</button>'
+                        ).join('');
+                        existing.innerHTML += '<p style="color:#64748b;font-size:11px;margin-top:14px;margin-bottom:6px">Did you mean?</p>' + sugHtml;
+                    }
+                }
+            }
+        };
+
+        // ══ PRELOAD ADJACENT FILES IN PREVIEW ══════════════════
+        function _preloadFile(url, name) {
+            if (!url) return;
+            const ext = (name || '').split('.').pop().toLowerCase();
+            if (['jpg','jpeg','png','gif','webp','svg'].includes(ext)) {
+                const img = new Image(); img.src = url;
+            } else {
+                // Prefetch non-images (PDFs etc.) using a low-priority link hint
+                const link = document.createElement('link');
+                link.rel = 'prefetch'; link.href = url; link.as = 'fetch'; link.crossOrigin = 'anonymous';
+                document.head.appendChild(link);
+                setTimeout(() => { try { document.head.removeChild(link); } catch(e) {} }, 5000);
+            }
+        }
+        // Patch previewByIdx to silently preload neighbors
+        const _origPreviewByIdxPreload = previewByIdx;
+        previewByIdx = function(idx) {
+            _origPreviewByIdxPreload(idx);
+            const prev = _fileRegistry[idx - 1];
+            const next = _fileRegistry[idx + 1];
+            if (prev) _preloadFile(prev.url, prev.name);
+            if (next) _preloadFile(next.url, next.name);
+        };
+
     </script>
     
     <!-- ══ Settings Panel (53-56) ══ -->
@@ -2154,6 +2452,17 @@
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
             <p style="color:white;font-weight:700;font-size:14px">Display Settings</p>
             <button onclick="toggleSettings()" style="background:none;border:none;cursor:pointer;color:#64748b"><span class="material-symbols-outlined" style="font-size:18px">close</span></button>
+        </div>
+        <!-- Theme toggle -->
+        <div class="setting-row" style="margin-bottom:12px">
+            <span class="setting-label">Theme</span>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+                <span style="font-size:12px;color:#cbd5e1">Light / Dark mode</span>
+                <button onclick="toggleTheme()" title="Toggle light/dark mode"
+                    style="display:flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;background:rgba(255,255,255,0.05);color:#94a3b8;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit">
+                    <span class="material-symbols-outlined" style="font-size:15px">contrast</span> Toggle
+                </button>
+            </div>
         </div>
         <!-- 55: Compact View -->
         <div class="setting-row" style="margin-bottom:12px">
