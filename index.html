@@ -1174,7 +1174,7 @@
                         (file.description ? '<p class="mt-0.5 text-[11px] text-slate-400 italic truncate">' + highlightText(file.description, currentSearchTerm) + '</p>' : '') +
                     '</div>' +
                     '<div class="flex gap-0.5 opacity-100 shrink-0">' +
-                    '<button class="card-react-btn p-1 text-slate-400 hover:text-pink-400 transition" data-fid="' + (file.id||'') + '" title="React" aria-label="React to ' + file.name + '" onclick="openCardReactionPickerSafe(\'' + (file.id||'') + '\',this,event)" style="font-size:17px;line-height:1;display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;background:none;border:none;cursor:pointer;flex-shrink:0;touch-action:manipulation">😊</button>' +
+                    '<button class="card-react-btn p-1 text-slate-400 hover:text-pink-400 transition" data-fid="' + (file.id||'') + '" title="React to this file" aria-label="React to ' + file.name + '" onclick="openCardReactionPickerSafe(\'' + (file.id||'') + '\',this,event)" style="font-size:15px;line-height:1;display:inline-flex;align-items:center;gap:3px;padding:4px 8px;height:34px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);cursor:pointer;flex-shrink:0;touch-action:manipulation;color:#94a3b8;font-weight:700;font-family:inherit">😊<span style="font-size:10px;font-weight:700;letter-spacing:.01em">React</span></button>' +
                     '<button onclick="previewByIdx(' + _ri + ');event.stopPropagation()" class="p-2 text-slate-400 hover:text-primary material-symbols-outlined text-xl" title="Preview" aria-label="Preview ' + file.name + '">visibility</button>' +
                     '<button onclick="copyFileLink(\'' + safeUrl + '\',event);event.stopPropagation()" class="btn-copy" title="Copy link" aria-label="Copy link for ' + file.name + '"><span class="material-symbols-outlined text-xl" style="font-size:20px;display:block" aria-hidden="true">link</span></button>' +
                     '<a href="' + safeUrl + '" download onclick="track(\'' + file.id + '\',\'' + safeName + '\',\'' + safeUrl + '\');event.stopPropagation()" class="p-2 text-slate-400 hover:text-green-400 material-symbols-outlined text-xl" title="Download" aria-label="Download ' + file.name + '">download</a>' +
@@ -1999,12 +1999,16 @@
         initDragSelect();
 
         // ── Card emoji button handler ──────────────────────────
-        // handleCardClick already skips clicks on buttons, so no capture-phase tricks needed.
-        // We just need a reliable open function that both onclick and touchend can call.
+        // Picker state declared here (top-level) so all picker functions can reference them
+        let _pickerFileId = null;
+        let _pickerOpen = false;
+        let _pickerHideTimeout = null;
+        let _longPressTimer = null;
+
         function openCardReactionPickerSafe(fidStr, btn, e) {
             if (e) { e.stopPropagation(); e.preventDefault(); }
-            const fid = fidStr || btn.dataset.fid || '';
-            if (!fid) { showToast('This file needs to be saved to the database to receive reactions.', 'info', 2500); return; }
+            const fid = (fidStr && fidStr !== '') ? String(fidStr) : (btn && btn.dataset.fid !== '' ? btn.dataset.fid : '');
+            if (!fid) { showToast('React feature requires files saved to the database.', 'info', 2500); return; }
             haptic('light');
             _openCardReactionPicker(fid, btn);
         }
@@ -3202,7 +3206,7 @@
             if (!bar) return;
             const rx = _reactionsCache[fileId] || {};
 
-            // Show chips for emojis that have any reactions, then the + picker button
+            // Always show chips for emojis that already have reactions
             const activeEmojis = REACTION_EMOJIS.filter(e => rx[e] && (rx[e].count > 0 || rx[e].mine));
             const chips = activeEmojis.map(emoji => {
                 const r = rx[emoji];
@@ -3215,15 +3219,29 @@
                     }<span style="font-size:10px;font-weight:700;color:${mine ? '#93c5fd' : '#64748b'}">${r.count}</span></button>`;
             }).join('');
 
-            bar.innerHTML = chips + `<button id="rxPickerBtn"
+            // Always show Popular quick-react row so users can see and click emojis immediately
+            const popularEmojis = REACTION_EMOJI_GROUPS[0].emojis; // 👍❤️🔥😮🤔💡📚✅
+            const quickBtns = popularEmojis.map(emoji => {
+                const r = rx[emoji] || { count: 0, mine: false };
+                const mine = r.mine;
+                // Skip if already shown in chips above
+                if (activeEmojis.includes(emoji)) return '';
+                return `<button onclick="toggleReaction('${fileId}','${emoji}')"
+                    style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;
+                    border-radius:8px;border:1px solid ${mine ? 'rgba(59,130,246,0.45)' : 'rgba(255,255,255,0.07)'};
+                    background:${mine ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.03)'};
+                    cursor:pointer;font-size:18px;transition:all .15s;flex-shrink:0" title="${emoji}">${emoji}</button>`;
+            }).join('');
+
+            bar.innerHTML = chips + quickBtns + `<button id="rxPickerBtn"
                 onmouseenter="_showEmojiPicker('${fileId}')"
                 onmouseleave="_schedulePickerHide()"
                 ontouchstart="_handlePickerTouch(event,'${fileId}')"
                 ontouchend="_cancelPickerTouch()"
                 onclick="_toggleEmojiPicker('${fileId}')"
                 style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;
-                border-radius:99px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);
-                cursor:pointer;font-size:15px;transition:all .15s;flex-shrink:0" title="Add reaction">➕</button>`;
+                border-radius:99px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);
+                cursor:pointer;font-size:14px;font-weight:700;color:#94a3b8;transition:all .15s;flex-shrink:0" title="More reactions">＋</button>`;
         }
 
         // ── Glow the card emoji button if user has reacted ──────────
@@ -3305,18 +3323,21 @@
         function _renderReactionBarFallback(fileId) {
             const bar = document.getElementById('previewReactionBar');
             if (!bar) return;
-            bar.innerHTML = `<button id="rxPickerBtn"
+            const popularEmojis = REACTION_EMOJI_GROUPS[0].emojis;
+            const quickBtns = popularEmojis.map(emoji =>
+                `<button onclick="toggleReaction('${fileId}','${emoji}')"
+                    style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;
+                    border-radius:8px;border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.03);
+                    cursor:pointer;font-size:18px;transition:all .15s;flex-shrink:0" title="${emoji}">${emoji}</button>`
+            ).join('');
+            bar.innerHTML = quickBtns + `<button id="rxPickerBtn"
                 onclick="_toggleEmojiPicker('${fileId}')"
-                style="padding:5px 12px;border-radius:99px;border:1px solid rgba(255,255,255,0.1);
-                background:rgba(255,255,255,0.04);cursor:pointer;font-size:13px">😊 React</button>`;
+                style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;
+                border-radius:99px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);
+                cursor:pointer;font-size:14px;font-weight:700;color:#94a3b8" title="More reactions">＋</button>`;
         }
 
         // ── Emoji Picker ─────────────────────────────────────────
-        let _pickerFileId = null;
-        let _pickerOpen = false;
-        let _pickerHideTimeout = null;
-        let _longPressTimer = null;
-
         function _getOrCreatePicker() {
             let p = document.getElementById('emojiPickerPopover');
             if (p) return p;
