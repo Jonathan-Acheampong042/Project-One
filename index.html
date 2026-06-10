@@ -1852,15 +1852,30 @@
 
                     const metaP = document.createElement('p');
                     metaP.className = 'ann-card-meta';
-                    // Show posted date + optional expiry
-                    let metaStr = ann.created_at
+                    // Show posted date
+                    const postedStr = ann.created_at
                         ? 'Posted ' + new Date(ann.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' })
                         : '';
                     if (ann.expires_at) {
-                        const expDate = new Date(ann.expires_at);
-                        metaStr += (metaStr ? ' · ' : '') + 'Expires ' + expDate.toLocaleDateString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+                        // Build meta with a live countdown span
+                        const expTarget = new Date(ann.expires_at).getTime();
+                        const cdSpan = document.createElement('span');
+                        function _updateExpiryCd() {
+                            const diff = expTarget - Date.now();
+                            if (diff <= 0) { metaP.textContent = postedStr; return; }
+                            const h = Math.floor(diff / 3600000);
+                            const m = Math.floor((diff % 3600000) / 60000);
+                            const s = Math.floor((diff % 60000) / 1000);
+                            cdSpan.textContent = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+                        }
+                        _updateExpiryCd();
+                        cdSpan._cdInterval = setInterval(_updateExpiryCd, 1000);
+                        // Assemble: "Posted 10 Jun · 00:59:39"
+                        metaP.textContent = postedStr + (postedStr ? ' \u00b7 ' : '');
+                        metaP.appendChild(cdSpan);
+                    } else {
+                        metaP.textContent = postedStr;
                     }
-                    metaP.textContent = metaStr;
                     body.appendChild(metaP);
 
                     // Countdown section (if event_date is in the future)
