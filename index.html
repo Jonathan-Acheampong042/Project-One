@@ -1174,7 +1174,7 @@
                         (file.description ? '<p class="mt-0.5 text-[11px] text-slate-400 italic truncate">' + highlightText(file.description, currentSearchTerm) + '</p>' : '') +
                     '</div>' +
                     '<div class="flex gap-0.5 opacity-100 shrink-0">' +
-                    '<button class="card-react-btn" data-fid="' + (file.id||'') + '" title="Add reaction" aria-label="React to ' + file.name + '" onclick="openCardReactionPickerSafe(\'' + (file.id||'') + '\',this,event)" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);cursor:pointer;flex-shrink:0;touch-action:manipulation;color:#94a3b8;font-size:17px;line-height:1;transition:all .2s;padding:0">➕</button>' +
+                    '<button class="card-react-btn p-2 text-slate-400 hover:text-pink-400 material-symbols-outlined text-xl" data-fid="' + (file.id||'') + '" title="Add reaction" aria-label="React to ' + file.name + '" onclick="openCardReactionPickerSafe(this.dataset.fid,this,event);event.stopPropagation()">add_reaction</button>' +
                     '<button onclick="previewByIdx(' + _ri + ');event.stopPropagation()" class="p-2 text-slate-400 hover:text-primary material-symbols-outlined text-xl" title="Preview" aria-label="Preview ' + file.name + '">visibility</button>' +
                     '<button onclick="copyFileLink(\'' + safeUrl + '\',event);event.stopPropagation()" class="btn-copy" title="Copy link" aria-label="Copy link for ' + file.name + '"><span class="material-symbols-outlined text-xl" style="font-size:20px;display:block" aria-hidden="true">link</span></button>' +
                     '<a href="' + safeUrl + '" download onclick="track(\'' + file.id + '\',\'' + safeName + '\',\'' + safeUrl + '\');event.stopPropagation()" class="p-2 text-slate-400 hover:text-green-400 material-symbols-outlined text-xl" title="Download" aria-label="Download ' + file.name + '">download</a>' +
@@ -3246,18 +3246,29 @@
                 cursor:pointer;font-size:14px;font-weight:700;color:#94a3b8;transition:all .15s;flex-shrink:0" title="More reactions">＋</button>`;
         }
 
-        // ── Update card ➕ button to show user's reaction (or revert to ➕) ──────────
+        // ── Update card reaction button appearance ──────────────────
         function _updateCardReactBtnGlow(fileId) {
             const rx = _reactionsCache[fileId] || {};
             const myEmojis = Object.entries(rx).filter(([, r]) => r.mine).map(([e]) => e);
             const hasReacted = myEmojis.length > 0;
             document.querySelectorAll('.card-react-btn[data-fid="' + fileId + '"]').forEach(function(btn) {
-                btn.textContent   = hasReacted ? myEmojis[0] : '➕';
-                btn.style.color      = hasReacted ? '' : '#94a3b8';
-                btn.style.fontSize   = hasReacted ? '18px' : '17px';
-                btn.style.border     = hasReacted ? '1px solid rgba(244,114,182,0.4)' : '1px solid rgba(255,255,255,0.1)';
-                btn.style.background = hasReacted ? 'rgba(244,114,182,0.12)' : 'rgba(255,255,255,0.04)';
-                btn.title = hasReacted ? 'You reacted · click to change' : 'Add reaction';
+                if (hasReacted) {
+                    // Show the user's top emoji — remove material icon classes so it renders as text
+                    btn.classList.remove('material-symbols-outlined');
+                    btn.style.fontSize   = '18px';
+                    btn.style.color      = '#f472b6';
+                    btn.style.textShadow = '0 0 8px rgba(244,114,182,0.5)';
+                    btn.textContent = myEmojis[0];
+                    btn.title = 'You reacted · click to change';
+                } else {
+                    // Restore material icon
+                    btn.classList.add('material-symbols-outlined');
+                    btn.style.fontSize   = '';
+                    btn.style.color      = '';
+                    btn.style.textShadow = '';
+                    btn.textContent = 'add_reaction';
+                    btn.title = 'Add reaction';
+                }
             });
         }
 
