@@ -1743,8 +1743,9 @@
         }, { passive: true });
 
         // ── ANNOUNCEMENT BANNER ─────────────────────────────────
-        // Announcements stay visible until expires_at passes or admin deletes them.
-        // No dismiss/localStorage — they are permanent by design.
+        // Announcements are permanent — shown to every student on every visit.
+        // They only disappear when expires_at passes or the admin deletes them.
+        // No localStorage dismiss system.
 
         async function loadAnnouncement() {
             try {
@@ -1757,7 +1758,7 @@
                 if (error) { console.warn('Announcements fetch error:', error.message); return; }
                 if (!data || data.length === 0) { console.info('No announcements in table.'); return; }
 
-                // Filter: only show announcements that haven't expired yet
+                // Only filter by expires_at — no "active" column needed
                 const now = new Date();
                 const active = data.filter(a => !a.expires_at || new Date(a.expires_at) > now);
                 if (!active.length) { console.info('No active announcements.'); return; }
@@ -1775,16 +1776,16 @@
                     bannerEl.classList.add('visible');
                 }
 
-                // Countdown: find the most recent active announcement with a future event_date
+                // Countdown: find any active announcement with a future event_date
                 const cdAnn = active.find(a => a.event_date && new Date(a.event_date) > now);
                 if (cdAnn) {
                     if (ann.id === cdAnn.id) {
-                        // Same row — embed the countdown inside the announcement banner
+                        // Same row as the displayed announcement — show countdown inside the banner
                         const acd = document.getElementById('announcementCountdown');
                         if (acd) acd.classList.add('visible');
                         _startCountdown(new Date(cdAnn.event_date), true);
                     } else {
-                        // Different row — show the standalone countdown banner below
+                        // Different row — show the standalone amber countdown banner
                         const titleEl  = document.getElementById('countdownTitle');
                         const cdBanner = document.getElementById('countdownBanner');
                         if (titleEl)  titleEl.textContent = cdAnn.message || 'Upcoming Event';
@@ -1837,7 +1838,7 @@
         }
 
         function dismissAnnouncement() {
-            // Announcements no longer dismissible — they stay until expired or deleted by admin
+            // Announcements no longer dismissible — stay until expired or deleted by admin
         }
 
         // ── PWA ──────────────────────────────────────────────────
@@ -3209,7 +3210,7 @@
                     });
                 });
             };
-            // Mark picker as open immediately so the outside-click handler doesn't race
+            // Set open flag immediately so the outside-click handler doesn't race
             _pickerOpen = true;
             _pickerFileId = fileId;
 
@@ -3354,10 +3355,9 @@
             clearTimeout(_longPressTimer);
         }
 
-        // Close picker when clicking outside
-        // Use setTimeout(0) so this runs AFTER the button's own onclick has finished
-        // setting _pickerOpen=true — otherwise a click that opens the picker immediately
-        // triggers this handler while _pickerOpen is still false, causing a race.
+        // Close picker when clicking outside.
+        // setTimeout(0) ensures this runs after the button's own onclick has set _pickerOpen=true,
+        // preventing the race where this handler fires before the picker finishes opening.
         document.addEventListener('click', (e) => {
             setTimeout(function() {
                 if (!_pickerOpen) return;
