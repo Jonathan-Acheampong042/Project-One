@@ -3004,7 +3004,16 @@
         // ══ EMOJI REACTIONS ════════════════════════════════════
         // Table: file_reactions (file_id TEXT, user_key TEXT, emoji TEXT)
         // Unique constraint: (file_id, user_key, emoji)
-        const REACTION_EMOJIS = ['👍','❤️','🔥','😮','🤔','💡','📚','✅'];
+        // All available emojis grouped by category
+        const REACTION_EMOJI_GROUPS = [
+            { label: 'Popular',    emojis: ['👍','❤️','🔥','😮','🤔','💡','📚','✅'] },
+            { label: 'Feelings',   emojis: ['😂','😍','🥰','😎','🤩','😭','😤','🥹','😬','🤯','😴','🤓','🥳','😏','🫡'] },
+            { label: 'Reactions',  emojis: ['💯','⭐','🌟','✨','💪','👏','🙌','🫶','🤝','👀','🫠','💀','🤌','🫣','💅'] },
+            { label: 'Study',      emojis: ['📖','📝','🖊️','🗒️','🧠','🔬','🧪','📐','📏','🔭','🏆','🎯','📊','📈','💻'] },
+            { label: 'Symbols',    emojis: ['❓','❗','💬','🔔','📌','🔑','⚡','🌈','🎉','🎊','🚀','💎','🏅','🌙','☀️'] },
+        ];
+        // Flat list for backwards-compat (used by fallback renderer)
+        const REACTION_EMOJIS = REACTION_EMOJI_GROUPS.flatMap(g => g.emojis);
         const _reactionsCache = {}; // fileId -> { emoji -> { count, mine } }
 
         async function loadReactions(fileId) {
@@ -3036,28 +3045,179 @@
             const bar = document.getElementById('previewReactionBar');
             if (!bar) return;
             const rx = _reactionsCache[fileId] || {};
-            bar.innerHTML = REACTION_EMOJIS.map(emoji => {
-                const r = rx[emoji] || { count: 0, mine: false };
-                const active = r.mine;
-                return '<button onclick="toggleReaction(\'' + fileId + '\',\'' + emoji + '\')" ' +
-                    'style="display:inline-flex;align-items:center;gap:3px;padding:5px 9px;border-radius:99px;border:1px solid ' +
-                    (active ? 'rgba(59,130,246,0.5)' : 'rgba(255,255,255,0.08)') +
-                    ';background:' + (active ? 'rgba(59,130,246,0.18)' : 'rgba(255,255,255,0.04)') +
-                    ';cursor:pointer;font-size:13px;transition:all .15s" title="' + emoji + (r.count > 0 ? ' · ' + r.count : '') + '">' +
-                    emoji + (r.count > 0 ? '<span style="font-size:10px;font-weight:700;color:' + (active ? '#93c5fd' : '#64748b') + '">' + r.count + '</span>' : '') +
-                    '</button>';
+
+            // Show chips for emojis that have any reactions, then the + picker button
+            const activeEmojis = REACTION_EMOJIS.filter(e => rx[e] && (rx[e].count > 0 || rx[e].mine));
+            const chips = activeEmojis.map(emoji => {
+                const r = rx[emoji];
+                const mine = r.mine;
+                return `<button onclick="toggleReaction('${fileId}','${emoji}')"
+                    style="display:inline-flex;align-items:center;gap:3px;padding:5px 9px;border-radius:99px;
+                    border:1px solid ${mine ? 'rgba(59,130,246,0.5)' : 'rgba(255,255,255,0.08)'};
+                    background:${mine ? 'rgba(59,130,246,0.18)' : 'rgba(255,255,255,0.04)'};
+                    cursor:pointer;font-size:13px;transition:all .15s" title="${emoji} · ${r.count}">${emoji
+                    }<span style="font-size:10px;font-weight:700;color:${mine ? '#93c5fd' : '#64748b'}">${r.count}</span></button>`;
             }).join('');
+
+            bar.innerHTML = chips + `<button id="rxPickerBtn"
+                onmouseenter="_showEmojiPicker('${fileId}')"
+                onmouseleave="_schedulePickerHide()"
+                ontouchstart="_handlePickerTouch(event,'${fileId}')"
+                ontouchend="_cancelPickerTouch()"
+                onclick="_toggleEmojiPicker('${fileId}')"
+                style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;
+                border-radius:99px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);
+                cursor:pointer;font-size:15px;transition:all .15s;flex-shrink:0" title="Add reaction">➕</button>`;
         }
 
         function _renderReactionBarFallback(fileId) {
             const bar = document.getElementById('previewReactionBar');
             if (!bar) return;
-            bar.innerHTML = REACTION_EMOJIS.map(emoji =>
-                '<button onclick="toggleReaction(\'' + fileId + '\',\'' + emoji + '\')" ' +
-                'style="padding:5px 9px;border-radius:99px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);cursor:pointer;font-size:13px">' +
-                emoji + '</button>'
-            ).join('');
+            bar.innerHTML = `<button id="rxPickerBtn"
+                onclick="_toggleEmojiPicker('${fileId}')"
+                style="padding:5px 12px;border-radius:99px;border:1px solid rgba(255,255,255,0.1);
+                background:rgba(255,255,255,0.04);cursor:pointer;font-size:13px">😊 React</button>`;
         }
+
+        // ── Emoji Picker ─────────────────────────────────────────
+        let _pickerFileId = null;
+        let _pickerOpen = false;
+        let _pickerHideTimeout = null;
+        let _longPressTimer = null;
+
+        function _getOrCreatePicker() {
+            let p = document.getElementById('emojiPickerPopover');
+            if (p) return p;
+            p = document.createElement('div');
+            p.id = 'emojiPickerPopover';
+            p.setAttribute('role', 'dialog');
+            p.setAttribute('aria-label', 'Choose a reaction');
+            p.style.cssText = 'position:fixed;z-index:99999;background:rgba(15,23,42,0.97);' +
+                'border:1px solid rgba(255,255,255,0.12);border-radius:18px;' +
+                'padding:14px 12px;box-shadow:0 24px 60px rgba(0,0,0,0.7);' +
+                'backdrop-filter:blur(20px);width:288px;max-height:330px;' +
+                'overflow-y:auto;scrollbar-width:thin;display:none;' +
+                'transition:opacity .15s,transform .15s;opacity:0;transform:scale(0.92) translateY(6px);';
+            p.onmouseenter = () => { clearTimeout(_pickerHideTimeout); };
+            p.onmouseleave = () => { _schedulePickerHide(); };
+            document.body.appendChild(p);
+            return p;
+        }
+
+        function _buildPickerContent(fileId) {
+            const p = _getOrCreatePicker();
+            const fid = fileId;
+            let html = '';
+            REACTION_EMOJI_GROUPS.forEach(function(group) {
+                html += '<div style="margin-bottom:10px">';
+                html += '<p style="font-size:9px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.1em;margin:0 0 6px">' + group.label + '</p>';
+                html += '<div style="display:flex;flex-wrap:wrap;gap:3px">';
+                group.emojis.forEach(function(emoji) {
+                    const rx = (_reactionsCache[fid] || {})[emoji];
+                    const mine = rx && rx.mine;
+                    const count = rx ? rx.count : 0;
+                    const border = mine ? 'rgba(59,130,246,0.45)' : 'rgba(255,255,255,0.06)';
+                    const bg     = mine ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.03)';
+                    const color  = mine ? '#93c5fd' : '#64748b';
+                    const badge  = count > 0
+                        ? '<span style="position:absolute;bottom:1px;right:2px;font-size:8px;font-weight:800;color:' + color + ';line-height:1">' + count + '</span>'
+                        : '';
+                    const title  = emoji + (count > 0 ? ' · ' + count : '');
+                    // Use data attributes + a delegated handler — no inline quote hell
+                    html += '<button class="rx-pick-btn" data-fid="' + fid + '" data-emoji="' + emoji + '" ' +
+                        'style="width:36px;height:36px;border-radius:8px;border:1px solid ' + border + ';' +
+                        'background:' + bg + ';cursor:pointer;font-size:19px;' +
+                        'display:flex;align-items:center;justify-content:center;transition:all .12s;position:relative" ' +
+                        'title="' + title + '">' + emoji + badge + '</button>';
+                });
+                html += '</div></div>';
+            });
+            p.innerHTML = html;
+        }
+
+        function _positionPicker() {
+            const btn = document.getElementById('rxPickerBtn');
+            const p = document.getElementById('emojiPickerPopover');
+            if (!btn || !p) return;
+            const r = btn.getBoundingClientRect();
+            const pw = 288, ph = 330;
+            let left = r.right - pw;
+            let top  = r.top - ph - 10;
+            if (left < 8) left = 8;
+            if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+            if (top < 8)  top = r.bottom + 10;
+            p.style.left = left + 'px';
+            p.style.top  = top  + 'px';
+        }
+
+        function _showEmojiPicker(fileId) {
+            clearTimeout(_pickerHideTimeout);
+            _pickerFileId = fileId;
+            _pickerOpen = true;
+            const p = _getOrCreatePicker();
+            _buildPickerContent(fileId);
+            p.style.display = 'block';
+            requestAnimationFrame(() => {
+                _positionPicker();
+                p.style.opacity = '1';
+                p.style.transform = 'scale(1) translateY(0)';
+            });
+        }
+
+        function _schedulePickerHide() {
+            clearTimeout(_pickerHideTimeout);
+            _pickerHideTimeout = setTimeout(_closeEmojiPicker, 300);
+        }
+
+        function _closeEmojiPicker() {
+            const p = document.getElementById('emojiPickerPopover');
+            if (!p) return;
+            p.style.opacity = '0';
+            p.style.transform = 'scale(0.92) translateY(6px)';
+            setTimeout(() => { if (p) p.style.display = 'none'; }, 150);
+            _pickerOpen = false;
+        }
+
+        function _toggleEmojiPicker(fileId) {
+            if (_pickerOpen && _pickerFileId === fileId) {
+                _closeEmojiPicker();
+            } else {
+                _showEmojiPicker(fileId);
+            }
+        }
+
+        // Mobile: long-press (500ms) to open picker; tap just opens too via onclick
+        function _handlePickerTouch(e, fileId) {
+            _longPressTimer = setTimeout(() => {
+                e.preventDefault();
+                _showEmojiPicker(fileId);
+            }, 500);
+        }
+        function _cancelPickerTouch() {
+            clearTimeout(_longPressTimer);
+        }
+
+        // Delegated handler for picker emoji buttons (avoids inline onclick quote issues)
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.rx-pick-btn');
+            if (btn) {
+                const fid   = btn.dataset.fid;
+                const emoji = btn.dataset.emoji;
+                if (fid && emoji) {
+                    toggleReaction(fid, emoji).then(() => {
+                        if (_pickerOpen && _pickerFileId === fid) _buildPickerContent(fid);
+                    });
+                }
+                return;
+            }
+            // Close picker when clicking outside
+            if (!_pickerOpen) return;
+            const p   = document.getElementById('emojiPickerPopover');
+            const pb  = document.getElementById('rxPickerBtn');
+            if (p && !p.contains(e.target) && pb && !pb.contains(e.target)) {
+                _closeEmojiPicker();
+            }
+        });
 
         async function toggleReaction(fileId, emoji) {
             if (!fileId) return;
