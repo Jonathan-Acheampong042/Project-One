@@ -1743,7 +1743,8 @@
         }, { passive: true });
 
         // ── ANNOUNCEMENT BANNER ─────────────────────────────────
-        const ANNOUNCE_KEY = 'fvDismissedAnnouncement';
+        // Announcements stay visible until expires_at passes or admin deletes them.
+        // No dismiss/localStorage — they are permanent by design.
 
         async function loadAnnouncement() {
             try {
@@ -1756,42 +1757,34 @@
                 if (error) { console.warn('Announcements fetch error:', error.message); return; }
                 if (!data || data.length === 0) { console.info('No announcements in table.'); return; }
 
-                // Accept active = true/1/"true"/"1"; if column absent, show all
-                const hasActiveCol = 'active' in data[0];
-                const active = hasActiveCol
-                    ? data.filter(a => a.active === true || a.active === 1 || a.active === 'true' || a.active === '1')
-                    : data;
-
+                // Filter: only show announcements that haven't expired yet
+                const now = new Date();
+                const active = data.filter(a => !a.expires_at || new Date(a.expires_at) > now);
                 if (!active.length) { console.info('No active announcements.'); return; }
 
-                // Show latest — keyed by id so re-posting same text still shows
+                // Show the most recent active announcement
                 const ann = active[0];
-                const dismissKey = String(ann.id || ann.message);
-                if (localStorage.getItem(ANNOUNCE_KEY) !== dismissKey) {
-                    const bannerEl = document.getElementById('announcementBanner');
-                    const textEl   = document.getElementById('announcementText');
-                    const metaEl   = document.getElementById('announcementMeta');
-                    if (bannerEl && textEl) {
-                        textEl.textContent = ann.message || '';
-                        if (metaEl) metaEl.textContent = ann.created_at
-                            ? 'Posted ' + new Date(ann.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' })
-                            : '';
-                        bannerEl.dataset.annId = String(ann.id || ann.message);
-                        bannerEl.classList.add('visible');
-                    }
+                const bannerEl = document.getElementById('announcementBanner');
+                const textEl   = document.getElementById('announcementText');
+                const metaEl   = document.getElementById('announcementMeta');
+                if (bannerEl && textEl) {
+                    textEl.textContent = ann.message || '';
+                    if (metaEl) metaEl.textContent = ann.created_at
+                        ? 'Posted ' + new Date(ann.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' })
+                        : '';
+                    bannerEl.classList.add('visible');
                 }
 
-                // Countdown: find any announcement with a future event_date
-                const cdAnn = active.find(a => a.event_date && new Date(a.event_date) > new Date());
+                // Countdown: find the most recent active announcement with a future event_date
+                const cdAnn = active.find(a => a.event_date && new Date(a.event_date) > now);
                 if (cdAnn) {
-                    const bannerVisible = document.getElementById('announcementBanner').classList.contains('visible');
-                    if (bannerVisible) {
-                        // Announcement banner is showing — embed the countdown inside it
+                    if (ann.id === cdAnn.id) {
+                        // Same row — embed the countdown inside the announcement banner
                         const acd = document.getElementById('announcementCountdown');
                         if (acd) acd.classList.add('visible');
                         _startCountdown(new Date(cdAnn.event_date), true);
                     } else {
-                        // Announcement was dismissed or absent — show standalone countdown banner
+                        // Different row — show the standalone countdown banner below
                         const titleEl  = document.getElementById('countdownTitle');
                         const cdBanner = document.getElementById('countdownBanner');
                         if (titleEl)  titleEl.textContent = cdAnn.message || 'Upcoming Event';
@@ -1844,11 +1837,7 @@
         }
 
         function dismissAnnouncement() {
-            document.getElementById('announcementBanner').classList.remove('visible');
-            // Store the banner's data-id if present, else fall back to text
-            const banner = document.getElementById('announcementBanner');
-            const key = (banner && banner.dataset.annId) || document.getElementById('announcementText').textContent;
-            if (key) localStorage.setItem(ANNOUNCE_KEY, String(key));
+            // Announcements no longer dismissible — they stay until expired or deleted by admin
         }
 
         // ── PWA ──────────────────────────────────────────────────
@@ -3220,6 +3209,10 @@
                     });
                 });
             };
+            // Mark picker as open immediately so the outside-click handler doesn't race
+            _pickerOpen = true;
+            _pickerFileId = fileId;
+
             if (!_reactionsCache[fileId] || Object.keys(_reactionsCache[fileId]).length === 0) {
                 _reactionsCache[fileId] = {};
                 Promise.all([
@@ -3362,14 +3355,19 @@
         }
 
         // Close picker when clicking outside
+        // Use setTimeout(0) so this runs AFTER the button's own onclick has finished
+        // setting _pickerOpen=true — otherwise a click that opens the picker immediately
+        // triggers this handler while _pickerOpen is still false, causing a race.
         document.addEventListener('click', (e) => {
-            if (!_pickerOpen) return;
-            const p = document.getElementById('emojiPickerPopover');
-            const rxBtn = document.getElementById('rxPickerBtn');
-            const cardBtn = e.target.closest('.card-react-btn');
-            if (p && !p.contains(e.target) && (!rxBtn || !rxBtn.contains(e.target)) && !cardBtn) {
-                _closeEmojiPicker();
-            }
+            setTimeout(function() {
+                if (!_pickerOpen) return;
+                const p = document.getElementById('emojiPickerPopover');
+                const rxBtn = document.getElementById('rxPickerBtn');
+                const cardBtn = e.target.closest('.card-react-btn');
+                if (p && !p.contains(e.target) && (!rxBtn || !rxBtn.contains(e.target)) && !cardBtn) {
+                    _closeEmojiPicker();
+                }
+            }, 0);
         });
 
         async function toggleReaction(fileId, emoji) {
