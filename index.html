@@ -6,6 +6,7 @@
     <link rel="icon" href="filevault%20logo.png">
     <link rel="manifest" href="Manifest.json">
     <meta name="theme-color" content="#020617">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="FileVault">
@@ -2164,29 +2165,40 @@
         }
 
         // ═══ 30: PINCH TO ZOOM ════════════════════════════════
+        // FIX: #previewBody is in the HTML *below* this script block, so
+        // getElementById returns null here. Defer listener attachment via
+        // DOMContentLoaded so the element is guaranteed to exist.
         function initPinchZoom() {
-            const body = document.getElementById('previewBody');
-            let scale = 1, lastScale = 1, startDist = 0, ox = 0, oy = 0;
-            body.addEventListener('touchstart', e => {
-                if (e.touches.length !== 2) return;
-                const img = body.querySelector('img'); if (!img) return;
-                startDist = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY);
-                ox = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-                oy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-            }, { passive: true });
-            body.addEventListener('touchmove', e => {
-                if (e.touches.length !== 2) return;
-                const img = body.querySelector('img'); if (!img) return;
-                e.preventDefault();
-                const dist = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY);
-                scale = Math.min(4, Math.max(1, lastScale * (dist / startDist)));
-                img.style.transform = 'scale(' + scale + ')';
-                img.style.transformOrigin = ox + 'px ' + oy + 'px';
-            }, { passive: false });
-            body.addEventListener('touchend', e => {
-                if (e.touches.length < 2) lastScale = scale;
-                if (scale <= 1) { const img = body.querySelector('img'); if (img) { img.style.transform = ''; img.style.transformOrigin = ''; } scale = 1; lastScale = 1; }
-            }, { passive: true });
+            function _attach() {
+                const body = document.getElementById('previewBody');
+                if (!body) return; // safety guard
+                let scale = 1, lastScale = 1, startDist = 0, ox = 0, oy = 0;
+                body.addEventListener('touchstart', e => {
+                    if (e.touches.length !== 2) return;
+                    const img = body.querySelector('img'); if (!img) return;
+                    startDist = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY);
+                    ox = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                    oy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                }, { passive: true });
+                body.addEventListener('touchmove', e => {
+                    if (e.touches.length !== 2) return;
+                    const img = body.querySelector('img'); if (!img) return;
+                    e.preventDefault();
+                    const dist = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY);
+                    scale = Math.min(4, Math.max(1, lastScale * (dist / startDist)));
+                    img.style.transform = 'scale(' + scale + ')';
+                    img.style.transformOrigin = ox + 'px ' + oy + 'px';
+                }, { passive: false });
+                body.addEventListener('touchend', e => {
+                    if (e.touches.length < 2) lastScale = scale;
+                    if (scale <= 1) { const img = body.querySelector('img'); if (img) { img.style.transform = ''; img.style.transformOrigin = ''; } scale = 1; lastScale = 1; }
+                }, { passive: true });
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', _attach);
+            } else {
+                _attach();
+            }
         }
 
         // ═══ 31: NEW SINCE LAST VISIT ═════════════════════════
@@ -2593,7 +2605,7 @@
             localStorage.setItem(LAST_KEY, now.toISOString());
         })();
         // ── FEATURE 5: COMPACT VIEW ─────────────────────────────
-        let compactView = localStorage.getItem('fvCompactView') === '1';
+        var compactView = localStorage.getItem('fvCompactView') === '1'; // FIX: var avoids TDZ when referenced in setTimeout callbacks registered earlier
         function applyCompactView() {
             const grid = document.getElementById('fileGrid');
             const toggle = document.getElementById('compactToggle');
@@ -3198,7 +3210,7 @@
         ];
         // Flat list for backwards-compat (used by fallback renderer)
         const REACTION_EMOJIS = REACTION_EMOJI_GROUPS.flatMap(g => g.emojis);
-        const _reactionsCache = {}; // fileId -> { emoji -> { count, mine } }
+        var _reactionsCache = {}; // fileId -> { emoji -> { count, mine } } // FIX: var avoids TDZ when click listeners registered earlier reference this
 
         async function loadReactions(fileId) {
             if (!fileId) return;
@@ -3756,4 +3768,4 @@
     <div class="lg:hidden h-16"></div>
    <script src="chat-widget.js"></script>
 </body>
-</html
+</html>
