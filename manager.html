@@ -1735,6 +1735,13 @@
         let skippedCount = 0;
         const MAX_BYTES = 50 * 1024 * 1024; // 50 MB — Supabase free plan limit
 
+        // Wake the Render server now so it's ready to send push notifications
+        // by the time the upload finishes. Fire-and-forget — don't await.
+        const _WAKE_URL = window.location.hostname === 'localhost'
+            ? 'http://localhost:3000/health'
+            : 'https://project-one-187u.onrender.com/health';
+        fetch(_WAKE_URL).catch(() => {});
+
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             const overallLabel = `File ${i + 1} of ${totalFiles}`;
