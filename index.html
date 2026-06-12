@@ -954,8 +954,12 @@
                 const { data: dbData, error: dbError } = await _supabase.from('files_list').select('*').order('created_at', { ascending: false });
                 if (dbError) throw dbError;
 
-                if (dbData && dbData.length > 0) {
-                    allFiles = dbData.map(row => ({
+                // Filter out files that are scheduled for a future release date
+                const now = new Date();
+                const visibleData = (dbData || []).filter(row => !row.scheduled_at || new Date(row.scheduled_at) <= now);
+
+                if (visibleData && visibleData.length > 0) {
+                    allFiles = visibleData.map(row => ({
                         id: row.id,
                         name: row.file_name,
                         folder: row.folder_name && row.folder_name !== 'Root' ? row.folder_name : null,
