@@ -89,7 +89,7 @@
         .type-btn.active { box-shadow:0 0 0 1px rgba(59,130,246,.25); }
 
         /* ── Back to top button ── */
-        :root { --mobile-nav-height: 64px; }
+        :root { --mobile-nav-height: 76px; }
         #backToTop { position:fixed;bottom:90px;right:20px;z-index:9000;width:42px;height:42px;border-radius:50%;background:rgba(59,130,246,0.85);border:1px solid rgba(59,130,246,0.5);backdrop-filter:blur(12px);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(59,130,246,0.35);opacity:0;pointer-events:none;transition:opacity .3s,transform .3s; }
         #backToTop.visible { opacity:1;pointer-events:auto; }
         #backToTop:hover { transform:translateY(-3px); }
@@ -564,6 +564,9 @@
                         </div>
                     </div>
                     <div style="padding:6px 0">
+                        <a class="pd-item" href="profile.html" style="text-decoration:none">
+                            <span class="material-symbols-outlined">manage_accounts</span> My Profile
+                        </a>
                         <button class="pd-item danger" onclick="signOutUser()">
                             <span class="material-symbols-outlined">logout</span> Sign Out
                         </button>
@@ -4301,10 +4304,10 @@
             <span class="material-symbols-outlined text-xl" aria-hidden="true">login</span>
             <span class="text-[9px] font-bold uppercase">Sign In</span>
         </a>
-        <button id="mobileProfileTab" onclick="toggleProfileDropdown()" class="flex flex-col items-center gap-0.5 px-3 py-1 text-slate-400" aria-label="Account" style="display:none;background:none;border:none;cursor:pointer;font-family:inherit">
+        <a id="mobileProfileTab" href="profile.html" class="flex flex-col items-center gap-0.5 px-3 py-1 text-slate-400" aria-label="My profile" style="display:none;text-decoration:none;font-family:inherit">
             <div id="mobileAvatar" style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:white;text-transform:uppercase">?</div>
             <span class="text-[9px] font-bold uppercase text-primary">Me</span>
-        </button>
+        </a>
     </nav>
     <footer class="text-center text-white/20 text-xs py-4 lg:py-6">
         Built by <span class="text-white/40 font-semibold">Jonathan Acheampong</span> · FileVault
