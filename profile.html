@@ -125,6 +125,31 @@
         .req-status { font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px; }
         .req-status.fulfilled { background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.25); }
         .req-status.pending { background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.25); }
+
+        /* ── File history / pinned chips ── */
+        .file-history-chip { display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;text-decoration:none;transition:background .18s,border-color .18s; }
+        .file-history-chip:hover { background:rgba(59,130,246,0.1);border-color:rgba(59,130,246,0.25); }
+        .file-icon-dot { width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+        .file-chip-name { font-size:12px;font-weight:700;color:#e2e8f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0; }
+        .file-chip-meta { font-size:10px;color:#475569;white-space:nowrap;flex-shrink:0; }
+
+        /* ── Verify email banner ── */
+        #verifyBanner { display:none;align-items:center;gap:12px;padding:12px 16px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.28);border-radius:14px; }
+        #verifyBanner.show { display:flex; }
+
+        /* ── Danger zone ── */
+        .danger-item { display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05); }
+        .danger-item:last-child { border-bottom:none; }
+        .danger-item-label { font-size:13px;font-weight:600;color:#cbd5e1; }
+        .danger-item-sub { font-size:11px;color:#475569;margin-top:2px; }
+        .btn-danger-sm { padding:7px 14px;border:1px solid rgba(239,68,68,0.3);border-radius:10px;background:rgba(239,68,68,0.08);color:#fca5a5;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap;flex-shrink:0; }
+        .btn-danger-sm:hover { background:rgba(239,68,68,0.18);border-color:rgba(239,68,68,0.5); }
+
+        /* ── Session info ── */
+        .session-row { display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px; }
+        .session-row:last-child { border-bottom:none; }
+        .session-key { color:#64748b;font-weight:600; }
+        .session-val { color:#cbd5e1;font-weight:700;text-align:right;word-break:break-all;max-width:60%; }
     </style>
 </head>
 <body>
@@ -187,6 +212,18 @@
                             <p class="stat-lbl">Days Active</p>
                         </div>
                     </div>
+                </div>
+
+                <!-- Email verification banner (shown only when unverified) -->
+                <div id="verifyBanner">
+                    <span class="material-symbols-outlined" style="color:#fbbf24;font-size:22px;flex-shrink:0">mark_email_unread</span>
+                    <div style="flex:1;min-width:0">
+                        <p style="font-size:13px;font-weight:700;color:#fbbf24;margin:0">Email not verified</p>
+                        <p style="font-size:11px;color:#92400e;margin:2px 0 0">Verify your email to unlock all FileVault features.</p>
+                    </div>
+                    <button id="resendVerifyBtn" onclick="resendVerification()" style="padding:7px 12px;border:1px solid rgba(245,158,11,0.4);border-radius:10px;background:rgba(245,158,11,0.12);color:#fbbf24;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;transition:all .2s;flex-shrink:0">
+                        <span id="resendVerifyText">Resend</span>
+                    </button>
                 </div>
 
                 <!-- Display name -->
@@ -293,6 +330,65 @@
                     </a>
                 </div>
 
+                <!-- Recently downloaded -->
+                <div class="section-card" id="recentDlSection">
+                    <div class="section-title"><span class="material-symbols-outlined">download_done</span> Recently Downloaded</div>
+                    <div id="recentDlList" class="space-y-2">
+                        <p style="font-size:12px;color:#475569;text-align:center;padding:8px 0">No downloads recorded on this device yet.</p>
+                    </div>
+                    <button onclick="clearDownloadHistory()" id="clearDlBtn" style="display:none;margin-top:12px;width:100%;padding:9px;border:1px solid rgba(255,255,255,0.08);border-radius:11px;background:rgba(255,255,255,0.03);color:#64748b;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s">
+                        <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle">delete_sweep</span> Clear history
+                    </button>
+                </div>
+
+                <!-- Pinned files -->
+                <div class="section-card" id="pinnedSection">
+                    <div class="section-title"><span class="material-symbols-outlined">push_pin</span> Pinned Files</div>
+                    <div id="pinnedList" class="space-y-2">
+                        <p style="font-size:12px;color:#475569;text-align:center;padding:8px 0">You haven't pinned any files yet.</p>
+                    </div>
+                    <a href="index.html" class="btn-secondary mt-3" style="text-decoration:none;margin-top:12px">
+                        <span class="material-symbols-outlined" style="font-size:16px">open_in_new</span> Browse the Vault
+                    </a>
+                </div>
+
+                <!-- Session & device info -->
+                <div class="section-card">
+                    <div class="section-title"><span class="material-symbols-outlined">devices</span> This Session</div>
+                    <div id="sessionInfo">
+                        <div class="session-row"><span class="session-key">Browser</span><span class="session-val" id="sessBrowser">—</span></div>
+                        <div class="session-row"><span class="session-key">Last sign-in</span><span class="session-val" id="sessLastSignIn">—</span></div>
+                        <div class="session-row"><span class="session-key">Auth provider</span><span class="session-val" id="sessProvider">—</span></div>
+                        <div class="session-row"><span class="session-key">User ID</span><span class="session-val" id="sessUserId" style="font-size:10px;font-family:monospace">—</span></div>
+                    </div>
+                </div>
+
+                <!-- Danger zone -->
+                <div class="section-card" style="border-color:rgba(239,68,68,0.15)">
+                    <div class="section-title" style="color:#fca5a5"><span class="material-symbols-outlined" style="color:#f87171">warning</span> Data & Privacy</div>
+                    <div class="danger-item">
+                        <div>
+                            <p class="danger-item-label">Clear download history</p>
+                            <p class="danger-item-sub">Removes the list of files you've downloaded on this device</p>
+                        </div>
+                        <button class="btn-danger-sm" onclick="clearDownloadHistory()">Clear</button>
+                    </div>
+                    <div class="danger-item">
+                        <div>
+                            <p class="danger-item-label">Clear pinned files</p>
+                            <p class="danger-item-sub">Unpins all files on this device (pins are stored locally)</p>
+                        </div>
+                        <button class="btn-danger-sm" onclick="clearPinnedFiles()">Clear</button>
+                    </div>
+                    <div class="danger-item">
+                        <div>
+                            <p class="danger-item-label">Reset all preferences</p>
+                            <p class="danger-item-sub">Clears notification settings, view preferences, and cached data</p>
+                        </div>
+                        <button class="btn-danger-sm" onclick="resetAllPrefs()">Reset</button>
+                    </div>
+                </div>
+
                 <!-- Account actions -->
                 <div class="section-card">
                     <div class="section-title"><span class="material-symbols-outlined">manage_accounts</span> Account</div>
@@ -331,11 +427,15 @@
             }
             _currentUser = session.user;
             populateProfile(_currentUser);
+            showVerifyBanner(_currentUser);
             loadProfileStats(_currentUser);
             loadNotifPrefs();
             loadRequestHistory(_currentUser);
+            loadRecentDownloads();
+            loadPinnedFiles();
+            loadSessionInfo(_currentUser);
             document.getElementById('profileLoading').style.display = 'none';
-            document.getElementById('profileContent').style.display = '';
+            document.getElementById('profileContent').style.display = 'block';
         })();
 
         _supabase.auth.onAuthStateChange((event, session) => {
@@ -623,6 +723,184 @@
                 // table probably doesn't exist yet — hide the section silently
                 document.getElementById('requestHistorySection').style.display = 'none';
             }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // EMAIL VERIFICATION
+        // ═══════════════════════════════════════════════════════════
+        async function resendVerification() {
+            const btn  = document.getElementById('resendVerifyBtn');
+            const txt  = document.getElementById('resendVerifyText');
+            btn.disabled = true;
+            txt.textContent = 'Sending…';
+            const { error } = await _supabase.auth.resend({ type: 'signup', email: _currentUser.email });
+            if (error) {
+                txt.textContent = 'Failed';
+                showToast('Could not send email: ' + error.message, 'error');
+                setTimeout(() => { btn.disabled = false; txt.textContent = 'Resend'; }, 3000);
+            } else {
+                txt.textContent = 'Sent ✓';
+                showToast('Verification email sent! Check your inbox.', 'success');
+                setTimeout(() => { btn.disabled = false; txt.textContent = 'Resend'; }, 8000);
+            }
+        }
+
+        function showVerifyBanner(user) {
+            if (!user.email_confirmed_at) {
+                document.getElementById('verifyBanner').classList.add('show');
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // RECENT DOWNLOADS
+        // ═══════════════════════════════════════════════════════════
+        function loadRecentDownloads() {
+            const list = document.getElementById('recentDlList');
+            const clearBtn = document.getElementById('clearDlBtn');
+            // fvDownloadHistory: array of { name, url, folder, ts }
+            let history = [];
+            try { history = JSON.parse(localStorage.getItem('fvDownloadHistory') || '[]'); } catch(_) {}
+            // Also check flat key used by some versions: fvDLHistory
+            if (!history.length) {
+                try { history = JSON.parse(localStorage.getItem('fvDLHistory') || '[]'); } catch(_) {}
+            }
+
+            document.getElementById('statDownloads').textContent = history.length || 0;
+
+            if (!history.length) {
+                list.innerHTML = '<p style="font-size:12px;color:#475569;text-align:center;padding:8px 0">No downloads recorded on this device yet.</p>';
+                clearBtn.style.display = 'none';
+                return;
+            }
+            clearBtn.style.display = '';
+            const recent = history.slice(-8).reverse();
+            list.innerHTML = recent.map(f => {
+                const ext = ((f.name || '').split('.').pop() || '').toLowerCase();
+                const { bg, icon, color } = fileIconStyle(ext);
+                const ts = f.ts ? new Date(f.ts).toLocaleDateString(undefined, { month:'short', day:'numeric' }) : '';
+                const folder = f.folder ? f.folder : '';
+                const meta = [folder, ts].filter(Boolean).join(' · ');
+                return `<a href="${f.url || '#'}" target="_blank" class="file-history-chip" title="${f.name || ''}">
+                    <div class="file-icon-dot" style="background:${bg}">
+                        <span class="material-symbols-outlined" style="font-size:15px;color:${color}">${icon}</span>
+                    </div>
+                    <span class="file-chip-name">${f.name || 'File'}</span>
+                    ${meta ? `<span class="file-chip-meta">${meta}</span>` : ''}
+                </a>`;
+            }).join('');
+        }
+
+        function clearDownloadHistory() {
+            if (!confirm('Clear your download history on this device?')) return;
+            localStorage.removeItem('fvDownloadHistory');
+            localStorage.removeItem('fvDLHistory');
+            loadRecentDownloads();
+            loadPinnedFiles(); // refresh stat
+            document.getElementById('statDownloads').textContent = '0';
+            showToast('Download history cleared', 'info');
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // PINNED FILES
+        // ═══════════════════════════════════════════════════════════
+        function loadPinnedFiles() {
+            const list = document.getElementById('pinnedList');
+            // fvPinned: object keyed by file URL, value = { name, folder, url }
+            let pinned = {};
+            try { pinned = JSON.parse(localStorage.getItem('fvPinned') || '{}'); } catch(_) {}
+            const entries = Object.values(pinned);
+
+            if (!entries.length) {
+                list.innerHTML = '<p style="font-size:12px;color:#475569;text-align:center;padding:8px 0">You haven\'t pinned any files yet. Pin files on the Vault to see them here.</p>';
+                return;
+            }
+            list.innerHTML = entries.slice(0, 8).map(f => {
+                const ext = ((f.name || '').split('.').pop() || '').toLowerCase();
+                const { bg, icon, color } = fileIconStyle(ext);
+                const folder = f.folder || '';
+                return `<a href="${f.url || 'index.html'}" target="_blank" class="file-history-chip" title="${f.name || ''}">
+                    <div class="file-icon-dot" style="background:${bg}">
+                        <span class="material-symbols-outlined" style="font-size:15px;color:${color}">${icon}</span>
+                    </div>
+                    <span class="file-chip-name">${f.name || 'File'}</span>
+                    ${folder ? `<span class="file-chip-meta">${folder}</span>` : ''}
+                </a>`;
+            }).join('');
+        }
+
+        function clearPinnedFiles() {
+            if (!confirm('Unpin all files on this device?')) return;
+            localStorage.removeItem('fvPinned');
+            loadPinnedFiles();
+            showToast('Pinned files cleared', 'info');
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // SESSION INFO
+        // ═══════════════════════════════════════════════════════════
+        function loadSessionInfo(user) {
+            // Browser name
+            const ua = navigator.userAgent;
+            let browser = 'Unknown';
+            if (/Edg\//.test(ua))         browser = 'Microsoft Edge';
+            else if (/OPR\//.test(ua))    browser = 'Opera';
+            else if (/Chrome\//.test(ua)) browser = 'Chrome';
+            else if (/Firefox\//.test(ua))browser = 'Firefox';
+            else if (/Safari\//.test(ua)) browser = 'Safari';
+            document.getElementById('sessBrowser').textContent = browser;
+
+            // Last sign in
+            const lastSignIn = user.last_sign_in_at
+                ? new Date(user.last_sign_in_at).toLocaleString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })
+                : '—';
+            document.getElementById('sessLastSignIn').textContent = lastSignIn;
+
+            // Auth provider
+            const identities = user.identities || [];
+            const providers = identities.length
+                ? identities.map(i => i.provider.charAt(0).toUpperCase() + i.provider.slice(1)).join(', ')
+                : 'Email / Password';
+            document.getElementById('sessProvider').textContent = providers;
+
+            // User ID (truncated)
+            const uid = user.id || '—';
+            document.getElementById('sessUserId').textContent = uid.length > 20 ? uid.slice(0,8) + '…' + uid.slice(-6) : uid;
+            document.getElementById('sessUserId').title = uid;
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // DANGER ZONE — RESET PREFERENCES
+        // ═══════════════════════════════════════════════════════════
+        function resetAllPrefs() {
+            if (!confirm('Reset all FileVault preferences on this device? This clears notification settings, display settings, collections, and cached data. Your account and files are not affected.')) return;
+            const keep = ['fvDownloadHistory', 'fvDLHistory', 'fvPinned']; // preserve history / pins
+            const toRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && k.startsWith('fv') && !keep.includes(k)) toRemove.push(k);
+            }
+            toRemove.forEach(k => localStorage.removeItem(k));
+            loadNotifPrefs(); // refresh toggles to defaults
+            showToast('All preferences reset to defaults', 'info');
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // FILE ICON HELPER
+        // ═══════════════════════════════════════════════════════════
+        function fileIconStyle(ext) {
+            const map = {
+                pdf:  { bg:'rgba(239,68,68,0.15)',   icon:'picture_as_pdf', color:'#f87171' },
+                pptx: { bg:'rgba(249,115,22,0.15)',  icon:'co_present',     color:'#fb923c' },
+                ppt:  { bg:'rgba(249,115,22,0.15)',  icon:'co_present',     color:'#fb923c' },
+                docx: { bg:'rgba(59,130,246,0.15)',  icon:'description',    color:'#60a5fa' },
+                doc:  { bg:'rgba(59,130,246,0.15)',  icon:'description',    color:'#60a5fa' },
+                xlsx: { bg:'rgba(16,185,129,0.15)',  icon:'table_chart',    color:'#34d399' },
+                csv:  { bg:'rgba(16,185,129,0.15)',  icon:'table_chart',    color:'#34d399' },
+                png:  { bg:'rgba(139,92,246,0.15)',  icon:'image',          color:'#a78bfa' },
+                jpg:  { bg:'rgba(139,92,246,0.15)',  icon:'image',          color:'#a78bfa' },
+                jpeg: { bg:'rgba(139,92,246,0.15)',  icon:'image',          color:'#a78bfa' },
+            };
+            return map[ext] || { bg:'rgba(100,116,139,0.15)', icon:'insert_drive_file', color:'#94a3b8' };
         }
 
         // ═══════════════════════════════════════════════════════════

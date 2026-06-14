@@ -407,13 +407,18 @@ function initChatWidget() {
                     border-radius: 20px !important;
                     box-sizing: border-box !important;
                 }
-                /* ── Login page: chatbot floats above sign-in card, not behind the nav bar ── */
+                /* ── Login page: chatbot floats at top-right, clear of the sign-in card ── */
                 body.login-page #aiChatWidget {
-                    bottom: 20px !important;
+                    top: 16px !important;
+                    bottom: auto !important;
                     right: 16px !important;
+                    display: flex !important;
+                    flex-direction: column-reverse !important;
                 }
                 body.login-page #chatWindow {
-                    height: min(440px, 65vh) !important;
+                    height: min(440px, 60vh) !important;
+                    margin-bottom: 0 !important;
+                    margin-top: 12px !important;
                 }
             }
         `;
