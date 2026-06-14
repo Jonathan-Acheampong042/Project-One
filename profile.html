@@ -96,6 +96,35 @@
         /* ── Loading state ── */
         #profileLoading { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:60px 20px; color:#64748b; }
         #profileContent { display:none; }
+        /* ── Avatar upload ── */
+        .avatar-upload-ring { position:relative;width:84px;height:84px;margin:0 auto 14px;cursor:pointer; }
+        .avatar-upload-ring:hover .avatar-overlay { opacity:1; }
+        .avatar-overlay { position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s; }
+        .avatar-overlay .material-symbols-outlined { color:white;font-size:18px; }
+
+        /* ── Stats strip ── */
+        .stats-strip { display:grid;grid-template-columns:repeat(3,1fr);gap:10px; }
+        .stat-cell { background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:12px;text-align:center; }
+        .stat-num { font-size:22px;font-weight:800;color:#f1f5f9;line-height:1; }
+        .stat-lbl { font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-top:4px; }
+
+        /* ── Toggle switch ── */
+        .toggle-row { display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05); }
+        .toggle-row:last-child { border-bottom:none; }
+        .toggle-label { font-size:13px;font-weight:600;color:#cbd5e1; }
+        .toggle-sub { font-size:11px;color:#475569;margin-top:2px; }
+        .toggle-switch { position:relative;width:42px;height:24px;flex-shrink:0; }
+        .toggle-switch input { opacity:0;width:0;height:0; }
+        .toggle-track { position:absolute;inset:0;background:rgba(255,255,255,0.1);border-radius:99px;transition:background .2s;cursor:pointer; }
+        .toggle-switch input:checked + .toggle-track { background:linear-gradient(135deg,#3b82f6,#7c3aed); }
+        .toggle-thumb { position:absolute;width:18px;height:18px;background:white;border-radius:50%;top:3px;left:3px;transition:transform .2s;pointer-events:none; }
+        .toggle-switch input:checked ~ .toggle-thumb { transform:translateX(18px); }
+
+        /* ── Request history chip ── */
+        .req-chip { display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px; }
+        .req-status { font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px; }
+        .req-status.fulfilled { background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.25); }
+        .req-status.pending { background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.25); }
     </style>
 </head>
 <body>
@@ -128,7 +157,13 @@
 
                 <!-- Identity card -->
                 <div class="glass-card rounded-3xl p-6 text-center">
-                    <div id="pPhotoWrap" style="width:84px;height:84px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:white;overflow:hidden;border:3px solid rgba(255,255,255,0.1);margin:0 auto 14px">?</div>
+                    <!-- Clickable avatar with upload overlay -->
+                    <div class="avatar-upload-ring" onclick="document.getElementById('avatarFileInput').click()" title="Change profile photo">
+                        <div id="pPhotoWrap" style="width:84px;height:84px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:white;overflow:hidden;border:3px solid rgba(255,255,255,0.1)">?</div>
+                        <div class="avatar-overlay"><span class="material-symbols-outlined">photo_camera</span></div>
+                    </div>
+                    <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="handleAvatarUpload(this)"/>
+                    <p id="avatarMsg" style="font-size:11px;color:#64748b;min-height:14px;margin:-2px 0 8px"></p>
                     <h2 id="pName" style="font-size:18px;font-weight:800;color:#f1f5f9;margin:0">—</h2>
                     <p id="pEmail" style="font-size:13px;color:#64748b;margin:4px 0 12px">—</p>
                     <div class="flex items-center justify-center gap-2 flex-wrap">
@@ -136,6 +171,22 @@
                         <span class="pd-badge" id="pVerifiedBadge"></span>
                     </div>
                     <p id="pJoined" style="font-size:11px;color:#475569;margin-top:12px"></p>
+
+                    <!-- Stats strip -->
+                    <div class="stats-strip mt-4">
+                        <div class="stat-cell">
+                            <p class="stat-num" id="statDownloads">—</p>
+                            <p class="stat-lbl">Downloads</p>
+                        </div>
+                        <div class="stat-cell">
+                            <p class="stat-num" id="statRequests">—</p>
+                            <p class="stat-lbl">Requests</p>
+                        </div>
+                        <div class="stat-cell">
+                            <p class="stat-num" id="statDaysMember">—</p>
+                            <p class="stat-lbl">Days Active</p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Display name -->
@@ -192,6 +243,56 @@
                     <p id="pwdMsg" class="mt-2 text-center text-sm min-h-5"></p>
                 </div>
 
+                <!-- Notification preferences -->
+                <div class="section-card">
+                    <div class="section-title"><span class="material-symbols-outlined">notifications</span> Notification Preferences</div>
+                    <div class="toggle-row">
+                        <div>
+                            <p class="toggle-label">New file alerts</p>
+                            <p class="toggle-sub">Notify me when new files are uploaded</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="notifNewFiles" onchange="saveNotifPrefs()"/>
+                            <span class="toggle-track"></span>
+                            <span class="toggle-thumb"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-row">
+                        <div>
+                            <p class="toggle-label">Expiry reminders</p>
+                            <p class="toggle-sub">Alert before files are removed from the Vault</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="notifExpiry" onchange="saveNotifPrefs()"/>
+                            <span class="toggle-track"></span>
+                            <span class="toggle-thumb"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-row">
+                        <div>
+                            <p class="toggle-label">Request fulfilled</p>
+                            <p class="toggle-sub">Notify me when my file request is uploaded</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="notifRequests" onchange="saveNotifPrefs()"/>
+                            <span class="toggle-track"></span>
+                            <span class="toggle-thumb"></span>
+                        </label>
+                    </div>
+                    <p id="notifMsg" class="mt-2 text-center text-sm min-h-5" style="font-size:11px;color:#64748b"></p>
+                </div>
+
+                <!-- File request history -->
+                <div class="section-card" id="requestHistorySection">
+                    <div class="section-title"><span class="material-symbols-outlined">history</span> My File Requests</div>
+                    <div id="requestHistoryList">
+                        <p style="font-size:12px;color:#64748b;text-align:center;padding:8px 0">Loading your requests…</p>
+                    </div>
+                    <a href="upload-request.html" class="btn-secondary mt-3" style="text-decoration:none">
+                        <span class="material-symbols-outlined" style="font-size:16px">add_circle</span> Make a New Request
+                    </a>
+                </div>
+
                 <!-- Account actions -->
                 <div class="section-card">
                     <div class="section-title"><span class="material-symbols-outlined">manage_accounts</span> Account</div>
@@ -230,6 +331,9 @@
             }
             _currentUser = session.user;
             populateProfile(_currentUser);
+            loadProfileStats(_currentUser);
+            loadNotifPrefs();
+            loadRequestHistory(_currentUser);
             document.getElementById('profileLoading').style.display = 'none';
             document.getElementById('profileContent').style.display = '';
         })();
@@ -252,6 +356,7 @@
             const photoUrl    = meta.avatar_url || meta.picture || meta.photo_url || null;
 
             const photoWrap = document.getElementById('pPhotoWrap');
+            photoWrap.innerHTML = '';
             if (photoUrl) {
                 photoWrap.style.background = 'transparent';
                 photoWrap.style.border = 'none';
@@ -259,10 +364,15 @@
                 img.src = photoUrl;
                 img.alt = initials;
                 img.style.cssText = 'width:84px;height:84px;border-radius:50%;object-fit:cover;display:block';
-                img.onerror = function() { photoWrap.innerHTML = ''; photoWrap.textContent = initials; };
-                photoWrap.innerHTML = '';
+                img.onerror = function() {
+                    photoWrap.innerHTML = '';
+                    photoWrap.textContent = initials;
+                    photoWrap.style.background = 'linear-gradient(135deg,#3b82f6,#7c3aed)';
+                };
                 photoWrap.appendChild(img);
             } else {
+                photoWrap.style.background = 'linear-gradient(135deg,#3b82f6,#7c3aed)';
+                photoWrap.style.border = '3px solid rgba(255,255,255,0.1)';
                 photoWrap.textContent = initials;
             }
 
@@ -378,6 +488,141 @@
             const icon  = document.getElementById(iconId);
             if (input.type === 'password') { input.type = 'text'; icon.textContent = 'visibility_off'; }
             else { input.type = 'password'; icon.textContent = 'visibility'; }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // AVATAR UPLOAD
+        // ═══════════════════════════════════════════════════════════
+        async function handleAvatarUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) {
+                setMsg('avatarMsg', 'Image must be under 2 MB.', 'error');
+                input.value = '';
+                return;
+            }
+            setMsg('avatarMsg', 'Uploading…', 'info');
+
+            // Convert to base64 data URL for preview and store in user_metadata
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const dataUrl = e.target.result;
+
+                // Show preview immediately
+                const photoWrap = document.getElementById('pPhotoWrap');
+                photoWrap.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = dataUrl;
+                img.style.cssText = 'width:84px;height:84px;border-radius:50%;object-fit:cover;display:block';
+                photoWrap.style.background = 'transparent';
+                photoWrap.appendChild(img);
+
+                // Save to Supabase user metadata
+                const { data, error } = await _supabase.auth.updateUser({
+                    data: { avatar_url: dataUrl }
+                });
+                if (error) {
+                    setMsg('avatarMsg', 'Failed to save photo: ' + error.message, 'error');
+                } else {
+                    if (data && data.user) _currentUser = data.user;
+                    setMsg('avatarMsg', '✅ Profile photo updated.', 'success');
+                    showToast('Profile photo updated', 'success');
+                    setTimeout(() => setMsg('avatarMsg', '', 'info'), 3000);
+                }
+                input.value = '';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // STATS STRIP
+        // ═══════════════════════════════════════════════════════════
+        async function loadProfileStats(user) {
+            // Days active since account creation
+            if (user.created_at) {
+                const days = Math.floor((Date.now() - new Date(user.created_at)) / 86400000);
+                document.getElementById('statDaysMember').textContent = days;
+            }
+
+            // Download count from localStorage (tracks downloads on this device)
+            const dlHistory = JSON.parse(localStorage.getItem('fvDownloadHistory') || '[]');
+            document.getElementById('statDownloads').textContent = dlHistory.length;
+
+            // Request count from Supabase (file_requests table — gracefully fails if table doesn't exist)
+            try {
+                const { data, error } = await _supabase
+                    .from('file_requests')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('requester_email', user.email);
+                if (!error) {
+                    document.getElementById('statRequests').textContent = data === null ? 0 : (data.length ?? 0);
+                } else {
+                    document.getElementById('statRequests').textContent = '—';
+                }
+            } catch (_) {
+                document.getElementById('statRequests').textContent = '—';
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // NOTIFICATION PREFERENCES
+        // ═══════════════════════════════════════════════════════════
+        function loadNotifPrefs() {
+            const prefs = JSON.parse(localStorage.getItem('fvNotifPrefs') || '{}');
+            document.getElementById('notifNewFiles').checked = prefs.newFiles !== false; // default on
+            document.getElementById('notifExpiry').checked   = prefs.expiry   !== false;
+            document.getElementById('notifRequests').checked = prefs.requests  !== false;
+        }
+
+        function saveNotifPrefs() {
+            const prefs = {
+                newFiles: document.getElementById('notifNewFiles').checked,
+                expiry:   document.getElementById('notifExpiry').checked,
+                requests: document.getElementById('notifRequests').checked,
+            };
+            localStorage.setItem('fvNotifPrefs', JSON.stringify(prefs));
+            document.getElementById('notifMsg').textContent = '✅ Preferences saved.';
+            document.getElementById('notifMsg').style.color = '#34d399';
+            setTimeout(() => { document.getElementById('notifMsg').textContent = ''; }, 2000);
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // FILE REQUEST HISTORY
+        // ═══════════════════════════════════════════════════════════
+        async function loadRequestHistory(user) {
+            const list = document.getElementById('requestHistoryList');
+            try {
+                const { data, error } = await _supabase
+                    .from('file_requests')
+                    .select('id, file_name, folder_name, status, created_at')
+                    .eq('requester_email', user.email)
+                    .order('created_at', { ascending: false })
+                    .limit(8);
+
+                if (error) throw error;
+                if (!data || data.length === 0) {
+                    list.innerHTML = '<p style="font-size:12px;color:#64748b;text-align:center;padding:8px 0">You haven\'t made any file requests yet.</p>';
+                    document.getElementById('statRequests').textContent = '0';
+                    return;
+                }
+                document.getElementById('statRequests').textContent = data.length;
+                list.innerHTML = data.map(r => {
+                    const status = (r.status || 'pending').toLowerCase();
+                    const date   = new Date(r.created_at).toLocaleDateString(undefined, { month:'short', day:'numeric' });
+                    const folder = r.folder_name ? ` · ${r.folder_name}` : '';
+                    return `<div class="req-chip" style="margin-bottom:6px">
+                        <span class="material-symbols-outlined" style="font-size:16px;color:#64748b;flex-shrink:0">description</span>
+                        <div style="flex:1;min-width:0">
+                            <p style="font-size:12px;font-weight:700;color:#e2e8f0;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.file_name || 'Untitled request'}</p>
+                            <p style="font-size:10px;color:#475569;margin:2px 0 0">${date}${folder}</p>
+                        </div>
+                        <span class="req-status ${status === 'fulfilled' ? 'fulfilled' : 'pending'}">${status === 'fulfilled' ? 'Fulfilled' : 'Pending'}</span>
+                    </div>`;
+                }).join('');
+            } catch (e) {
+                // table probably doesn't exist yet — hide the section silently
+                document.getElementById('requestHistorySection').style.display = 'none';
+            }
         }
 
         // ═══════════════════════════════════════════════════════════

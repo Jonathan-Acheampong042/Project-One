@@ -128,11 +128,19 @@
 
         /* ── Mobile search expansion (issue 4) ── */
         @media (max-width:1023px) {
-            #headerIcons { display:flex;align-items:center;gap:6px;transition:opacity .2s;flex-shrink:0; }
+            #headerIcons { display:flex;align-items:center;gap:4px;transition:opacity .2s;flex-shrink:0; }
             header.search-active #headerIcons { display:none; }
             #searchCollapseBtn { display:none;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);cursor:pointer;color:#94a3b8;flex-shrink:0; }
             header.search-active #searchCollapseBtn { display:flex; }
             header.search-active #searchInput { border-color:rgba(59,130,246,0.5); }
+            /* Prevent search bar from squeezing other items off-screen */
+            #searchWrapper { min-width:0; flex:1 1 80px; }
+            header { gap:6px !important; }
+        }
+        @media (max-width:480px) {
+            /* On very small screens hide non-essential icons; user can tap search to expand */
+            #headerIcons button:nth-child(n+3) { display:none; }
+            header.search-active #headerIcons { display:none; }
         }
         @media (min-width:1024px) {
             #headerIcons { display:flex;align-items:center;gap:6px; }
@@ -439,10 +447,11 @@
 
 
         /* ── User profile chip & dropdown ── */
-        #profileChip { display:flex;align-items:center;gap:8px;padding:5px 10px 5px 6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:99px;cursor:pointer;transition:all .2s;flex-shrink:0;position:relative; }
+        #profileChip { display:flex;align-items:center;gap:6px;padding:5px 8px 5px 5px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:99px;cursor:pointer;transition:all .2s;flex-shrink:0;position:relative;min-width:0;max-width:160px; }
         #profileChip:hover { background:rgba(59,130,246,0.14);border-color:rgba(59,130,246,0.35); }
         #profileAvatar { width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:white;flex-shrink:0;text-transform:uppercase; }
-        #profileName { font-size:12px;font-weight:700;color:#cbd5e1;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+        #profileName { font-size:12px;font-weight:700;color:#cbd5e1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1; }
+        @media (max-width:480px) { #profileChip { max-width:110px; } #profileName { font-size:11px; } }
         #profileDropdown { position:absolute;top:calc(100% + 8px);right:0;min-width:220px;background:rgba(10,18,35,0.97);border:1px solid rgba(255,255,255,0.10);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.55);backdrop-filter:blur(20px);z-index:9999;overflow:hidden;display:none;animation:fadeSlideDown .18s ease; }
         #profileDropdown.open { display:block; }
         @keyframes fadeSlideDown { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
